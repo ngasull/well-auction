@@ -21,5 +21,11 @@
 			<version>1.7.9-R0.1</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.bukkit</groupId>
+			<artifactId>craftbukkit</artifactId>
+			<version>1.7.9-R0.1</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 </project>
