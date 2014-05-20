@@ -28,6 +28,6 @@ public class AuctionPlayerInteractListener implements Listener {
 	@EventHandler
 	public void onPlayerMove(PlayerInteractEvent evt) {
 		Player player = evt.getPlayer();
-		new AuctionInventory(player).open();
+		new AuctionInventory(player).open(player);
 	}
 }

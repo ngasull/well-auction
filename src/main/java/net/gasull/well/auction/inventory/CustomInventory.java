@@ -21,29 +21,28 @@ public abstract class CustomInventory implements Inventory {
 	/** The actual inventory. */
 	private Inventory actualInventory;
 
-	/** The player. */
-	private Player player;
-
-	/**
-	 * Opens the actual inventory for the player.
-	 */
-	public void open() {
-		player.openInventory(actualInventory);
-	}
-
 	/**
 	 * Instantiates a new custom inventory.
 	 * 
-	 * @param player
-	 *            the player
+	 * @param holder
+	 *            the inventory holder
 	 * @param type
 	 *            the inventory type
 	 * @param title
 	 *            the inventory's title
 	 */
-	protected CustomInventory(Player player, InventoryType type, String title) {
-		this.player = player;
-		this.actualInventory = Bukkit.createInventory(player, type, title);
+	protected CustomInventory(InventoryHolder holder, InventoryType type, String title) {
+		this.actualInventory = Bukkit.createInventory(holder, type, title);
+	}
+
+	/**
+	 * Opens the actual inventory for the player.
+	 * 
+	 * @param player
+	 *            the player
+	 */
+	public void open(Player player) {
+		player.openInventory(actualInventory);
 	}
 
 	public HashMap<Integer, ItemStack> addItem(ItemStack... arg0) throws IllegalArgumentException {
