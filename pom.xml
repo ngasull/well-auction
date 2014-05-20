@@ -7,6 +7,11 @@
 	<name>well-auction</name>
 	<description>Yet a simple but powerful way to set the economic equilibrium in your bukkit server</description>
 
+	<properties>
+		<minecraft.version>1.7.9</minecraft.version>
+		<bukkit.version>1.7.9-R0.1</bukkit.version>
+	</properties>
+
 	<repositories>
 		<repository>
 			<id>bukkit-repo</id>
@@ -17,14 +22,22 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.bukkit</groupId>
-			<artifactId>bukkit</artifactId>
-			<version>1.7.9-R0.1</version>
+			<artifactId>minecraft-server</artifactId>
+			<version>${minecraft.version}</version>
+			<type>jar</type>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.bukkit</groupId>
 			<artifactId>craftbukkit</artifactId>
-			<version>1.7.9-R0.1</version>
+			<version>${bukkit.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.bukkit</groupId>
+			<artifactId>bukkit</artifactId>
+			<version>${bukkit.version}</version>
+			<type>jar</type>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
