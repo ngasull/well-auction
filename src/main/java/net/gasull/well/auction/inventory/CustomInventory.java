@@ -19,7 +19,7 @@ import org.bukkit.inventory.ItemStack;
 public abstract class CustomInventory implements Inventory {
 
 	/** The actual inventory. */
-	private Inventory actualInventory;
+	protected Inventory actualInventory;
 
 	/**
 	 * Instantiates a new custom inventory.

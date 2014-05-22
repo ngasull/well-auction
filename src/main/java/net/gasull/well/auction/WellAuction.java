@@ -15,7 +15,7 @@ public class WellAuction extends JavaPlugin {
 		getLogger().info("Enabling well-auction");
 
 		AuctionShopManager shopManager = new AuctionShopManager();
-		AuctionPlayerInteractListener testListener = new AuctionPlayerInteractListener(shopManager);
+		AuctionPlayerInteractListener testListener = new AuctionPlayerInteractListener(this, shopManager);
 		getServer().getPluginManager().registerEvents(testListener, this);
 	}
 

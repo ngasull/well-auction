@@ -28,4 +28,9 @@ public class ShopEntity {
 	public Location getLocation() {
 		return location;
 	}
+
+	@Override
+	public boolean equals(Object compared) {
+		return location != null && location.equals(compared);
+	}
 }
