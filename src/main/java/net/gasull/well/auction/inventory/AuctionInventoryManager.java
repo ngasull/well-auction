@@ -59,8 +59,8 @@ public class AuctionInventoryManager {
 		this.plugin = plugin;
 		this.auctionMenu = new AuctionMenu(plugin);
 		this.TITLE_BASE = plugin.wellConfig().getString("inventory.menu.title", "Auction House");
-		this.TITLE_SELL = TITLE_BASE + TITLE_SEPARATOR + plugin.wellConfig().getString("inventory.sell.title", "Sell");
-		this.TITLE_BUY = TITLE_BASE + TITLE_SEPARATOR + plugin.wellConfig().getString("inventory.buy.title", "Buy");
+		this.TITLE_SELL = TITLE_BASE + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.sell.title", "Sell");
+		this.TITLE_BUY = TITLE_BASE + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.buy.title", "Buy");
 	}
 
 	/**
