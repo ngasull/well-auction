@@ -27,9 +27,12 @@ public class AuctionMenu {
 
 	/** The Constant BUY_SLOT. */
 	public static final int BUY_SLOT = 14;
-
+	
 	/** The Constant SALE_SLOT. */
 	public static final int SALE_SLOT = 12;
+
+	/** The Constant REFITEM_SLOT. */
+	public static final int REFITEM_SLOT = 1;
 
 	/** The size of the menu inventory. */
 	static final int MENU_SIZE = 27;
@@ -73,7 +76,7 @@ public class AuctionMenu {
 					// "Buy"));
 				} else {
 					switch (i) {
-					case 1:
+					case REFITEM_SLOT:
 					case 7:
 					case 9:
 					case 17:

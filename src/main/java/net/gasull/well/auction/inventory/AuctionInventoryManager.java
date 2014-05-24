@@ -1,12 +1,21 @@
+/*
+ * 
+ */
 package net.gasull.well.auction.inventory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.auction.shop.AuctionSale;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * The well-auction's Invntory manager.
@@ -19,6 +28,12 @@ public class AuctionInventoryManager {
 	/** The auction menu. */
 	private AuctionMenu auctionMenu;
 
+	/** The sell inventories. */
+	private Map<Material, Map<Player, Inventory>> sellInventories = new HashMap<Material, Map<Player, Inventory>>();
+
+	/** The buy inventories. */
+	private Map<Material, Map<Player, Inventory>> buyInventories = new HashMap<Material, Map<Player, Inventory>>();
+
 	/** The auction inventory's title base (first part). */
 	private final String TITLE_BASE;
 
@@ -30,6 +45,9 @@ public class AuctionInventoryManager {
 
 	/** The separator between title base and sub view title. */
 	private static final String TITLE_SEPARATOR = " - ";
+
+	// FULL TMP
+	private ArrayList<AuctionSale> sales = new ArrayList<AuctionSale>();
 
 	/**
 	 * Instantiates a new auction inventory manager.
@@ -60,18 +78,26 @@ public class AuctionInventoryManager {
 	/**
 	 * Handle menu click.
 	 * 
+	 * @param inv
+	 *            the calling inventory
 	 * @param slot
 	 *            the slot
+	 * @param player
+	 *            the player
 	 * @return true, if successful
 	 */
-	public void handleMenuClick(int slot, Player player) {
+	public void handleMenuClick(Inventory inv, int slot, Player player) {
+		ItemStack refItem = inv.getItem(AuctionMenu.REFITEM_SLOT);
+
 		switch (slot) {
 		case AuctionMenu.BUY_SLOT:
+			break;
 		case AuctionMenu.SALE_SLOT:
-			player.closeInventory();
+			Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.SIZE, TITLE_SELL);
+			sellInv.setContents(AuctionSellInventory.generateContents(refItem.getType(), sales));
 
-			Inventory inv = Bukkit.createInventory(player, 9);
-			player.openInventory(inv);
+			player.closeInventory();
+			player.openInventory(sellInv);
 			break;
 		default:
 			// Do nothing
@@ -79,36 +105,35 @@ public class AuctionInventoryManager {
 	}
 
 	/**
-	 * Checks if player opening sell menu and handles the action if needed.
+	 * Handle sell.
 	 * 
-	 * @param event
-	 *            the event
+	 * @param inv
+	 *            the inv
+	 * @param slot
+	 *            the slot
+	 * @param player
+	 *            the player
+	 * @param theItem
+	 *            the the item
 	 * @return true, if successful
 	 */
-	public boolean handleOpenSell(InventoryClickEvent evt) {
+	public boolean handleSell(Inventory inv, int slot, Player player, ItemStack theItem) {
+
+		if (slot != AuctionSellInventory.REFITEM_SLOT) {
+			ItemStack refItem = inv.getItem(AuctionSellInventory.REFITEM_SLOT);
+
+			if (refItem.isSimilar(theItem)) {
+				sales.add(new AuctionSale(player, theItem));
+				inv.setContents(AuctionSellInventory.generateContents(refItem.getType(), sales));
+				return true;
+			}
+		}
+
 		return false;
 	}
 
-	/**
-	 * Checks if player opening buy menu and handles the action if needed.
-	 * 
-	 * @param event
-	 *            the event
-	 * @return true, if successful
-	 */
-	public boolean handleOpenBuy(InventoryClickEvent event) {
-		return false;
-	}
+	public void handleBuy(Inventory inv, int slot, Player player) {
 
-	/**
-	 * Checks if player closing current menu and handles the action if needed.
-	 * 
-	 * @param event
-	 *            the event
-	 * @return true, if successful
-	 */
-	public boolean handleCloseMenu(InventoryClickEvent event) {
-		return false;
 	}
 
 	/**

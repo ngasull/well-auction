@@ -12,6 +12,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class AuctionPlayerInteractListener implements Listener {
 
@@ -100,10 +101,8 @@ public class AuctionPlayerInteractListener implements Listener {
 					doBuyAction(evt, action);
 					break;
 				case PLACE:
-					doSellAction(evt, action);
-					break;
 				case SWAP:
-					evt.setCancelled(true);
+					doSellAction(evt, action);
 					break;
 				default:
 					// Do nothing
@@ -143,7 +142,7 @@ public class AuctionPlayerInteractListener implements Listener {
 		// Otherwise, it's the menu
 		else {
 			evt.setCancelled(true);
-			inventoryManager.handleMenuClick(evt.getRawSlot(), (Player) evt.getWhoClicked());
+			inventoryManager.handleMenuClick(evt.getInventory(), evt.getRawSlot(), (Player) evt.getWhoClicked());
 		}
 	}
 
@@ -157,11 +156,69 @@ public class AuctionPlayerInteractListener implements Listener {
 	 */
 	private void doSellAction(final InventoryClickEvent evt, final AuctionInventoryAction action) {
 
+		/*
+		 * If sell-like (or anything else) action, cancel. Operations will be
+		 * manually managed.
+		 */
+		evt.setCancelled(true);
+
 		// If current view if the sell view
-		if (inventoryManager.isSellInventory(evt.getInventory())) {
-			// TODO here
-		} else {
-			evt.setCancelled(true);
+		if (inventoryManager.isSellInventory(evt.getInventory()) && evt.getWhoClicked() instanceof Player) {
+			ItemStack theItem = theItem(evt, action);
+			Player player = (Player) evt.getWhoClicked();
+
+			if (inventoryManager.handleSell(evt.getInventory(), evt.getRawSlot(), player, theItem)) {
+				plugin.getLogger().info(player.getName() + " successfully put on sale " + theItem);
+				removeTheItem(evt, action);
+			}
+		}
+	}
+
+	/**
+	 * Determines the item being traded depending on the action.
+	 * 
+	 * @param evt
+	 *            the evt
+	 * @param action
+	 *            the action
+	 * @return the item stack
+	 */
+	private ItemStack theItem(final InventoryClickEvent evt, final AuctionInventoryAction action) {
+		switch (action) {
+		case MOVE:
+		case PICKUP:
+			return evt.getCurrentItem();
+		case PLACE:
+		case SWAP:
+		case DROP:
+			return evt.getCursor();
+		default:
+			throw new IllegalArgumentException("Can't get item from action " + action.name());
+		}
+	}
+
+	/**
+	 * Removes the item being traded depending on the action.
+	 * 
+	 * @param evt
+	 *            the evt
+	 * @param action
+	 *            the action
+	 * @return the item stack
+	 */
+	private void removeTheItem(final InventoryClickEvent evt, final AuctionInventoryAction action) {
+		switch (action) {
+		case MOVE:
+		case PICKUP:
+			evt.getInventory().setItem(evt.getRawSlot(), null);
+			break;
+		case PLACE:
+		case SWAP:
+		case DROP:
+			((Player) evt.getWhoClicked()).setItemOnCursor(null);
+			break;
+		default:
+			throw new IllegalArgumentException("Can't get item from action " + action.name());
 		}
 	}
 }
