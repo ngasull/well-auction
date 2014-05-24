@@ -5,6 +5,7 @@ package net.gasull.well.auction.inventory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.gasull.well.auction.WellAuction;
@@ -13,7 +14,6 @@ import net.gasull.well.auction.shop.AuctionSale;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -69,7 +69,7 @@ public class AuctionInventoryManager {
 	 * @param player
 	 *            the player
 	 */
-	public void open(Player player, Material material) {
+	public void openMenu(Player player, Material material) {
 		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, TITLE_BASE);
 		inv.setContents(auctionMenu.getMaterialMenu(material));
 		player.openInventory(inv);
@@ -87,17 +87,19 @@ public class AuctionInventoryManager {
 	 * @return true, if successful
 	 */
 	public void handleMenuClick(Inventory inv, int slot, Player player) {
-		ItemStack refItem = inv.getItem(AuctionMenu.REFITEM_SLOT);
+		Material refMaterial = inv.getItem(AuctionMenu.REFITEM_SLOT).getType();
 
 		switch (slot) {
 		case AuctionMenu.BUY_SLOT:
+			Inventory buyInv = Bukkit.createInventory(player, AuctionBuyInventory.SIZE, TITLE_BUY);
+			loadBuyInventory(refMaterial, buyInv, sales);
+			openSubMenu(player, buyInv, refMaterial, buyInventories);
 			break;
 		case AuctionMenu.SALE_SLOT:
 			Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.SIZE, TITLE_SELL);
-			sellInv.setContents(AuctionSellInventory.generateContents(refItem.getType(), sales));
-
-			player.closeInventory();
-			player.openInventory(sellInv);
+			// ! \\ HAS TO BE PLAYER'S SALES
+			sellInv.setContents(AuctionSellInventory.generateContents(refMaterial, sales));
+			openSubMenu(player, sellInv, refMaterial, sellInventories);
 			break;
 		default:
 			// Do nothing
@@ -105,7 +107,7 @@ public class AuctionInventoryManager {
 	}
 
 	/**
-	 * Handle sell.
+	 * Checks a sale.
 	 * 
 	 * @param inv
 	 *            the inv
@@ -117,23 +119,75 @@ public class AuctionInventoryManager {
 	 *            the the item
 	 * @return true, if successful
 	 */
-	public boolean handleSell(Inventory inv, int slot, Player player, ItemStack theItem) {
+	public boolean checkSell(Inventory inv, int slot, Player player, ItemStack theItem) {
 
 		if (slot != AuctionSellInventory.REFITEM_SLOT) {
 			ItemStack refItem = inv.getItem(AuctionSellInventory.REFITEM_SLOT);
-
-			if (refItem.isSimilar(theItem)) {
-				sales.add(new AuctionSale(player, theItem));
-				inv.setContents(AuctionSellInventory.generateContents(refItem.getType(), sales));
-				return true;
-			}
+			return refItem.isSimilar(theItem);
 		}
 
 		return false;
 	}
 
-	public void handleBuy(Inventory inv, int slot, Player player) {
+	/**
+	 * Handle a sale.
+	 * 
+	 * @param inv
+	 *            the inventory
+	 * @param player
+	 *            the player
+	 * @param theItem
+	 *            the the item
+	 */
+	public void handleSell(Inventory inv, Player player, ItemStack theItem) {
+		sales.add(new AuctionSale(player, theItem));
+		inv.setContents(AuctionSellInventory.generateContents(theItem.getType(), sales));
+		refreshBuyInventories(theItem.getType(), sales);
+	}
 
+	/**
+	 * Checks buy.
+	 * 
+	 * @param inv
+	 *            the inv
+	 * @param slot
+	 *            the slot
+	 * @param player
+	 *            the player
+	 * @param theItem
+	 *            the the item
+	 * @return true, if successful
+	 */
+	public boolean checkBuy(Inventory inv, int slot, Player player, ItemStack theItem) {
+		return !AuctionBuyInventory.isSaleSlot(slot) && sales.size() > 0;
+	}
+
+	public ItemStack handleBuy(Inventory inv, Player player, ItemStack theItem) {
+		AuctionSale sale = sales.get(0);
+		sales.remove(sale);
+		inv.setContents(AuctionBuyInventory.generateContents(theItem.getType(), sales));
+		// refreshSellInventories(theItem.getType(), sales);
+		return sale.getItem();
+	}
+
+	/**
+	 * Properly closes the inventory.
+	 * 
+	 * @param inventory
+	 *            the inventory
+	 * @param player
+	 *            the player
+	 */
+	public void handleClose(Inventory inventory, Player player) {
+		Material refMaterial;
+
+		if (isBuyInventory(inventory)) {
+			refMaterial = inventory.getItem(AuctionBuyInventory.REFITEM_SLOT).getType();
+			buyInventories.get(refMaterial).remove(player);
+		} else if (isSellInventory(inventory)) {
+			refMaterial = inventory.getItem(AuctionSellInventory.REFITEM_SLOT).getType();
+			sellInventories.get(refMaterial).remove(player);
+		}
 	}
 
 	/**
@@ -183,12 +237,77 @@ public class AuctionInventoryManager {
 	/**
 	 * Checks if is top inventory event.
 	 * 
-	 * @param evt
-	 *            the evt
+	 * @param inventory
+	 *            the inventory
+	 * @param slot
+	 *            the slot
 	 * @return true, if is top inventory event
 	 */
-	public boolean isTopInventoryEvent(InventoryClickEvent evt) {
-		return evt.getRawSlot() < evt.getView().getTopInventory().getSize();
+	public boolean isTopInventoryEvent(Inventory inventory, int slot) {
+		return slot < inventory.getSize();
+	}
+
+	/**
+	 * Open sub menu.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param sellInv
+	 *            the sell inv
+	 * @param refMaterial
+	 *            the ref material
+	 * @param inventoryMap
+	 *            the inventory map
+	 */
+	private void openSubMenu(Player player, Inventory sellInv, Material refMaterial, Map<Material, Map<Player, Inventory>> inventoryMap) {
+
+		Map<Player, Inventory> playerInventories = inventoryMap.get(refMaterial);
+		if (playerInventories == null) {
+			synchronized (refMaterial) {
+				playerInventories = inventoryMap.get(refMaterial);
+
+				if (playerInventories == null) {
+					playerInventories = new HashMap<Player, Inventory>();
+					inventoryMap.put(refMaterial, playerInventories);
+				}
+			}
+		}
+
+		// Always erase an existing open inventory for the same player
+		playerInventories.put(player, sellInv);
+
+		player.closeInventory();
+		player.openInventory(sellInv);
+	}
+
+	/**
+	 * Refresh buy inventories.
+	 * 
+	 * @param type
+	 *            the type
+	 * @param sales
+	 *            the sales
+	 */
+	private void refreshBuyInventories(Material type, List<AuctionSale> sales) {
+		Map<Player, Inventory> invMap = buyInventories.get(type);
+
+		if (invMap != null) {
+			for (Inventory inv : invMap.values()) {
+				loadBuyInventory(type, inv, sales);
+			}
+		}
+	}
+
+	/**
+	 * Sets contents of an inventory for buy.
+	 * 
+	 * @param refMaterial
+	 *            the ref material
+	 * @param buyInv
+	 *            the buy inv
+	 */
+	private void loadBuyInventory(Material refMaterial, Inventory buyInv, List<AuctionSale> sales) {
+		buyInv.setContents(AuctionBuyInventory.generateContents(refMaterial, sales));
 	}
 
 	/**

@@ -18,16 +18,16 @@ public class AuctionSellInventory {
 	/** The item of reference's slot. */
 	public static final int REFITEM_SLOT = SIZE - 1;
 
-	public static ItemStack[] generateContents(Material refItem, List<AuctionSale> sales) {
+	public static ItemStack[] generateContents(Material refItem, List<AuctionSale> playerSales) {
 		ItemStack[] contents = new ItemStack[SIZE];
 
 		int i = 0;
-		for (AuctionSale sale : sales) {
+		for (AuctionSale sale : playerSales) {
 			if (i == REFITEM_SLOT) {
 				continue;
 			}
 
-			contents[i++] = new ItemStack(sale.getItem(), sale.getQuantity());
+			contents[i++] = sale.getTradeStack();
 		}
 
 		contents[REFITEM_SLOT] = new ItemStack(refItem);

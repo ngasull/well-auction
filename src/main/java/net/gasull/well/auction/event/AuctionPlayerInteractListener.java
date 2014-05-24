@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -30,7 +31,7 @@ public class AuctionPlayerInteractListener implements Listener {
 	public void onPlayerInteract(PlayerInteractEvent evt) {
 
 		if (evt.getAction() == Action.LEFT_CLICK_AIR) {
-			inventoryManager.open(evt.getPlayer(), Material.STICK);
+			inventoryManager.openMenu(evt.getPlayer(), Material.STICK);
 		}
 	}
 
@@ -52,6 +53,12 @@ public class AuctionPlayerInteractListener implements Listener {
 		}
 	}
 
+	/**
+	 * Handle Auction inventory clicks.
+	 * 
+	 * @param evt
+	 *            the evt
+	 */
 	@EventHandler
 	public void onInventoryClick(final InventoryClickEvent evt) {
 		if (inventoryManager.isAuctionInventory(evt.getInventory())) {
@@ -94,7 +101,7 @@ public class AuctionPlayerInteractListener implements Listener {
 			}
 
 			// Clicked inside auction shop
-			if (inventoryManager.isTopInventoryEvent(evt)) {
+			if (inventoryManager.isTopInventoryEvent(evt.getInventory(), evt.getRawSlot())) {
 				switch (action) {
 				case MOVE:
 				case PICKUP:
@@ -122,6 +129,19 @@ public class AuctionPlayerInteractListener implements Listener {
 	}
 
 	/**
+	 * Handle Auction inventory closes.
+	 * 
+	 * @param evt
+	 *            the evt
+	 */
+	@EventHandler
+	public void onInventoryClose(InventoryCloseEvent evt) {
+		if (inventoryManager.isAuctionInventory(evt.getInventory()) && evt.getPlayer() instanceof Player) {
+			inventoryManager.handleClose(evt.getInventory(), (Player) evt.getPlayer());
+		}
+	}
+
+	/**
 	 * Do buy action (of the type auction shop to player's inventory).
 	 * 
 	 * @param evt
@@ -133,7 +153,19 @@ public class AuctionPlayerInteractListener implements Listener {
 
 		// If current view is the buy view
 		if (inventoryManager.isBuyInventory(evt.getInventory())) {
-			// TODO here
+			ItemStack theItem = theItem(evt, action);
+			Player player = (Player) evt.getWhoClicked();
+
+			if (inventoryManager.checkBuy(evt.getInventory(), evt.getRawSlot(), player, theItem)) {
+
+				// DO THE BUSINESS
+
+				ItemStack bought = inventoryManager.handleBuy(evt.getInventory(), player, theItem);
+				evt.setCurrentItem(bought);
+				plugin.getLogger().info(player.getName() + " successfully bought " + theItem);
+			} else {
+				evt.setCancelled(true);
+			}
 		}
 		// If current view is the sell view
 		else if (inventoryManager.isSellInventory(evt.getInventory())) {
@@ -167,7 +199,11 @@ public class AuctionPlayerInteractListener implements Listener {
 			ItemStack theItem = theItem(evt, action);
 			Player player = (Player) evt.getWhoClicked();
 
-			if (inventoryManager.handleSell(evt.getInventory(), evt.getRawSlot(), player, theItem)) {
+			if (inventoryManager.checkSell(evt.getInventory(), evt.getRawSlot(), player, theItem)) {
+
+				// DO THE BUSINESS
+
+				inventoryManager.handleSell(evt.getInventory(), player, theItem);
 				plugin.getLogger().info(player.getName() + " successfully put on sale " + theItem);
 				removeTheItem(evt, action);
 			}
@@ -209,6 +245,10 @@ public class AuctionPlayerInteractListener implements Listener {
 	private void removeTheItem(final InventoryClickEvent evt, final AuctionInventoryAction action) {
 		switch (action) {
 		case MOVE:
+			if (inventoryManager.isSellInventory(evt.getInventory())) {
+				evt.getView().getBottomInventory().setItem(evt.getSlot(), null);
+			}
+			break;
 		case PICKUP:
 			evt.getInventory().setItem(evt.getRawSlot(), null);
 			break;

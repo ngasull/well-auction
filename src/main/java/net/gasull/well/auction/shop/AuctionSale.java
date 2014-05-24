@@ -12,11 +12,14 @@ public class AuctionSale {
 	/** The player. */
 	private Player player;
 
-	/** The item. */
-	private Material item;
+	/** The item type. */
+	private Material type;
 
-	/** The quantity. */
-	private int quantity;
+	/** The item (stack). */
+	private ItemStack item;
+
+	/** The item displayed in shop. */
+	private ItemStack tradeStack;
 
 	/**
 	 * Instantiates a new auction sale.
@@ -28,8 +31,9 @@ public class AuctionSale {
 	 */
 	public AuctionSale(Player player, ItemStack stack) {
 		this.player = player;
-		this.item = stack.getType();
-		this.quantity = stack.getAmount();
+		this.type = stack.getType();
+		this.item = stack;
+		this.tradeStack = new ItemStack(stack);
 	}
 
 	/**
@@ -42,20 +46,29 @@ public class AuctionSale {
 	}
 
 	/**
+	 * Gets the item type.
+	 * 
+	 * @return the item type
+	 */
+	public Material getType() {
+		return type;
+	}
+
+	/**
 	 * Gets the item.
 	 * 
 	 * @return the item
 	 */
-	public Material getItem() {
+	public ItemStack getItem() {
 		return item;
 	}
 
 	/**
-	 * Gets the quantity.
+	 * Gets the trade stack.
 	 * 
-	 * @return the quantity
+	 * @return the trade stack
 	 */
-	public int getQuantity() {
-		return quantity;
+	public ItemStack getTradeStack() {
+		return tradeStack;
 	}
 }
