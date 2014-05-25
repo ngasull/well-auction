@@ -1,3 +1,4 @@
 name: well-auction
 main: net.gasull.well.auction.WellAuction
 version: 0.0.1
+depend: [Vault]

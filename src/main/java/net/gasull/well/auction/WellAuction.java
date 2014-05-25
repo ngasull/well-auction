@@ -4,7 +4,9 @@ import net.gasull.well.auction.event.AuctionPlayerInteractListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.shop.AuctionShopManager;
 import net.gasull.well.auction.shop.AuctionType;
+import net.milkbowl.vault.economy.Economy;
 
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -15,12 +17,20 @@ public class WellAuction extends JavaPlugin {
 	/** The well config. */
 	private WellConfig wellConfig;
 
+	/** The permission. */
+	public WellPermissionManager permission;
+
+	/** The economy. */
+	public Economy economy;
+
 	@Override
 	public void onEnable() {
-		getLogger().info("Enabling well-auction");
+		setupVault();
 
 		wellConfig = new WellConfig(this, "well-auction.yml");
-		AuctionShopManager shopManager = new AuctionShopManager();
+		permission = new WellPermissionManager(this, wellConfig);
+
+		AuctionShopManager shopManager = new AuctionShopManager(this);
 		AuctionInventoryManager inventoryManager = new AuctionInventoryManager(this);
 		AuctionPlayerInteractListener testListener = new AuctionPlayerInteractListener(this, shopManager, inventoryManager);
 		getServer().getPluginManager().registerEvents(testListener, this);
@@ -30,7 +40,6 @@ public class WellAuction extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		getLogger().info("Disabling well-auction");
 
 		// Clearing static mappings
 		AuctionType.clear();
@@ -43,5 +52,18 @@ public class WellAuction extends JavaPlugin {
 	 */
 	public WellConfig wellConfig() {
 		return wellConfig;
+	}
+
+	/**
+	 * Setup vault.
+	 */
+	private void setupVault() {
+		RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+
+		if (economyProvider == null) {
+			throw new RuntimeException("Couldn't initialize Vault's Economy. Is Vault in your plugins?");
+		}
+
+		economy = economyProvider.getProvider();
 	}
 }
