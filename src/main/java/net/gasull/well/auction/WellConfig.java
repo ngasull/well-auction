@@ -1,11 +1,15 @@
 package net.gasull.well.auction;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.bukkit.Color;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,14 +22,24 @@ public class WellConfig {
 	/** The plugin. */
 	private JavaPlugin plugin;
 
+	/** The conf. */
+	private final FileConfiguration conf;
+
+	/** The file's relative path. */
+	private final String filePath;
+
 	/**
 	 * Instantiates a new well config.
 	 * 
 	 * @param plugin
 	 *            the plugin
+	 * @param filePath
+	 *            the file's relative path
 	 */
-	public WellConfig(JavaPlugin plugin) {
+	public WellConfig(JavaPlugin plugin, String filePath) {
 		this.plugin = plugin;
+		this.filePath = filePath;
+		this.conf = new YamlConfiguration();
 	}
 
 	/**
@@ -34,7 +48,18 @@ public class WellConfig {
 	 * @return the config
 	 */
 	public FileConfiguration getConfig() {
-		return plugin.getConfig();
+		return conf;
+	}
+
+	/**
+	 * Saves the config.
+	 */
+	public void save() {
+		try {
+			conf.save(new File(plugin.getDataFolder(), filePath));
+		} catch (IOException e) {
+			plugin.getLogger().log(Level.SEVERE, "Couldn't save config file well-auction.yml", e);
+		}
 	}
 
 	/**
@@ -47,7 +72,7 @@ public class WellConfig {
 	 * @return the boolean
 	 */
 	public boolean getBoolean(final String key, final boolean def) {
-		return setAndReturn(key, plugin.getConfig().getBoolean(key, def));
+		return setAndReturn(key, conf.getBoolean(key, def));
 	}
 
 	/**
@@ -58,7 +83,7 @@ public class WellConfig {
 	 * @return the boolean
 	 */
 	public boolean getBoolean(final String key) {
-		return plugin.getConfig().getBoolean(key);
+		return conf.getBoolean(key);
 	}
 
 	/**
@@ -71,7 +96,7 @@ public class WellConfig {
 	 * @return the color
 	 */
 	public Color getColor(final String key, final Color def) {
-		return setAndReturn(key, plugin.getConfig().getColor(key, def));
+		return setAndReturn(key, conf.getColor(key, def));
 	}
 
 	/**
@@ -82,7 +107,7 @@ public class WellConfig {
 	 * @return the color
 	 */
 	public Color getColor(final String key) {
-		return plugin.getConfig().getColor(key);
+		return conf.getColor(key);
 	}
 
 	/**
@@ -95,7 +120,7 @@ public class WellConfig {
 	 * @return the double
 	 */
 	public double getDouble(final String key, final double def) {
-		return setAndReturn(key, plugin.getConfig().getDouble(key, def));
+		return setAndReturn(key, conf.getDouble(key, def));
 	}
 
 	/**
@@ -106,7 +131,7 @@ public class WellConfig {
 	 * @return the double
 	 */
 	public double getDouble(final String key) {
-		return plugin.getConfig().getDouble(key);
+		return conf.getDouble(key);
 	}
 
 	/**
@@ -119,7 +144,7 @@ public class WellConfig {
 	 * @return the int
 	 */
 	public int getInt(final String key, final int def) {
-		return setAndReturn(key, plugin.getConfig().getInt(key, def));
+		return setAndReturn(key, conf.getInt(key, def));
 	}
 
 	/**
@@ -130,7 +155,7 @@ public class WellConfig {
 	 * @return the int
 	 */
 	public int getInt(final String key) {
-		return plugin.getConfig().getInt(key);
+		return conf.getInt(key);
 	}
 
 	/**
@@ -143,7 +168,7 @@ public class WellConfig {
 	 * @return the item stack
 	 */
 	public ItemStack getItemStack(final String key, final ItemStack def) {
-		return setAndReturn(key, plugin.getConfig().getItemStack(key, def));
+		return setAndReturn(key, conf.getItemStack(key, def));
 	}
 
 	/**
@@ -154,7 +179,7 @@ public class WellConfig {
 	 * @return the item stack
 	 */
 	public ItemStack getItemStack(final String key) {
-		return plugin.getConfig().getItemStack(key);
+		return conf.getItemStack(key);
 	}
 
 	/**
@@ -167,7 +192,7 @@ public class WellConfig {
 	 * @return the long
 	 */
 	public long getLong(final String key, final long def) {
-		return setAndReturn(key, plugin.getConfig().getLong(key, def));
+		return setAndReturn(key, conf.getLong(key, def));
 	}
 
 	/**
@@ -178,7 +203,7 @@ public class WellConfig {
 	 * @return the long
 	 */
 	public long getLong(final String key) {
-		return plugin.getConfig().getLong(key);
+		return conf.getLong(key);
 	}
 
 	/**
@@ -191,7 +216,7 @@ public class WellConfig {
 	 * @return the string
 	 */
 	public String getString(final String key, final String def) {
-		return setAndReturn(key, plugin.getConfig().getString(key, def));
+		return setAndReturn(key, conf.getString(key, def));
 	}
 
 	/**
@@ -202,7 +227,7 @@ public class WellConfig {
 	 * @return the string
 	 */
 	public String getString(final String key) {
-		return plugin.getConfig().getString(key);
+		return conf.getString(key);
 	}
 
 	/**
@@ -213,7 +238,7 @@ public class WellConfig {
 	 * @return the boolean list
 	 */
 	public List<Boolean> getBooleanList(final String key) {
-		return plugin.getConfig().getBooleanList(key);
+		return conf.getBooleanList(key);
 	}
 
 	/**
@@ -224,7 +249,7 @@ public class WellConfig {
 	 * @return the character list
 	 */
 	public List<Character> getCharacterList(final String key) {
-		return plugin.getConfig().getCharacterList(key);
+		return conf.getCharacterList(key);
 	}
 
 	/**
@@ -235,7 +260,7 @@ public class WellConfig {
 	 * @return the double list
 	 */
 	public List<Double> getDoubleList(final String key) {
-		return plugin.getConfig().getDoubleList(key);
+		return conf.getDoubleList(key);
 	}
 
 	/**
@@ -246,7 +271,7 @@ public class WellConfig {
 	 * @return the integer list
 	 */
 	public List<Integer> getIntegerList(final String key) {
-		return plugin.getConfig().getIntegerList(key);
+		return conf.getIntegerList(key);
 	}
 
 	/**
@@ -257,7 +282,7 @@ public class WellConfig {
 	 * @return the long list
 	 */
 	public List<Long> getLongList(final String key) {
-		return plugin.getConfig().getLongList(key);
+		return conf.getLongList(key);
 	}
 
 	/**
@@ -268,7 +293,7 @@ public class WellConfig {
 	 * @return the short list
 	 */
 	public List<Short> getShortList(final String key) {
-		return plugin.getConfig().getShortList(key);
+		return conf.getShortList(key);
 	}
 
 	/**
@@ -279,7 +304,7 @@ public class WellConfig {
 	 * @return the map list
 	 */
 	public List<Map<?, ?>> getMapList(final String key) {
-		return plugin.getConfig().getMapList(key);
+		return conf.getMapList(key);
 	}
 
 	/**
@@ -290,7 +315,7 @@ public class WellConfig {
 	 * @return the string list
 	 */
 	public List<String> getStringList(final String key) {
-		return plugin.getConfig().getStringList(key);
+		return conf.getStringList(key);
 	}
 
 	/**
@@ -305,7 +330,7 @@ public class WellConfig {
 	 * @return the t
 	 */
 	private <T> T setAndReturn(final String key, final T value) {
-		plugin.getConfig().set(key, value);
+		conf.set(key, value);
 		return value;
 	}
 }

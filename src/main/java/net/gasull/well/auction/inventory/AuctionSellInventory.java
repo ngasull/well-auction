@@ -4,7 +4,6 @@ import java.util.List;
 
 import net.gasull.well.auction.shop.AuctionSale;
 
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -15,22 +14,21 @@ public class AuctionSellInventory {
 	/** The size of the selling inventory. */
 	public static final int SIZE = 4 * 9;
 
-	/** The item of reference's slot. */
-	public static final int REFITEM_SLOT = SIZE - 1;
-
-	public static ItemStack[] generateContents(Material refItem, List<AuctionSale> playerSales) {
+	/**
+	 * Generate contents.
+	 * 
+	 * @param playerSales
+	 *            the player sales
+	 * @return the item stack[]
+	 */
+	public static ItemStack[] generateContents(List<AuctionSale> playerSales) {
 		ItemStack[] contents = new ItemStack[SIZE];
 
 		int i = 0;
 		for (AuctionSale sale : playerSales) {
-			if (i == REFITEM_SLOT) {
-				continue;
-			}
-
 			contents[i++] = sale.getTradeStack();
 		}
 
-		contents[REFITEM_SLOT] = new ItemStack(refItem);
 		return contents;
 	}
 }

@@ -3,6 +3,7 @@ package net.gasull.well.auction;
 import net.gasull.well.auction.event.AuctionPlayerInteractListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.shop.AuctionShopManager;
+import net.gasull.well.auction.shop.AuctionType;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,16 +19,21 @@ public class WellAuction extends JavaPlugin {
 	public void onEnable() {
 		getLogger().info("Enabling well-auction");
 
-		wellConfig = new WellConfig(this);
+		wellConfig = new WellConfig(this, "well-auction.yml");
 		AuctionShopManager shopManager = new AuctionShopManager();
 		AuctionInventoryManager inventoryManager = new AuctionInventoryManager(this);
 		AuctionPlayerInteractListener testListener = new AuctionPlayerInteractListener(this, shopManager, inventoryManager);
 		getServer().getPluginManager().registerEvents(testListener, this);
+
+		wellConfig.save();
 	}
 
 	@Override
 	public void onDisable() {
 		getLogger().info("Disabling well-auction");
+
+		// Clearing static mappings
+		AuctionType.clear();
 	}
 
 	/**

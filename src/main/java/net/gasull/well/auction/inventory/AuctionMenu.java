@@ -88,13 +88,6 @@ public class AuctionMenu {
 				}
 			}
 
-			try {
-				plugin.wellConfig().getConfig().save("plugins/well-auction/well-auction.yml");
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
 			inventoryContents.put(soldItem, contents);
 		}
 

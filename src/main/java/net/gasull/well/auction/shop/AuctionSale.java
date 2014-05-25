@@ -1,6 +1,5 @@
 package net.gasull.well.auction.shop;
 
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -13,7 +12,7 @@ public class AuctionSale {
 	private Player player;
 
 	/** The item type. */
-	private Material type;
+	private AuctionType type;
 
 	/** The item (stack). */
 	private ItemStack item;
@@ -31,7 +30,7 @@ public class AuctionSale {
 	 */
 	public AuctionSale(Player player, ItemStack stack) {
 		this.player = player;
-		this.type = stack.getType();
+		this.type = AuctionType.get(stack);
 		this.item = stack;
 		this.tradeStack = new ItemStack(stack);
 	}
@@ -50,7 +49,7 @@ public class AuctionSale {
 	 * 
 	 * @return the item type
 	 */
-	public Material getType() {
+	public AuctionType getType() {
 		return type;
 	}
 
