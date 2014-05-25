@@ -1,10 +1,7 @@
 package net.gasull.well.auction.inventory;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.auction.shop.AuctionType;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -19,15 +16,12 @@ public class AuctionMenu {
 	/** The plugin. */
 	private WellAuction plugin;
 
-	/** The inventory contents (template). */
-	private Map<Material, ItemStack[]> inventoryContents;
-
 	/** The Constant INFO_SLOT. */
 	public static final int INFO_SLOT = 13;
 
 	/** The Constant BUY_SLOT. */
 	public static final int BUY_SLOT = 14;
-	
+
 	/** The Constant SALE_SLOT. */
 	public static final int SALE_SLOT = 12;
 
@@ -42,53 +36,46 @@ public class AuctionMenu {
 	 */
 	public AuctionMenu(WellAuction plugin) {
 		this.plugin = plugin;
-		this.inventoryContents = new HashMap<Material, ItemStack[]>();
 	}
 
 	@SuppressWarnings("deprecation")
-	public ItemStack[] getMaterialMenu(Material soldItem) {
+	public ItemStack[] getMenuForType(AuctionType auctionType) {
 
-		ItemStack[] contents = inventoryContents.get(soldItem);
+		ItemStack[] contents = new ItemStack[MENU_SIZE];
 
-		if (contents == null) {
-			contents = new ItemStack[MENU_SIZE];
+		for (int i = 0; i < MENU_SIZE; i++) {
+			if (isSaleSlot(i)) {
+				contents[i] = new ItemStack(plugin.wellConfig().getInt("inventory.menu.button.sell.item", Material.GOLD_INGOT.getId()));
 
-			for (int i = 0; i < MENU_SIZE; i++) {
-				if (isSaleSlot(i)) {
-					contents[i] = new ItemStack(plugin.wellConfig().getInt("inventory.menu.button.sell.item", Material.GOLD_INGOT.getId()));
+				ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(contents[i].getType());
+				itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.sell.title", "Sell"));
+				contents[i].setItemMeta(itemMeta);
+			} else if (isBuySlot(i)) {
+				contents[i] = new ItemStack(plugin.wellConfig().getInt("inventory.menu.button.buy.item", Material.EMERALD.getId()));
 
-					ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(contents[i].getType());
-					itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.sell.title", "Sell"));
-					contents[i].setItemMeta(itemMeta);
-				} else if (isBuySlot(i)) {
-					contents[i] = new ItemStack(plugin.wellConfig().getInt("inventory.menu.button.buy.item", Material.EMERALD.getId()));
+				ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(contents[i].getType());
+				itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.buy.title", "Buy"));
+				contents[i].setItemMeta(itemMeta);
+			} else if (isInfoSlot(i)) {
+				contents[i] = new ItemStack(plugin.wellConfig().getInt("inventory.menu.button.info.item", Material.PAPER.getId()));
 
-					ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(contents[i].getType());
-					itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.buy.title", "Buy"));
-					contents[i].setItemMeta(itemMeta);
-				} else if (isInfoSlot(i)) {
-					contents[i] = new ItemStack(plugin.wellConfig().getInt("inventory.menu.button.info.item", Material.PAPER.getId()));
-
-					ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(contents[i].getType());
-					itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.info.title", "Info"));
-					contents[i].setItemMeta(itemMeta);
-					// contents[i].getItemMeta().setDisplayName(plugin.wellConfig().getString("lang.inventory.buy",
-					// "Buy"));
-				} else {
-					switch (i) {
-					case REFITEM_SLOT:
-					case 7:
-					case 9:
-					case 17:
-					case 19:
-					case 25:
-						contents[i] = new ItemStack(soldItem);
-						break;
-					}
+				ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(contents[i].getType());
+				itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.info.title", "Info"));
+				contents[i].setItemMeta(itemMeta);
+				// contents[i].getItemMeta().setDisplayName(plugin.wellConfig().getString("lang.inventory.buy",
+				// "Buy"));
+			} else {
+				switch (i) {
+				case REFITEM_SLOT:
+				case 7:
+				case 9:
+				case 17:
+				case 19:
+				case 25:
+					contents[i] = new ItemStack(auctionType.getRefItem());
+					break;
 				}
 			}
-
-			inventoryContents.put(soldItem, contents);
 		}
 
 		return contents;

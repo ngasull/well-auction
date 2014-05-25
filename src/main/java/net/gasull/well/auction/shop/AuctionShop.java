@@ -1,5 +1,6 @@
 package net.gasull.well.auction.shop;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Material;
@@ -12,23 +13,23 @@ import org.bukkit.inventory.ItemStack;
  */
 public class AuctionShop {
 
-	/** The material being sold. */
-	private Material material;
+	/** The auction type. */
+	private AuctionType type;
 
 	/** The registered shop-entities. */
-	private List<ShopEntity> registered;
+	private List<ShopEntity> registered = new ArrayList<ShopEntity>();
 
 	/** The sales. */
-	private List<AuctionSale> sales;
+	private List<AuctionSale> sales = new ArrayList<AuctionSale>();
 
 	/**
 	 * Instantiates a new auction shop.
 	 * 
-	 * @param material
-	 *            the material
+	 * @param type
+	 *            the auction type
 	 */
-	public AuctionShop(Material material) {
-		this.material = material;
+	public AuctionShop(AuctionType type) {
+		this.type = type;
 
 		// TODO Create its Inventory here
 	}
@@ -43,16 +44,72 @@ public class AuctionShop {
 		registered.add(shopEntity);
 	}
 
-	public void sell(Player player, ItemStack item) throws AuctionShopException {
+	/**
+	 * Sell.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param item
+	 *            the item
+	 * @return the auction sale
+	 * @throws AuctionShopException
+	 *             the auction shop exception
+	 */
+	public AuctionSale sell(Player player, ItemStack item, double price) throws AuctionShopException {
 
+		if (price < 0) {
+			throw new AuctionShopException("Can't sell for a price less than 0");
+		}
+
+		AuctionSale sale = new AuctionSale(player.getName(), item, price);
+		sales.add(sale);
+
+		return sale;
+	}
+
+	public ItemStack buy(Player player, AuctionSale sale) throws AuctionShopException {
+		if (!sales.remove(sale)) {
+			throw new AuctionShopException("Sale not found but should have been");
+		}
+
+		return sale.getItem();
 	}
 
 	/**
-	 * Gets the material.
+	 * Fetches a sale for stack.
 	 * 
-	 * @return the material
+	 * @param saleStack
+	 *            the sale stack
+	 * @return the auction sale
 	 */
-	public Material getMaterial() {
-		return material;
+	public AuctionSale saleForStack(ItemStack saleStack) {
+		AuctionSale sale = null;
+
+		for (AuctionSale s : sales) {
+			if (s.isSellingStack(saleStack)) {
+				sale = s;
+				break;
+			}
+		}
+
+		return sale;
+	}
+
+	/**
+	 * Gets the auction type.
+	 * 
+	 * @return the auction type
+	 */
+	public AuctionType getType() {
+		return type;
+	}
+
+	/**
+	 * Gets the sales.
+	 * 
+	 * @return the sales
+	 */
+	public List<AuctionSale> getSales() {
+		return sales;
 	}
 }
