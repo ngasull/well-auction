@@ -24,9 +24,11 @@ public class AuctionBuyInventory {
 	public static ItemStack[] generateContents(List<AuctionSale> sales) {
 		ItemStack[] contents = new ItemStack[SIZE];
 
-		int i = 0;
-		for (AuctionSale sale : sales) {
-			contents[i++] = sale.getTradeStack();
+		if (sales != null) {
+			int i = 0;
+			for (AuctionSale sale : sales) {
+				contents[i++] = sale.getTradeStack();
+			}
 		}
 
 		return contents;

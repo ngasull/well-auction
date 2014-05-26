@@ -1,5 +1,6 @@
 package net.gasull.well.auction.shop;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -11,7 +12,7 @@ public class AuctionSale {
 	private long id;
 
 	/** The seller. */
-	private String seller;
+	private OfflinePlayer seller;
 
 	/** The item shop. */
 	private AuctionShop shop;
@@ -37,7 +38,7 @@ public class AuctionSale {
 	 * @param price
 	 *            the price
 	 */
-	public AuctionSale(String seller, AuctionShop shop, ItemStack stack, double price) {
+	public AuctionSale(OfflinePlayer seller, AuctionShop shop, ItemStack stack, double price) {
 		this.seller = seller;
 		this.shop = shop;
 		this.item = stack;
@@ -70,7 +71,7 @@ public class AuctionSale {
 	 * 
 	 * @return the seller
 	 */
-	public String getSeller() {
+	public OfflinePlayer getSeller() {
 		return seller;
 	}
 

@@ -1,15 +1,17 @@
 package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * The actual Auction Shop, shared all over the world for a given
- * {@link Material}.
+ * The actual Auction Shop, shared all over the world for a given refItem
+ * {@link ItemStack}.
  */
 public class AuctionShop {
 
@@ -22,6 +24,9 @@ public class AuctionShop {
 	/** The sales. */
 	private List<AuctionSale> sales = new ArrayList<AuctionSale>();
 
+	/** The player sales. */
+	private Map<UUID, List<AuctionSale>> playerSales = new HashMap<UUID, List<AuctionSale>>();
+
 	/**
 	 * Instantiates a new auction shop.
 	 * 
@@ -29,9 +34,7 @@ public class AuctionShop {
 	 *            the reference item
 	 */
 	AuctionShop(ItemStack stack) {
-		this.refItem = stack;
-
-		// TODO Create its Inventory here
+		this.refItem = refItemFor(stack);
 	}
 
 	/**
@@ -55,21 +58,48 @@ public class AuctionShop {
 	 * @throws AuctionShopException
 	 *             the auction shop exception
 	 */
-	AuctionSale sell(Player player, ItemStack item, double price) throws AuctionShopException {
+	AuctionSale sell(OfflinePlayer player, ItemStack item, double price) throws AuctionShopException {
 
 		if (price < 0) {
 			throw new AuctionShopException("Can't sell for a price less than 0");
 		}
 
-		AuctionSale sale = new AuctionSale(player.getName(), this, item, price);
+		AuctionSale sale = new AuctionSale(player, this, item, price);
 		sales.add(sale);
 
+		List<AuctionSale> pSales = playerSales.get(player.getUniqueId());
+		if (pSales == null) {
+			pSales = new ArrayList<AuctionSale>();
+			playerSales.put(player.getUniqueId(), pSales);
+		}
+
+		pSales.add(sale);
 		return sale;
 	}
 
-	ItemStack buy(Player player, AuctionSale sale) throws AuctionShopException {
+	/**
+	 * Buy.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param sale
+	 *            the sale
+	 * @return the bought stack
+	 * @throws AuctionShopException
+	 *             the auction shop exception
+	 */
+	ItemStack buy(OfflinePlayer player, AuctionSale sale) throws AuctionShopException {
 		if (!sales.remove(sale)) {
 			throw new AuctionShopException("Sale not found but should have been");
+		}
+
+		List<AuctionSale> pSales = playerSales.get(player.getUniqueId());
+		if (pSales != null) {
+			pSales.remove(sale);
+
+			if (pSales.size() == 0) {
+				playerSales.remove(player.getUniqueId());
+			}
 		}
 
 		return sale.getItem();
@@ -122,6 +152,15 @@ public class AuctionShop {
 	 */
 	public List<AuctionSale> getSales() {
 		return sales;
+	}
+
+	/**
+	 * Gets the sales for a player.
+	 * 
+	 * @return the sales
+	 */
+	public List<AuctionSale> getSales(OfflinePlayer player) {
+		return playerSales.get(player.getUniqueId());
 	}
 
 	/**

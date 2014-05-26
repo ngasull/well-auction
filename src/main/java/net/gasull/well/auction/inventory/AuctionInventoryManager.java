@@ -6,6 +6,7 @@ package net.gasull.well.auction.inventory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.shop.AuctionSale;
@@ -13,7 +14,9 @@ import net.gasull.well.auction.shop.AuctionShop;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -33,11 +36,11 @@ public class AuctionInventoryManager {
 	/** The buy inventories. */
 	private Map<AuctionShop, Map<Player, Inventory>> buyInventories = new HashMap<AuctionShop, Map<Player, Inventory>>();
 
-	/** The material for an open sell inventories. */
-	private Map<Inventory, AuctionShop> playerForSellInventory = new HashMap<Inventory, AuctionShop>();
+	/** The shop for sell inventory. */
+	private Map<Inventory, AuctionShop> shopForSellInventory = new HashMap<Inventory, AuctionShop>();
 
-	/** The material for an open buy inventories. */
-	private Map<Inventory, AuctionShop> playerForBuyInventory = new HashMap<Inventory, AuctionShop>();
+	/** The shop for buy inventory. */
+	private Map<Inventory, AuctionShop> shopForBuyInventory = new HashMap<Inventory, AuctionShop>();
 
 	/** The auction inventory's title base (first part). */
 	private final String TITLE_BASE;
@@ -86,13 +89,11 @@ public class AuctionInventoryManager {
 	 *            the player
 	 * @param shop
 	 *            the auction shop
-	 * @param sales
-	 *            the sales
 	 */
-	public void openSell(Player player, AuctionShop shop, List<AuctionSale> sales) {
+	public void openSell(Player player, AuctionShop shop) {
 		Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.SIZE, TITLE_SELL);
-		loadSellInventory(sellInv, sales);
-		openSubMenu(player, sellInv, shop, sellInventories, playerForSellInventory);
+		loadSellInventory(sellInv, shop.getSales(player));
+		openSubMenu(player, sellInv, shop, sellInventories, shopForSellInventory);
 	}
 
 	/**
@@ -106,7 +107,7 @@ public class AuctionInventoryManager {
 	public void openBuy(Player player, AuctionShop shop) {
 		Inventory buyInv = Bukkit.createInventory(player, AuctionBuyInventory.SIZE, TITLE_BUY);
 		loadBuyInventory(buyInv, shop.getSales());
-		openSubMenu(player, buyInv, shop, buyInventories, playerForBuyInventory);
+		openSubMenu(player, buyInv, shop, buyInventories, shopForBuyInventory);
 	}
 
 	/**
@@ -121,7 +122,7 @@ public class AuctionInventoryManager {
 	 * @return true, if successful
 	 */
 	public boolean checkSell(Inventory inv, Player player, ItemStack theItem) {
-		AuctionShop shop = playerForSellInventory.get(inv);
+		AuctionShop shop = shopForSellInventory.get(inv);
 		return shop != null && shop.sells(theItem);
 	}
 
@@ -132,12 +133,12 @@ public class AuctionInventoryManager {
 	 *            the inventory
 	 * @param shop
 	 *            the shop
-	 * @param playersSales
-	 *            the player's sales
+	 * @param player
+	 *            the player
 	 */
-	public void handleSell(Inventory inv, AuctionShop shop, List<AuctionSale> playersSales) {
-		loadSellInventory(inv, playersSales);
-		refreshBuyInventories(shop, shop.getSales());
+	public void handleSell(Inventory inv, AuctionShop shop, Player player) {
+		loadSellInventory(inv, shop.getSales(player));
+		refreshBuyInventories(shop);
 	}
 
 	/**
@@ -152,7 +153,8 @@ public class AuctionInventoryManager {
 	 * @return true, if successful
 	 */
 	public boolean checkBuy(Inventory inv, Player player, ItemStack theItem) {
-		return true;
+		AuctionShop shop = shopForBuyInventory.get(inv);
+		return shop != null && shop.sells(theItem);
 	}
 
 	/**
@@ -164,15 +166,18 @@ public class AuctionInventoryManager {
 	 *            the player
 	 * @param sale
 	 *            the sale
-	 * @param playersSales
-	 *            the player's sales
 	 * @return the item stack
 	 */
-	public ItemStack handleBuy(Inventory inv, Player player, AuctionSale sale, List<AuctionSale> playersSales) {
+	public ItemStack handleBuy(Inventory inv, Player player, AuctionSale sale) {
 		AuctionShop shop = sale.getShop();
-		loadBuyInventory(inv, shop.getSales());
-		refreshBuyInventories(shop, shop.getSales());
-		refreshSellInventories(shop, playersSales);
+		Map<Player, Inventory> invMap = buyInventories.get(shop);
+
+		if (invMap != null) {
+			invMap.put(player, inv);
+			refreshBuyInventories(shop);
+			refreshSellInventories(shop);
+		}
+
 		return sale.getItem();
 	}
 
@@ -186,13 +191,13 @@ public class AuctionInventoryManager {
 	 */
 	public void handleClose(Inventory inventory, Player player) {
 		if (isBuyInventory(inventory)) {
-			AuctionShop shop = playerForBuyInventory.remove(inventory);
+			AuctionShop shop = shopForBuyInventory.remove(inventory);
 
 			if (shop != null) {
 				buyInventories.get(shop).remove(player);
 			}
 		} else if (isSellInventory(inventory)) {
-			AuctionShop shop = playerForSellInventory.remove(inventory);
+			AuctionShop shop = shopForSellInventory.remove(inventory);
 
 			if (shop != null) {
 				sellInventories.get(shop).remove(player);
@@ -268,11 +273,11 @@ public class AuctionInventoryManager {
 	 *            the auction shop
 	 * @param inventoryMap
 	 *            the inventory map
-	 * @param playerForInventory
-	 *            the player for inventory
+	 * @param shopForInventory
+	 *            the shop for inventory
 	 */
 	private void openSubMenu(Player player, Inventory inv, AuctionShop shop, Map<AuctionShop, Map<Player, Inventory>> inventoryMap,
-			Map<Inventory, AuctionShop> playerForInventory) {
+			Map<Inventory, AuctionShop> shopForInventory) {
 
 		Map<Player, Inventory> playerInventories = inventoryMap.get(shop);
 
@@ -289,10 +294,36 @@ public class AuctionInventoryManager {
 
 		// Always erase an existing open inventory for the same player
 		playerInventories.put(player, inv);
-		playerForInventory.put(inv, shop);
+		shopForInventory.put(inv, shop);
 
 		player.closeInventory();
 		player.openInventory(inv);
+	}
+
+	/**
+	 * Re open sub menu.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param inv
+	 *            the inv
+	 * @param shop
+	 *            the shop
+	 * @param inventoryMap
+	 *            the inventory map
+	 * @param shopForInventory
+	 *            the shop for inventory
+	 */
+	private void reOpenSubMenu(Player player, Inventory inv, AuctionShop shop, Map<AuctionShop, Map<Player, Inventory>> inventoryMap,
+			Map<Inventory, AuctionShop> shopForInventory) {
+		Map<Player, Inventory> playerInventories = inventoryMap.get(shop);
+
+		if (playerInventories != null) {
+			playerInventories.remove(player);
+		}
+
+		shopForInventory.remove(inv);
+		openSubMenu(player, inv, shop, inventoryMap, shopForInventory);
 	}
 
 	/**
@@ -300,15 +331,15 @@ public class AuctionInventoryManager {
 	 * 
 	 * @param shop
 	 *            the shop
-	 * @param sales
-	 *            the sales
 	 */
-	private void refreshBuyInventories(AuctionShop shop, List<AuctionSale> sales) {
+	private void refreshBuyInventories(AuctionShop shop) {
 		Map<Player, Inventory> invMap = buyInventories.get(shop);
 
 		if (invMap != null) {
-			for (Inventory inv : invMap.values()) {
-				loadBuyInventory(inv, sales);
+			for (Entry<Player, Inventory> pair : invMap.entrySet()) {
+				loadBuyInventory(pair.getValue(), shop.getSales());
+// TODO VIEWERS ---> this not needed, simplify everything with 1 inv per shop --> Bukkit.getPluginManager().callEvent(new InventoryEvent(pair.getValue().getViewers());
+//				reOpenSubMenu(pair.getKey(), pair.getValue(), shop, buyInventories, shopForBuyInventory);
 			}
 		}
 	}
@@ -330,15 +361,13 @@ public class AuctionInventoryManager {
 	 * 
 	 * @param shop
 	 *            the shop
-	 * @param sales
-	 *            the sales
 	 */
-	private void refreshSellInventories(AuctionShop shop, List<AuctionSale> sales) {
+	private void refreshSellInventories(AuctionShop shop) {
 		Map<Player, Inventory> invMap = sellInventories.get(shop);
 
 		if (invMap != null) {
-			for (Inventory inv : invMap.values()) {
-				loadSellInventory(inv, sales);
+			for (Entry<Player, Inventory> pair : invMap.entrySet()) {
+				loadSellInventory(pair.getValue(), shop.getSales(pair.getKey()));
 			}
 		}
 	}

@@ -101,7 +101,7 @@ public class AuctionShopManager {
 		}
 
 		AuctionSale sale = shop.saleForStack(saleStack);
-		double money = plugin.economy.getBalance(player.getName());
+		double money = plugin.economy.getBalance(player);
 
 		// Double check to avoid systematic synchronized
 		if (sale != null && money >= sale.getPrice()) {
@@ -109,7 +109,7 @@ public class AuctionShopManager {
 			synchronized (sale) {
 
 				sale = shop.saleForStack(saleStack);
-				money = plugin.economy.getBalance(player.getName());
+				money = plugin.economy.getBalance(player);
 				if (sale != null && money >= sale.getPrice()) {
 
 					shop.buy(player, sale);
@@ -117,13 +117,13 @@ public class AuctionShopManager {
 
 					// Notify both players
 					player.sendMessage(ChatColor.DARK_GREEN
-							+ MSG_BUY_NOTIFY.replace("%item%", item.toString()).replace("%player%", sale.getSeller())
+							+ MSG_BUY_NOTIFY.replace("%item%", item.toString()).replace("%player%", sale.getSeller().getName())
 									.replace("%price%", String.valueOf(sale.getPrice())));
 					player.sendMessage(ChatColor.BLUE
-							+ MSG_SELL_NOTIFY.replace("%item%", item.toString()).replace("%player%", sale.getSeller())
+							+ MSG_SELL_NOTIFY.replace("%item%", item.toString()).replace("%player%", sale.getSeller().getName())
 									.replace("%price%", String.valueOf(sale.getPrice())));
 
-					plugin.economy.withdrawPlayer(player.getName(), sale.getPrice());
+					plugin.economy.withdrawPlayer(player, sale.getPrice());
 					plugin.economy.depositPlayer(sale.getSeller(), sale.getPrice());
 
 					return sale;

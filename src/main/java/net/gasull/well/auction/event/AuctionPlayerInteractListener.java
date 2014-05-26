@@ -1,7 +1,5 @@
 package net.gasull.well.auction.event;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 
 import net.gasull.well.auction.WellAuction;
@@ -30,8 +28,6 @@ public class AuctionPlayerInteractListener implements Listener {
 	private WellAuction plugin;
 	private AuctionShopManager shopManager;
 	private AuctionInventoryManager inventoryManager;
-
-	private List<AuctionSale> TMP_SALES = new ArrayList<AuctionSale>();
 
 	public AuctionPlayerInteractListener(WellAuction plugin, AuctionShopManager shopManager, AuctionInventoryManager inventoryManager) {
 		this.plugin = plugin;
@@ -174,8 +170,7 @@ public class AuctionPlayerInteractListener implements Listener {
 
 				try {
 					AuctionSale sale = shopManager.buy(player, theItem);
-					TMP_SALES.remove(0); // TODO TODO TODO !!!!
-					ItemStack bought = inventoryManager.handleBuy(evt.getInventory(), player, sale, TMP_SALES);
+					ItemStack bought = inventoryManager.handleBuy(evt.getInventory(), player, sale);
 					evt.setCurrentItem(bought);
 					plugin.getLogger().info(player.getName() + " successfully bought " + bought);
 				} catch (AuctionShopException e) {
@@ -205,7 +200,7 @@ public class AuctionPlayerInteractListener implements Listener {
 				inventoryManager.openBuy(player, shop);
 				break;
 			case AuctionMenu.SALE_SLOT:
-				inventoryManager.openSell(player, shop, TMP_SALES);
+				inventoryManager.openSell(player, shop);
 				break;
 			default:
 				// Do nothing
@@ -238,8 +233,7 @@ public class AuctionPlayerInteractListener implements Listener {
 
 				try {
 					AuctionSale sale = shopManager.sell(player, theItem);
-					TMP_SALES.add(sale); // TODO TODO TODO !!!!
-					inventoryManager.handleSell(evt.getInventory(), sale.getShop(), TMP_SALES);
+					inventoryManager.handleSell(evt.getInventory(), sale.getShop(), player);
 					plugin.getLogger().info(player.getName() + " successfully put on sale " + theItem);
 					removeTheItem(evt, action);
 				} catch (AuctionShopException e) {
