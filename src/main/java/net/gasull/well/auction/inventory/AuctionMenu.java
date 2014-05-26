@@ -1,7 +1,7 @@
 package net.gasull.well.auction.inventory;
 
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.shop.AuctionType;
+import net.gasull.well.auction.shop.AuctionShop;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -38,8 +38,15 @@ public class AuctionMenu {
 		this.plugin = plugin;
 	}
 
+	/**
+	 * Gets the menu for type.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @return the menu for shop
+	 */
 	@SuppressWarnings("deprecation")
-	public ItemStack[] getMenuForType(AuctionType auctionType) {
+	public ItemStack[] getMenuForShop(AuctionShop shop) {
 
 		ItemStack[] contents = new ItemStack[MENU_SIZE];
 
@@ -72,7 +79,7 @@ public class AuctionMenu {
 				case 17:
 				case 19:
 				case 25:
-					contents[i] = new ItemStack(auctionType.getRefItem());
+					contents[i] = new ItemStack(shop.getRefItem());
 					break;
 				}
 			}

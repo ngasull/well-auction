@@ -3,7 +3,6 @@ package net.gasull.well.auction;
 import net.gasull.well.auction.event.AuctionPlayerInteractListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.shop.AuctionShopManager;
-import net.gasull.well.auction.shop.AuctionType;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -36,13 +35,6 @@ public class WellAuction extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(testListener, this);
 
 		wellConfig.save();
-	}
-
-	@Override
-	public void onDisable() {
-
-		// Clearing static mappings
-		AuctionType.clear();
 	}
 
 	/**

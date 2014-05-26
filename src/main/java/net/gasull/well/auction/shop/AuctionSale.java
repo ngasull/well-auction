@@ -13,8 +13,8 @@ public class AuctionSale {
 	/** The seller. */
 	private String seller;
 
-	/** The item type. */
-	private AuctionType type;
+	/** The item shop. */
+	private AuctionShop shop;
 
 	/** The item (stack). */
 	private ItemStack item;
@@ -30,14 +30,16 @@ public class AuctionSale {
 	 * 
 	 * @param seller
 	 *            the seller
+	 * @param shop
+	 *            the shop
 	 * @param stack
 	 *            the stack
 	 * @param price
 	 *            the price
 	 */
-	public AuctionSale(String seller, ItemStack stack, double price) {
+	public AuctionSale(String seller, AuctionShop shop, ItemStack stack, double price) {
 		this.seller = seller;
-		this.type = AuctionType.get(stack);
+		this.shop = shop;
 		this.item = stack;
 		this.price = price;
 		this.tradeStack = new ItemStack(stack);
@@ -73,12 +75,12 @@ public class AuctionSale {
 	}
 
 	/**
-	 * Gets the item type.
+	 * Gets the auction shop.
 	 * 
-	 * @return the item type
+	 * @return the auction shop
 	 */
-	public AuctionType getType() {
-		return type;
+	public AuctionShop getShop() {
+		return shop;
 	}
 
 	/**

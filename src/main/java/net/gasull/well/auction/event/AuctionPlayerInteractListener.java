@@ -12,7 +12,6 @@ import net.gasull.well.auction.shop.AuctionSale;
 import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
-import net.gasull.well.auction.shop.AuctionType;
 import net.gasull.well.auction.shop.ShopEntity;
 
 import org.bukkit.Material;
@@ -39,14 +38,14 @@ public class AuctionPlayerInteractListener implements Listener {
 		this.shopManager = shopManager;
 		this.inventoryManager = inventoryManager;
 
-		shopManager.registerEntityAsShop(AuctionType.get(new ItemStack(Material.STICK)), new ShopEntity(null));
+		shopManager.registerEntityAsShop(shopManager.getShop(new ItemStack(Material.STICK)), new ShopEntity(null));
 	}
 
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent evt) {
 
 		if (evt.getAction() == Action.LEFT_CLICK_AIR) {
-			inventoryManager.openMenu(evt.getPlayer(), AuctionType.get(new ItemStack(Material.STICK)));
+			inventoryManager.openMenu(evt.getPlayer(), shopManager.getShop(new ItemStack(Material.STICK)));
 		}
 	}
 
@@ -175,9 +174,8 @@ public class AuctionPlayerInteractListener implements Listener {
 
 				try {
 					AuctionSale sale = shopManager.buy(player, theItem);
-					AuctionShop shop = shopManager.getShop(sale.getType());
 					TMP_SALES.remove(0); // TODO TODO TODO !!!!
-					ItemStack bought = inventoryManager.handleBuy(evt.getInventory(), player, shop, sale, TMP_SALES);
+					ItemStack bought = inventoryManager.handleBuy(evt.getInventory(), player, sale, TMP_SALES);
 					evt.setCurrentItem(bought);
 					plugin.getLogger().info(player.getName() + " successfully bought " + bought);
 				} catch (AuctionShopException e) {
@@ -199,15 +197,15 @@ public class AuctionPlayerInteractListener implements Listener {
 		else {
 			evt.setCancelled(true);
 			ItemStack refItem = evt.getInventory().getItem(AuctionMenu.REFITEM_SLOT);
-			AuctionType type = AuctionType.get(refItem);
+			AuctionShop shop = shopManager.getShop(refItem);
 			Player player = (Player) evt.getWhoClicked();
 
 			switch (evt.getRawSlot()) {
 			case AuctionMenu.BUY_SLOT:
-				inventoryManager.openBuy(player, shopManager.getShop(type));
+				inventoryManager.openBuy(player, shop);
 				break;
 			case AuctionMenu.SALE_SLOT:
-				inventoryManager.openSell(player, type, TMP_SALES);
+				inventoryManager.openSell(player, shop, TMP_SALES);
 				break;
 			default:
 				// Do nothing
@@ -240,9 +238,8 @@ public class AuctionPlayerInteractListener implements Listener {
 
 				try {
 					AuctionSale sale = shopManager.sell(player, theItem);
-					AuctionShop shop = shopManager.getShop(sale.getType());
 					TMP_SALES.add(sale); // TODO TODO TODO !!!!
-					inventoryManager.handleSell(evt.getInventory(), shop, TMP_SALES);
+					inventoryManager.handleSell(evt.getInventory(), sale.getShop(), TMP_SALES);
 					plugin.getLogger().info(player.getName() + " successfully put on sale " + theItem);
 					removeTheItem(evt, action);
 				} catch (AuctionShopException e) {

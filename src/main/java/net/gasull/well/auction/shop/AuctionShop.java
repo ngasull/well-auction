@@ -13,8 +13,8 @@ import org.bukkit.inventory.ItemStack;
  */
 public class AuctionShop {
 
-	/** The auction type. */
-	private AuctionType type;
+	/** The ref item. */
+	private ItemStack refItem;
 
 	/** The registered shop-entities. */
 	private List<ShopEntity> registered = new ArrayList<ShopEntity>();
@@ -25,11 +25,11 @@ public class AuctionShop {
 	/**
 	 * Instantiates a new auction shop.
 	 * 
-	 * @param type
-	 *            the auction type
+	 * @param stack
+	 *            the reference item
 	 */
-	public AuctionShop(AuctionType type) {
-		this.type = type;
+	AuctionShop(ItemStack stack) {
+		this.refItem = stack;
 
 		// TODO Create its Inventory here
 	}
@@ -40,7 +40,7 @@ public class AuctionShop {
 	 * @param shopEntity
 	 *            the shop entity
 	 */
-	public void registerEntity(ShopEntity shopEntity) {
+	void registerEntity(ShopEntity shopEntity) {
 		registered.add(shopEntity);
 	}
 
@@ -55,19 +55,19 @@ public class AuctionShop {
 	 * @throws AuctionShopException
 	 *             the auction shop exception
 	 */
-	public AuctionSale sell(Player player, ItemStack item, double price) throws AuctionShopException {
+	AuctionSale sell(Player player, ItemStack item, double price) throws AuctionShopException {
 
 		if (price < 0) {
 			throw new AuctionShopException("Can't sell for a price less than 0");
 		}
 
-		AuctionSale sale = new AuctionSale(player.getName(), item, price);
+		AuctionSale sale = new AuctionSale(player.getName(), this, item, price);
 		sales.add(sale);
 
 		return sale;
 	}
 
-	public ItemStack buy(Player player, AuctionSale sale) throws AuctionShopException {
+	ItemStack buy(Player player, AuctionSale sale) throws AuctionShopException {
 		if (!sales.remove(sale)) {
 			throw new AuctionShopException("Sale not found but should have been");
 		}
@@ -96,12 +96,23 @@ public class AuctionShop {
 	}
 
 	/**
-	 * Gets the auction type.
+	 * Checks if the shop sells an item.
 	 * 
-	 * @return the auction type
+	 * @param item
+	 *            the item
+	 * @return the check
 	 */
-	public AuctionType getType() {
-		return type;
+	public boolean sells(ItemStack item) {
+		return refItem.equals(refItemFor(item));
+	}
+
+	/**
+	 * Gets the ref item.
+	 * 
+	 * @return the ref item
+	 */
+	public ItemStack getRefItem() {
+		return new ItemStack(refItem);
 	}
 
 	/**
@@ -111,5 +122,18 @@ public class AuctionShop {
 	 */
 	public List<AuctionSale> getSales() {
 		return sales;
+	}
+
+	/**
+	 * Provides the reference item for an item.
+	 * 
+	 * @param item
+	 *            the item
+	 * @return the reference item
+	 */
+	public static ItemStack refItemFor(ItemStack item) {
+		ItemStack refItem = new ItemStack(item);
+		refItem.setAmount(1);
+		return refItem;
 	}
 }

@@ -23,7 +23,7 @@ public class AuctionShopManager {
 	private Map<ShopEntity, AuctionShop> shopsByLocation = new HashMap<ShopEntity, AuctionShop>();
 
 	/** The registered shops by type. */
-	private Map<AuctionType, AuctionShop> shops = new HashMap<AuctionType, AuctionShop>();
+	private Map<ItemStack, AuctionShop> shops = new HashMap<ItemStack, AuctionShop>();
 
 	/** The sell notification message. */
 	private final String MSG_SELL_NOTIFY;
@@ -68,12 +68,10 @@ public class AuctionShopManager {
 	public AuctionSale sell(Player player, ItemStack theItem) throws AuctionShopException, WellPermissionException {
 
 		plugin.permission.can("sell items", player, "well.auction.sell");
-
-		AuctionType type = AuctionType.get(theItem);
-		AuctionShop shop = shops.get(type);
+		AuctionShop shop = getShop(theItem);
 
 		if (shop == null) {
-			throw new AuctionShopException("No registered shop for type " + type);
+			throw new AuctionShopException("No registered shop for item " + theItem);
 		}
 
 		// TODO Fetch amounts
@@ -96,7 +94,7 @@ public class AuctionShopManager {
 	public AuctionSale buy(Player player, ItemStack saleStack) throws AuctionShopException, WellPermissionException {
 
 		plugin.permission.can("buy items", player, "well.auction.buy");
-		AuctionShop shop = shops.get(AuctionType.get(saleStack));
+		AuctionShop shop = getShop(saleStack);
 
 		if (shop == null) {
 			throw new AuctionShopException("No registered shop for type " + saleStack.getType());
@@ -146,14 +144,23 @@ public class AuctionShopManager {
 	}
 
 	/**
-	 * Gets the shop for a given {@link AuctionType}.
+	 * Gets the shop from a given item.
 	 * 
 	 * @param type
 	 *            the auction type
 	 * @return the shop if exists for the associated material, null otherwise.
 	 */
-	public AuctionShop getShop(AuctionType type) {
-		return shops.get(type);
+	public AuctionShop getShop(ItemStack type) {
+		ItemStack refType = AuctionShop.refItemFor(type);
+		AuctionShop singletonShop = shops.get(refType);
+
+		if (singletonShop == null) {
+			AuctionShop shop = new AuctionShop(refType);
+			shops.put(refType, shop);
+			return shop;
+		} else {
+			return singletonShop;
+		}
 	}
 
 	/**
@@ -171,21 +178,14 @@ public class AuctionShopManager {
 	 * Registers a {@link ShopEntity} as a shop. Instantiates a new
 	 * {@link AuctionShop} if none exist for shopEntity.
 	 * 
-	 * @param type
-	 *            the type
+	 * @param shop
+	 *            the shop
 	 * @param shopEntity
 	 *            the shop entity
 	 * @return the auction shop
 	 */
-	public AuctionShop registerEntityAsShop(AuctionType type, ShopEntity shopEntity) {
-		AuctionShop shop = shopsByLocation.get(shopEntity);
-
-		if (shop == null) {
-			shop = new AuctionShop(type);
-			shops.put(type, shop);
-			shopsByLocation.put(shopEntity, shop);
-		}
-
+	public AuctionShop registerEntityAsShop(AuctionShop shop, ShopEntity shopEntity) {
+		shopsByLocation.put(shopEntity, shop);
 		shop.registerEntity(shopEntity);
 		return shop;
 	}
