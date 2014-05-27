@@ -8,6 +8,8 @@ import org.bukkit.inventory.ItemStack;
  */
 public class AuctionSale {
 
+	private static long TMP_INC = 0;
+	
 	/** The sale id. */
 	private long id;
 
@@ -39,6 +41,7 @@ public class AuctionSale {
 	 *            the price
 	 */
 	public AuctionSale(OfflinePlayer seller, AuctionShop shop, ItemStack stack, double price) {
+		this.id = TMP_INC++;
 		this.seller = seller;
 		this.shop = shop;
 		this.item = stack;

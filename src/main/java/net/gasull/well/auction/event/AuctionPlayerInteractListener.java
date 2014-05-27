@@ -147,7 +147,7 @@ public class AuctionPlayerInteractListener implements Listener {
 	@EventHandler
 	public void onInventoryClose(InventoryCloseEvent evt) {
 		if (inventoryManager.isAuctionInventory(evt.getInventory()) && evt.getPlayer() instanceof Player) {
-			inventoryManager.handleClose(evt.getInventory(), (Player) evt.getPlayer());
+			inventoryManager.handleClose(evt.getView(), (Player) evt.getPlayer());
 		}
 	}
 
@@ -161,32 +161,31 @@ public class AuctionPlayerInteractListener implements Listener {
 	 */
 	private void doBuyAction(final InventoryClickEvent evt, final AuctionInventoryAction action) {
 
+		// Operations manually managed
+		evt.setCancelled(true);
+
 		// If current view is the buy view
 		if (inventoryManager.isBuyInventory(evt.getInventory())) {
 			ItemStack theItem = theItem(evt, action);
 			Player player = (Player) evt.getWhoClicked();
 
-			if (inventoryManager.checkBuy(evt.getInventory(), player, theItem)) {
+			if (inventoryManager.checkBuy(evt.getView(), player, theItem)) {
 
 				try {
 					AuctionSale sale = shopManager.buy(player, theItem);
-					ItemStack bought = inventoryManager.handleBuy(evt.getInventory(), player, sale);
-					evt.setCurrentItem(bought);
+					ItemStack bought = inventoryManager.handleBuy(sale);
+					player.setItemOnCursor(bought);
 					plugin.getLogger().info(player.getName() + " successfully bought " + bought);
 				} catch (AuctionShopException e) {
-					evt.setCancelled(true);
 					plugin.getLogger().log(Level.WARNING, player.getName() + " couldn't buy " + theItem, e);
 				} catch (WellPermissionException e) {
-					evt.setCancelled(true);
 					plugin.getLogger().log(Level.INFO, player.getName() + " was not allowed to buy " + theItem);
 				}
-			} else {
-				evt.setCancelled(true);
 			}
 		}
 		// If current view is the sell view
 		else if (inventoryManager.isSellInventory(evt.getInventory())) {
-			evt.setCancelled(true);
+			// Do nothing
 		}
 		// Otherwise, it's the menu
 		else {
@@ -229,7 +228,7 @@ public class AuctionPlayerInteractListener implements Listener {
 			ItemStack theItem = theItem(evt, action);
 			Player player = (Player) evt.getWhoClicked();
 
-			if (inventoryManager.checkSell(evt.getInventory(), player, theItem)) {
+			if (inventoryManager.checkSell(evt.getView(), player, theItem)) {
 
 				try {
 					AuctionSale sale = shopManager.sell(player, theItem);
