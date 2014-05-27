@@ -44,16 +44,16 @@ public class WellPermissionManager {
 	/**
 	 * Determines if a player can do something.
 	 * 
-	 * @param thing
-	 *            an expression describing the thing to do
 	 * @param player
 	 *            the player
+	 * @param thing
+	 *            an expression describing the thing to do
 	 * @param key
 	 *            the permission key
 	 * @throws WellPermissionException
 	 *             the well permission exception
 	 */
-	public void can(String thing, Player player, String key) throws WellPermissionException {
+	public void can(Player player, String thing, String key) throws WellPermissionException {
 		if (!player.hasPermission(key)) {
 			player.sendMessage(ChatColor.DARK_RED + notAllowedMsg.replace("%thing%", thing));
 			throw new WellPermissionException();

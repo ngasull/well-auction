@@ -10,7 +10,6 @@ import net.gasull.well.auction.shop.AuctionSale;
 import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
-import net.gasull.well.auction.shop.ShopEntity;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -23,20 +22,50 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class AuctionPlayerInteractListener implements Listener {
+/**
+ * The listener interface for receiving auctionPlayerInteract events. The class
+ * that is interested in processing a auctionPlayerInteract event implements
+ * this interface, and the object created with that class is registered with a
+ * component using the component's
+ * <code>addAuctionPlayerInteractListener<code> method. When
+ * the auctionPlayerInteract event occurs, that object's appropriate
+ * method is invoked.
+ * 
+ * @see AuctionPlayerInteractEvent
+ */
+public class AuctionShopInventoryListener implements Listener {
 
+	/** The plugin. */
 	private WellAuction plugin;
+
+	/** The shop manager. */
 	private AuctionShopManager shopManager;
+
+	/** The inventory manager. */
 	private AuctionInventoryManager inventoryManager;
 
-	public AuctionPlayerInteractListener(WellAuction plugin, AuctionShopManager shopManager, AuctionInventoryManager inventoryManager) {
+	/**
+	 * Instantiates a new auction player interact listener.
+	 * 
+	 * @param plugin
+	 *            the plugin
+	 * @param shopManager
+	 *            the shop manager
+	 * @param inventoryManager
+	 *            the inventory manager
+	 */
+	public AuctionShopInventoryListener(WellAuction plugin, AuctionShopManager shopManager, AuctionInventoryManager inventoryManager) {
 		this.plugin = plugin;
 		this.shopManager = shopManager;
 		this.inventoryManager = inventoryManager;
-
-		shopManager.registerEntityAsShop(shopManager.getShop(new ItemStack(Material.STICK)), new ShopEntity(null));
 	}
 
+	/**
+	 * On player interact.
+	 * 
+	 * @param evt
+	 *            the evt
+	 */
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent evt) {
 

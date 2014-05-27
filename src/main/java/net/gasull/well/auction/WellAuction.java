@@ -1,10 +1,15 @@
 package net.gasull.well.auction;
 
-import net.gasull.well.auction.event.AuctionPlayerInteractListener;
+import net.gasull.well.auction.event.AuctionShopInventoryListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.shop.AuctionShopManager;
+import net.gasull.well.auction.shop.ShopEntity;
 import net.milkbowl.vault.economy.Economy;
 
+import org.bukkit.Material;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -17,7 +22,10 @@ public class WellAuction extends JavaPlugin {
 	private WellConfig wellConfig;
 
 	/** The permission. */
-	public WellPermissionManager permission;
+	private WellPermissionManager permission;
+
+	/** The command handler. */
+	private WellAuctionCommandHandler commandHandler;
 
 	/** The economy. */
 	public Economy economy;
@@ -28,13 +36,23 @@ public class WellAuction extends JavaPlugin {
 
 		wellConfig = new WellConfig(this, "well-auction.yml");
 		permission = new WellPermissionManager(this, wellConfig);
+		commandHandler = new WellAuctionCommandHandler(this);
 
 		AuctionShopManager shopManager = new AuctionShopManager(this);
 		AuctionInventoryManager inventoryManager = new AuctionInventoryManager(this);
-		AuctionPlayerInteractListener testListener = new AuctionPlayerInteractListener(this, shopManager, inventoryManager);
-		getServer().getPluginManager().registerEvents(testListener, this);
+
+		// Listeners
+		getServer().getPluginManager().registerEvents(new AuctionShopInventoryListener(this, shopManager, inventoryManager), this);
+
+		// Init for testing
+		shopManager.registerEntityAsShop(shopManager.getShop(new ItemStack(Material.STICK)), new ShopEntity(null));
 
 		wellConfig.save();
+	}
+
+	@Override
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		return commandHandler.handle(sender, cmd, label, args);
 	}
 
 	/**
@@ -44,6 +62,15 @@ public class WellAuction extends JavaPlugin {
 	 */
 	public WellConfig wellConfig() {
 		return wellConfig;
+	}
+
+	/**
+	 * Permission.
+	 * 
+	 * @return the well permission manager
+	 */
+	public WellPermissionManager permission() {
+		return permission;
 	}
 
 	/**

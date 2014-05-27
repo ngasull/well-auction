@@ -30,16 +30,16 @@ public class AuctionInventoryManager {
 	private AuctionMenu auctionMenu;
 
 	/** The sell inventories. */
-	private Map<AuctionShop, Map<Player, InventoryView>> sellInventories = new HashMap<AuctionShop, Map<Player, InventoryView>>();
+	private Map<AuctionShop, Map<Player, InventoryView>> sellInventories = new HashMap<>();
 
 	/** The buy inventories. */
-	private Map<AuctionShop, Map<Player, InventoryView>> buyInventories = new HashMap<AuctionShop, Map<Player, InventoryView>>();
+	private Map<AuctionShop, Map<Player, InventoryView>> buyInventories = new HashMap<>();
 
 	/** The shop for sell inventory. */
-	private Map<InventoryView, AuctionShop> shopForSellInventory = new HashMap<InventoryView, AuctionShop>();
+	private Map<InventoryView, AuctionShop> shopForSellInventory = new HashMap<>();
 
 	/** The shop for buy inventory. */
-	private Map<InventoryView, AuctionShop> shopForBuyInventory = new HashMap<InventoryView, AuctionShop>();
+	private Map<InventoryView, AuctionShop> shopForBuyInventory = new HashMap<>();
 
 	/** The auction inventory's title base (first part). */
 	private final String TITLE_BASE;

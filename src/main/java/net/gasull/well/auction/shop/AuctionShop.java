@@ -19,13 +19,13 @@ public class AuctionShop {
 	private ItemStack refItem;
 
 	/** The registered shop-entities. */
-	private List<ShopEntity> registered = new ArrayList<ShopEntity>();
+	private List<ShopEntity> registered = new ArrayList<>();
 
 	/** The sales. */
-	private List<AuctionSale> sales = new ArrayList<AuctionSale>();
+	private List<AuctionSale> sales = new ArrayList<>();
 
 	/** The player sales. */
-	private Map<UUID, List<AuctionSale>> playerSales = new HashMap<UUID, List<AuctionSale>>();
+	private Map<UUID, List<AuctionSale>> playerSales = new HashMap<>();
 
 	/**
 	 * Instantiates a new auction shop.

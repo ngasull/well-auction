@@ -67,7 +67,7 @@ public class AuctionShopManager {
 	 */
 	public AuctionSale sell(Player player, ItemStack theItem) throws AuctionShopException, WellPermissionException {
 
-		plugin.permission.can("sell items", player, "well.auction.sell");
+		plugin.permission().can(player, "sell items", "well.auction.sell");
 		AuctionShop shop = getShop(theItem);
 
 		if (shop == null) {
@@ -93,7 +93,7 @@ public class AuctionShopManager {
 	 */
 	public AuctionSale buy(Player player, ItemStack saleStack) throws AuctionShopException, WellPermissionException {
 
-		plugin.permission.can("buy items", player, "well.auction.buy");
+		plugin.permission().can(player, "buy items", "well.auction.buy");
 		AuctionShop shop = getShop(saleStack);
 
 		if (shop == null) {
