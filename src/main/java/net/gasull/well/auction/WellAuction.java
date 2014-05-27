@@ -1,9 +1,10 @@
 package net.gasull.well.auction;
 
+import net.gasull.well.auction.event.AuctionBlockShopListener;
 import net.gasull.well.auction.event.AuctionShopInventoryListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.shop.AuctionShopManager;
-import net.gasull.well.auction.shop.ShopEntity;
+import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.Material;
@@ -27,6 +28,12 @@ public class WellAuction extends JavaPlugin {
 	/** The command handler. */
 	private WellAuctionCommandHandler commandHandler;
 
+	/** The shop manager. */
+	private AuctionShopManager shopManager;
+
+	/** The inventory manager. */
+	private AuctionInventoryManager inventoryManager;
+
 	/** The economy. */
 	public Economy economy;
 
@@ -36,18 +43,21 @@ public class WellAuction extends JavaPlugin {
 
 		wellConfig = new WellConfig(this, "well-auction.yml");
 		permission = new WellPermissionManager(this, wellConfig);
-		commandHandler = new WellAuctionCommandHandler(this);
 
-		AuctionShopManager shopManager = new AuctionShopManager(this);
-		AuctionInventoryManager inventoryManager = new AuctionInventoryManager(this);
+		shopManager = new AuctionShopManager(this);
+		inventoryManager = new AuctionInventoryManager(this);
 
 		// Listeners
 		getServer().getPluginManager().registerEvents(new AuctionShopInventoryListener(this, shopManager, inventoryManager), this);
+		getServer().getPluginManager().registerEvents(new AuctionBlockShopListener(this, shopManager, inventoryManager), this);
 
-		// Init for testing
-		shopManager.registerEntityAsShop(shopManager.getShop(new ItemStack(Material.STICK)), new ShopEntity(null));
-
+		commandHandler = new WellAuctionCommandHandler(this, shopManager);
 		wellConfig.save();
+	}
+
+	@Override
+	public void onDisable() {
+		shopManager.clean();
 	}
 
 	@Override

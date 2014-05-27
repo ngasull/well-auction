@@ -11,15 +11,12 @@ import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
 
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -58,20 +55,6 @@ public class AuctionShopInventoryListener implements Listener {
 		this.plugin = plugin;
 		this.shopManager = shopManager;
 		this.inventoryManager = inventoryManager;
-	}
-
-	/**
-	 * On player interact.
-	 * 
-	 * @param evt
-	 *            the evt
-	 */
-	@EventHandler
-	public void onPlayerInteract(PlayerInteractEvent evt) {
-
-		if (evt.getAction() == Action.LEFT_CLICK_AIR) {
-			inventoryManager.openMenu(evt.getPlayer(), shopManager.getShop(new ItemStack(Material.STICK)));
-		}
 	}
 
 	/**

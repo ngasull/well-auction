@@ -5,6 +5,7 @@ import java.util.Map;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
+import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -186,7 +187,34 @@ public class AuctionShopManager {
 	 */
 	public AuctionShop registerEntityAsShop(AuctionShop shop, ShopEntity shopEntity) {
 		shopsByLocation.put(shopEntity, shop);
-		shop.registerEntity(shopEntity);
+		shop.registerEntity(plugin, shopEntity);
 		return shop;
+	}
+
+	/**
+	 * Register entity as shop.
+	 * 
+	 * @param refItem
+	 *            the ref item
+	 * @param shopEntity
+	 *            the shop entity
+	 * @return the auction shop
+	 */
+	public AuctionShop registerEntityAsShop(ItemStack refItem, ShopEntity shopEntity) {
+		return registerEntityAsShop(getShop(refItem), shopEntity);
+	}
+
+	public void unregister(ShopEntity shopEntity) {
+		shopEntity.unregister(plugin);
+		shopsByLocation.remove(shopEntity);
+	}
+
+	/**
+	 * Clean.
+	 */
+	public void clean() {
+		for (ShopEntity shopEntity : shopsByLocation.keySet()) {
+			unregister(shopEntity);
+		}
 	}
 }

@@ -6,14 +6,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import net.gasull.well.auction.shop.entity.ShopEntity;
+
 import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * The actual Auction Shop, shared all over the world for a given refItem
  * {@link ItemStack}.
  */
 public class AuctionShop {
+
+	/** The id. */
+	private UUID id = UUID.randomUUID();
 
 	/** The ref item. */
 	private ItemStack refItem;
@@ -40,10 +46,13 @@ public class AuctionShop {
 	/**
 	 * Register entity for it to "contain" the shop.
 	 * 
+	 * @param plugin
+	 *            the plugin
 	 * @param shopEntity
 	 *            the shop entity
 	 */
-	void registerEntity(ShopEntity shopEntity) {
+	void registerEntity(JavaPlugin plugin, ShopEntity shopEntity) {
+		shopEntity.register(plugin, this);
 		registered.add(shopEntity);
 	}
 
@@ -134,6 +143,15 @@ public class AuctionShop {
 	 */
 	public boolean sells(ItemStack item) {
 		return refItem.equals(refItemFor(item));
+	}
+
+	/**
+	 * Gets the unique id of the shop.
+	 * 
+	 * @return the id
+	 */
+	public UUID getId() {
+		return id;
 	}
 
 	/**
