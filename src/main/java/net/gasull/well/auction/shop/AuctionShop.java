@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.bukkit.OfflinePlayer;
@@ -20,19 +21,22 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class AuctionShop {
 
 	/** The id. */
-	private UUID id = UUID.randomUUID();
+	private final UUID id = UUID.randomUUID();
+
+	/** The plugin. */
+	private final WellAuction plugin;
 
 	/** The ref item. */
-	private ItemStack refItem;
+	private final ItemStack refItem;
 
 	/** The registered shop-entities. */
-	private List<ShopEntity> registered = new ArrayList<>();
+	private final List<ShopEntity> registered = new ArrayList<>();
 
 	/** The sales. */
-	private List<AuctionSale> sales = new ArrayList<>();
+	private final List<AuctionSale> sales = new ArrayList<>();
 
 	/** The auction player. */
-	private Map<UUID, AuctionPlayer> auctionPlayers = new HashMap<>();
+	private final Map<UUID, AuctionPlayer> auctionPlayers = new HashMap<>();
 
 	/**
 	 * Instantiates a new auction shop.
@@ -40,7 +44,8 @@ public class AuctionShop {
 	 * @param stack
 	 *            the reference item
 	 */
-	AuctionShop(ItemStack stack) {
+	AuctionShop(WellAuction plugin, ItemStack stack) {
+		this.plugin = plugin;
 		this.refItem = refItemFor(stack);
 	}
 
@@ -75,9 +80,12 @@ public class AuctionShop {
 			throw new AuctionShopException("Can't sell for a price less than 0");
 		}
 
-		AuctionSale sale = new AuctionSale(player, this, item);
-		sale.setPrice(defaultPrice);
+		AuctionSale sale = new AuctionSale(plugin, player, this, item);
 		player.getSales().add(sale);
+
+		if (defaultPrice != null) {
+			sale.setPrice(defaultPrice * sale.getItem().getAmount());
+		}
 
 		return sale;
 	}
@@ -224,6 +232,13 @@ public class AuctionShop {
 	 */
 	public static ItemStack refItemFor(ItemStack item) {
 		ItemStack refItem = new ItemStack(item);
+
+		if (refItem.hasItemMeta() && refItem.getItemMeta().getLore() != null && !refItem.getItemMeta().getLore().contains(AuctionSale.LORE_SEPARATOR)) {
+			// TODO HANDLE CASE WITH LORE_SEPARATOR IN ACTUAL LORE
+			// TODO HANDLE CASE WITH ITEMS HAVING ITEM META
+			refItem.setItemMeta(null);
+		}
+
 		refItem.setAmount(1);
 		return refItem;
 	}

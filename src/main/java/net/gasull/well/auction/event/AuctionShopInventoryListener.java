@@ -6,12 +6,12 @@ import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.inventory.AuctionMenu;
-import net.gasull.well.auction.shop.AuctionPlayer;
 import net.gasull.well.auction.shop.AuctionSale;
 import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -208,6 +208,11 @@ public class AuctionShopInventoryListener implements Listener {
 
 		// If current view is the buy view
 		if (inventoryManager.isBuyInventory(evt.getInventory())) {
+
+			if (player.getItemOnCursor() != null && player.getItemOnCursor().getType() != Material.AIR) {
+				return;
+			}
+
 			ItemStack theItem = theItem(evt, action);
 
 			if (inventoryManager.checkBuy(evt.getView(), player, theItem)) {
@@ -227,14 +232,15 @@ public class AuctionShopInventoryListener implements Listener {
 		else if (inventoryManager.isSellInventory(evt.getInventory())) {
 			if (evt.isShiftClick()) {
 				ItemStack theItem = theItem(evt, action);
-				AuctionPlayer auctionPlayer = shopManager.getShop(theItem).getAuctionPlayer(player);
+				AuctionSale sale = shopManager.getShop(theItem).getAuctionPlayer(player).getSale(theItem);
 
-				inventoryManager.openPriceSet(player, auctionPlayer.getSale(theItem));
+				if (sale != null) {
+					inventoryManager.openPriceSet(player, sale);
+				}
 			}
 		}
 		// Otherwise, it's the menu
 		else {
-			evt.setCancelled(true);
 			ItemStack refItem = evt.getInventory().getItem(AuctionMenu.REFITEM_SLOT);
 			AuctionShop shop = shopManager.getShop(refItem);
 

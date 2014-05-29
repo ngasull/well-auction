@@ -158,7 +158,7 @@ public class AuctionShopManager {
 		AuctionShop singletonShop = shops.get(refType);
 
 		if (singletonShop == null) {
-			AuctionShop shop = new AuctionShop(refType);
+			AuctionShop shop = new AuctionShop(plugin, refType);
 			shops.put(refType, shop);
 			return shop;
 		} else {

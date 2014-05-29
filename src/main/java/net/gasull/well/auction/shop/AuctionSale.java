@@ -1,6 +1,14 @@
 package net.gasull.well.auction.shop;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import net.gasull.well.auction.WellAuction;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  * The Class AuctionSale.
@@ -15,6 +23,9 @@ public class AuctionSale {
 	/** The seller. */
 	private AuctionPlayer seller;
 
+	/** The plugin. */
+	private WellAuction plugin;
+
 	/** The item shop. */
 	private AuctionShop shop;
 
@@ -27,9 +38,14 @@ public class AuctionSale {
 	/** The item displayed in shop. */
 	private ItemStack tradeStack;
 
+	/** The Constant LORE_SEPARATOR. */
+	public static final String LORE_SEPARATOR = "====================";
+
 	/**
 	 * Instantiates a new auction sale.
 	 * 
+	 * @param plugin
+	 *            the plugin
 	 * @param seller
 	 *            the seller
 	 * @param shop
@@ -39,14 +55,16 @@ public class AuctionSale {
 	 * @param price
 	 *            the price
 	 */
-	public AuctionSale(AuctionPlayer seller, AuctionShop shop, ItemStack stack, double price) {
-		this(seller, shop, stack);
+	public AuctionSale(WellAuction plugin, AuctionPlayer seller, AuctionShop shop, ItemStack stack, double price) {
+		this(plugin, seller, shop, stack);
 		setPrice(price);
 	}
 
 	/**
 	 * Instantiates a new auction sale.
 	 * 
+	 * @param plugin
+	 *            the plugin
 	 * @param seller
 	 *            the seller
 	 * @param shop
@@ -54,13 +72,14 @@ public class AuctionSale {
 	 * @param stack
 	 *            the stack
 	 */
-	public AuctionSale(AuctionPlayer seller, AuctionShop shop, ItemStack stack) {
+	public AuctionSale(WellAuction plugin, AuctionPlayer seller, AuctionShop shop, ItemStack stack) {
+		this.plugin = plugin;
 		this.id = TMP_INC++;
 		this.seller = seller;
 		this.shop = shop;
 		this.item = stack;
 
-		this.tradeStack = new ItemStack(stack);
+		refresh();
 	}
 
 	/**
@@ -127,6 +146,7 @@ public class AuctionSale {
 	 */
 	public void setPrice(Double price) {
 		this.price = price;
+		refresh();
 
 		if (shop.getSales().contains(this)) {
 			shop.getSales().remove(this);
@@ -144,6 +164,41 @@ public class AuctionSale {
 	 */
 	public ItemStack getTradeStack() {
 		return tradeStack;
+	}
+
+	/**
+	 * Refresh the displayed stack.
+	 */
+	private void refresh() {
+		this.tradeStack = new ItemStack(this.item);
+		ItemMeta realMeta = this.tradeStack.getItemMeta();
+		ItemMeta meta = this.item.getItemMeta();
+
+		if (!this.tradeStack.hasItemMeta()) {
+			meta = Bukkit.getItemFactory().getItemMeta(this.tradeStack.getType());
+		}
+
+		List<String> desc;
+		if (this.tradeStack.hasItemMeta() && realMeta.getLore() != null && !realMeta.getLore().isEmpty()) {
+			desc = realMeta.getLore();
+			desc.add(LORE_SEPARATOR);
+		} else {
+			desc = new ArrayList<>();
+		}
+
+		desc.add(ChatColor.DARK_GRAY + "#" + id);
+
+		if (this.price == null) {
+			desc.add(this.plugin.wellConfig().getString("lang.shop.item.noPrice", "No price set up yet!"));
+		} else {
+			desc.add(ChatColor.GREEN + this.plugin.economy().format(this.price));
+		}
+
+		desc.add(ChatColor.BLUE
+				+ this.plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%").replace("%player%", this.seller.getPlayer().getName()));
+
+		meta.setLore(desc);
+		this.tradeStack.setItemMeta(meta);
 	}
 
 	@Override
