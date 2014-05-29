@@ -1,6 +1,5 @@
 package net.gasull.well.auction.shop;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -9,12 +8,12 @@ import org.bukkit.inventory.ItemStack;
 public class AuctionSale {
 
 	private static long TMP_INC = 0;
-	
+
 	/** The sale id. */
 	private long id;
 
 	/** The seller. */
-	private OfflinePlayer seller;
+	private AuctionPlayer seller;
 
 	/** The item shop. */
 	private AuctionShop shop;
@@ -23,7 +22,7 @@ public class AuctionSale {
 	private ItemStack item;
 
 	/** The price. */
-	private double price;
+	private Double price;
 
 	/** The item displayed in shop. */
 	private ItemStack tradeStack;
@@ -40,12 +39,27 @@ public class AuctionSale {
 	 * @param price
 	 *            the price
 	 */
-	public AuctionSale(OfflinePlayer seller, AuctionShop shop, ItemStack stack, double price) {
+	public AuctionSale(AuctionPlayer seller, AuctionShop shop, ItemStack stack, double price) {
+		this(seller, shop, stack);
+		setPrice(price);
+	}
+
+	/**
+	 * Instantiates a new auction sale.
+	 * 
+	 * @param seller
+	 *            the seller
+	 * @param shop
+	 *            the shop
+	 * @param stack
+	 *            the stack
+	 */
+	public AuctionSale(AuctionPlayer seller, AuctionShop shop, ItemStack stack) {
 		this.id = TMP_INC++;
 		this.seller = seller;
 		this.shop = shop;
 		this.item = stack;
-		this.price = price;
+
 		this.tradeStack = new ItemStack(stack);
 	}
 
@@ -74,7 +88,7 @@ public class AuctionSale {
 	 * 
 	 * @return the seller
 	 */
-	public OfflinePlayer getSeller() {
+	public AuctionPlayer getSeller() {
 		return seller;
 	}
 
@@ -103,6 +117,24 @@ public class AuctionSale {
 	 */
 	public double getPrice() {
 		return price;
+	}
+
+	/**
+	 * Sets the price.
+	 * 
+	 * @param price
+	 *            the new price
+	 */
+	public void setPrice(Double price) {
+		this.price = price;
+
+		if (shop.getSales().contains(this)) {
+			shop.getSales().remove(this);
+		}
+
+		if (price != null && price >= 0) {
+			shop.getSales().add(this);
+		}
 	}
 
 	/**

@@ -1,6 +1,8 @@
 package net.gasull.well.auction;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopManager;
@@ -42,6 +44,9 @@ public class WellAuctionCommandHandler {
 	/** Shop creation success message. */
 	private final String SUCC_CREATION;
 
+	/** Shop listing message for no shops registered. */
+	private final String LIST_NO_SHOP;
+
 	/**
 	 * Instantiates a new well auction command handler.
 	 * 
@@ -58,8 +63,8 @@ public class WellAuctionCommandHandler {
 		this.ERR_NO_BLOCK_SEEN = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.notBlockSeen", "You must be looking at a block");
 		this.ERR_CANT_SELL_AIR = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.cantSellAir", "You can't put air on sale!");
 
-		this.SUCC_CREATION = ChatColor.DARK_RED
-				+ plugin.wellConfig().getString("lang.command.creation.success", "Successfully created an AuctionShop for %item%");
+		this.SUCC_CREATION = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.creation.success", "Successfully created an AuctionShop for %item%");
+		this.LIST_NO_SHOP = ChatColor.YELLOW + plugin.wellConfig().getString("lang.command.list.noShop", "No AuctionShop registered yet");
 	}
 
 	/**
@@ -87,6 +92,9 @@ public class WellAuctionCommandHandler {
 				switch (args[0]) {
 				case "create":
 					handleCreate(sender, subArgs);
+					break;
+				case "list":
+					handleList(sender);
 					break;
 				default:
 					sender.sendMessage(ERR_UNKNOWN_CMD);
@@ -159,5 +167,38 @@ public class WellAuctionCommandHandler {
 
 		AuctionShop shop = shopManager.registerEntityAsShop(refItem, shopEntity);
 		player.sendMessage(SUCC_CREATION.replace("%item%", shop.getRefItem().toString()));
+	}
+
+	/**
+	 * List Auction Houses to the sender.
+	 * 
+	 * @param sender
+	 *            the sender
+	 */
+	private void handleList(CommandSender sender) {
+		StringBuilder msg;
+		Collection<AuctionShop> shops = shopManager.getShops();
+
+		if (shops.isEmpty()) {
+			sender.sendMessage(LIST_NO_SHOP);
+		} else {
+			for (AuctionShop shop : shops) {
+				msg = new StringBuilder().append(ChatColor.YELLOW).append(shop).append(": ").append("\n");
+
+				int i = 0;
+				String[] alterColor = new String[] { ChatColor.AQUA.toString(), ChatColor.BLUE.toString() };
+				List<ShopEntity> registeredEntities = shop.getRegistered();
+
+				for (ShopEntity shopEntity : registeredEntities) {
+					msg.append(alterColor[i % 2]).append(shopEntity);
+
+					if (++i < registeredEntities.size()) {
+						msg.append(", ");
+					}
+				}
+
+				sender.sendMessage(msg.toString());
+			}
+		}
 	}
 }

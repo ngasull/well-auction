@@ -13,6 +13,7 @@ import net.gasull.well.auction.shop.AuctionSale;
 import net.gasull.well.auction.shop.AuctionShop;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
@@ -41,17 +42,35 @@ public class AuctionInventoryManager {
 	/** The shop for buy inventory. */
 	private Map<InventoryView, AuctionShop> shopForBuyInventory = new HashMap<>();
 
+	/** The scheduled timouts for price setting tasks by player. */
+	private Map<Player, AuctionSetPriceCancelTask> setPriceTasks = new HashMap<>();
+
 	/** The auction inventory's title base (first part). */
-	private final String TITLE_BASE;
+	private final String titleBase;
 
 	/** The sell sub view title. */
-	private final String TITLE_SELL;
+	private final String titleSell;
 
 	/** The buy sub view title. */
-	private final String TITLE_BUY;
+	private final String titleBuy;
 
 	/** The separator between title base and sub view title. */
 	private static final String TITLE_SEPARATOR = " - ";
+
+	/** The message for set price please. */
+	private final String msgSetPricePlease;
+
+	/** The message for set price success. */
+	private final String msgSetPriceSuccess;
+
+	/** The message set invalid price. */
+	private final String msgSetPriceInvalid;
+
+	/** The message set price canceled. */
+	private final String msgSetPriceCanceled;
+
+	/** The set price delay. */
+	private final long setPriceTimeout;
 
 	/**
 	 * Instantiates a new auction inventory manager.
@@ -62,9 +81,15 @@ public class AuctionInventoryManager {
 	public AuctionInventoryManager(WellAuction plugin) {
 		this.plugin = plugin;
 		this.auctionMenu = new AuctionMenu(plugin);
-		this.TITLE_BASE = plugin.wellConfig().getString("inventory.menu.title", "Auction House");
-		this.TITLE_SELL = TITLE_BASE + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.sell.title", "Sell");
-		this.TITLE_BUY = TITLE_BASE + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.buy.title", "Buy");
+		this.titleBase = plugin.wellConfig().getString("inventory.menu.title", "Auction House");
+		this.titleSell = titleBase + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.sell.title", "Sell");
+		this.titleBuy = titleBase + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.buy.title", "Buy");
+		this.setPriceTimeout = plugin.wellConfig().getLong("player.setPrice.timeout", 140);
+
+		this.msgSetPricePlease = plugin.wellConfig().getString("lang.player.setPrice.please", "Please type in the chat the price you want to sell %item% at");
+		this.msgSetPriceSuccess = plugin.wellConfig().getString("lang.player.setPrice.success", "You're now selling %item% at %price%");
+		this.msgSetPriceInvalid = plugin.wellConfig().getString("lang.player.setPrice.invalid", "Invalid price, operation canceled");
+		this.msgSetPriceCanceled = plugin.wellConfig().getString("lang.player.setPrice.canceled", "Price set canceled");
 	}
 
 	/**
@@ -76,9 +101,61 @@ public class AuctionInventoryManager {
 	 *            the auction shop
 	 */
 	public void openMenu(Player player, AuctionShop shop) {
-		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, TITLE_BASE);
+		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, titleBase);
 		inv.setContents(auctionMenu.getMenuForShop(shop));
 		player.openInventory(inv);
+	}
+
+	/**
+	 * Open default price setting procedure.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param shop
+	 *            the shop
+	 */
+	public void openDefaultPriceSet(Player player, AuctionShop shop) {
+
+		// Cancel any pending task for the player
+		AuctionSetPriceCancelTask task = setPriceTasks.remove(player);
+		if (task != null) {
+			Bukkit.getScheduler().cancelTask(task.id);
+		}
+
+		// Create the new task
+		task = new AuctionSetPriceCancelTask(player, shop);
+		int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, task, setPriceTimeout);
+		task.id = taskId;
+
+		setPriceTasks.put(player, task);
+		player.closeInventory();
+		player.sendMessage(msgSetPricePlease.replace("%item%", shop.getRefItem().toString()));
+	}
+
+	/**
+	 * Open price setting procedure.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param sale
+	 *            the sale
+	 */
+	public void openPriceSet(Player player, AuctionSale sale) {
+
+		// Cancel any pending task for the player
+		AuctionSetPriceCancelTask task = setPriceTasks.remove(player);
+		if (task != null) {
+			Bukkit.getScheduler().cancelTask(task.id);
+		}
+
+		// Create the new task
+		task = new AuctionSetPriceCancelTask(player, sale);
+		int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, task, setPriceTimeout);
+		task.id = taskId;
+
+		setPriceTasks.put(player, task);
+		player.closeInventory();
+		player.sendMessage(msgSetPricePlease.replace("%item%", sale.getItem().toString()));
 	}
 
 	/**
@@ -90,7 +167,7 @@ public class AuctionInventoryManager {
 	 *            the auction shop
 	 */
 	public void openSell(Player player, AuctionShop shop) {
-		Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.SIZE, TITLE_SELL);
+		Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.SIZE, titleSell);
 		loadSellInventory(sellInv, shop.getSales(player));
 		openSubMenu(player, sellInv, shop, sellInventories, shopForSellInventory);
 	}
@@ -104,7 +181,7 @@ public class AuctionInventoryManager {
 	 *            the shop
 	 */
 	public void openBuy(Player player, AuctionShop shop) {
-		Inventory buyInv = Bukkit.createInventory(player, AuctionBuyInventory.SIZE, TITLE_BUY);
+		Inventory buyInv = Bukkit.createInventory(player, AuctionBuyInventory.SIZE, titleBuy);
 		loadBuyInventory(buyInv, shop.getSales());
 		openSubMenu(player, buyInv, shop, buyInventories, shopForBuyInventory);
 	}
@@ -172,6 +249,67 @@ public class AuctionInventoryManager {
 	}
 
 	/**
+	 * Handle price set.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param message
+	 *            the message
+	 * @return true, if a price set actually has been handled.
+	 */
+	public boolean handlePriceSet(Player player, String message) {
+		AuctionSetPriceCancelTask task = setPriceTasks.remove(player);
+
+		if (task != null) {
+			Bukkit.getScheduler().cancelTask(task.id);
+			Double price = checkPriceSet(player, message);
+
+			AuctionShop shop = task.getShop();
+			if (price != null) {
+				if (task.sale == null) {
+					shop.setDefaultPrice(player, price);
+				} else {
+					task.sale.setPrice(price);
+				}
+
+				refreshBuyInventories(task.shop);
+				player.sendMessage(ChatColor.BLUE
+						+ msgSetPriceSuccess.replace("%item%", shop.getRefItem().toString()).replace("%price%", plugin.economy().format(price)));
+			}
+
+			reOpenSell(task);
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Cancel price set.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param reopenIfPossible
+	 *            reopen sell inventory if possible
+	 * @return true, if successful
+	 */
+	public boolean cancelPriceSet(Player player, boolean reopenIfPossible) {
+		AuctionSetPriceCancelTask task = setPriceTasks.remove(player);
+
+		if (task != null) {
+			Bukkit.getScheduler().cancelTask(task.id);
+
+			if (reopenIfPossible) {
+				reOpenSell(task);
+			}
+
+			player.sendMessage(ChatColor.YELLOW + msgSetPriceCanceled);
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Properly closes the inventory.
 	 * 
 	 * @param inventoryView
@@ -200,7 +338,7 @@ public class AuctionInventoryManager {
 	 * @return true, if is auction inventory
 	 */
 	public boolean isAuctionInventory(Inventory inventory) {
-		return inventory.getTitle().startsWith(TITLE_BASE);
+		return inventory.getTitle().startsWith(titleBase);
 	}
 
 	/**
@@ -211,7 +349,7 @@ public class AuctionInventoryManager {
 	 * @return true, if is auction inventory menu
 	 */
 	public boolean isMenuInventory(Inventory inventory) {
-		return inventory.getTitle().equals(TITLE_BASE);
+		return inventory.getTitle().equals(titleBase);
 	}
 
 	/**
@@ -222,7 +360,7 @@ public class AuctionInventoryManager {
 	 * @return true, if is auction inventory sell
 	 */
 	public boolean isSellInventory(Inventory inventory) {
-		return inventory.getTitle().equals(TITLE_SELL);
+		return inventory.getTitle().equals(titleSell);
 	}
 
 	/**
@@ -233,7 +371,7 @@ public class AuctionInventoryManager {
 	 * @return true, if is auction inventory buy
 	 */
 	public boolean isBuyInventory(Inventory inventory) {
-		return inventory.getTitle().equals(TITLE_BUY);
+		return inventory.getTitle().equals(titleBuy);
 	}
 
 	/**
@@ -348,11 +486,101 @@ public class AuctionInventoryManager {
 	}
 
 	/**
+	 * Check price set.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param price
+	 *            the price
+	 * @return the double
+	 */
+	private Double checkPriceSet(Player player, String price) {
+		try {
+			return Double.valueOf(Integer.valueOf(price).doubleValue());
+		} catch (NumberFormatException e) {
+			player.sendMessage(ChatColor.DARK_RED + msgSetPriceInvalid);
+			return null;
+		}
+	}
+
+	/**
+	 * Reopen after price set.
+	 * 
+	 * @param task
+	 *            the task
+	 */
+	private void reOpenSell(AuctionSetPriceCancelTask task) {
+		openSell(task.player, task.getShop());
+	}
+
+	/**
 	 * Gets the auction menu template.
 	 * 
 	 * @return the menu
 	 */
 	public AuctionMenu getMenu() {
 		return auctionMenu;
+	}
+
+	/**
+	 * The task that cancels a registered action to set price from player's
+	 * chat.
+	 */
+	public class AuctionSetPriceCancelTask implements Runnable {
+
+		/** The task id. */
+		private int id;
+
+		/** The player. */
+		private Player player;
+
+		/** The shop. */
+		private AuctionShop shop;
+
+		/** The sale. */
+		private AuctionSale sale;
+
+		/**
+		 * Instantiates a new auction set price cancel task.
+		 * 
+		 * @param player
+		 *            the player
+		 * @param shop
+		 *            the shop
+		 */
+		private AuctionSetPriceCancelTask(Player player, AuctionShop shop) {
+			this.player = player;
+			this.shop = shop;
+		}
+
+		/**
+		 * Instantiates a new auction set price cancel task.
+		 * 
+		 * @param player
+		 *            the player
+		 * @param sale
+		 *            the sale
+		 */
+		private AuctionSetPriceCancelTask(Player player, AuctionSale sale) {
+			this.player = player;
+			this.sale = sale;
+		}
+
+		@Override
+		public void run() {
+			if (setPriceTasks.remove(player) != null) {
+				reOpenSell(this);
+				player.sendMessage(ChatColor.YELLOW + msgSetPriceCanceled);
+			}
+		}
+
+		/**
+		 * Gets the shop.
+		 * 
+		 * @return the shop
+		 */
+		private AuctionShop getShop() {
+			return shop == null ? sale.getShop() : shop;
+		}
 	}
 }

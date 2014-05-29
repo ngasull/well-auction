@@ -9,6 +9,7 @@ import java.util.UUID;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -30,8 +31,8 @@ public class AuctionShop {
 	/** The sales. */
 	private List<AuctionSale> sales = new ArrayList<>();
 
-	/** The player sales. */
-	private Map<UUID, List<AuctionSale>> playerSales = new HashMap<>();
+	/** The auction player. */
+	private Map<UUID, AuctionPlayer> auctionPlayers = new HashMap<>();
 
 	/**
 	 * Instantiates a new auction shop.
@@ -67,22 +68,17 @@ public class AuctionShop {
 	 * @throws AuctionShopException
 	 *             the auction shop exception
 	 */
-	AuctionSale sell(OfflinePlayer player, ItemStack item, double price) throws AuctionShopException {
+	AuctionSale sell(AuctionPlayer player, ItemStack item) throws AuctionShopException {
 
-		if (price < 0) {
+		Double defaultPrice = player.getDefaultPrices().get(this);
+		if (defaultPrice != null && defaultPrice < 0) {
 			throw new AuctionShopException("Can't sell for a price less than 0");
 		}
 
-		AuctionSale sale = new AuctionSale(player, this, item, price);
-		sales.add(sale);
+		AuctionSale sale = new AuctionSale(player, this, item);
+		sale.setPrice(defaultPrice);
+		player.getSales().add(sale);
 
-		List<AuctionSale> pSales = playerSales.get(player.getUniqueId());
-		if (pSales == null) {
-			pSales = new ArrayList<AuctionSale>();
-			playerSales.put(player.getUniqueId(), pSales);
-		}
-
-		pSales.add(sale);
 		return sale;
 	}
 
@@ -102,14 +98,8 @@ public class AuctionShop {
 			throw new AuctionShopException("Sale not found but should have been");
 		}
 
-		List<AuctionSale> pSales = playerSales.get(player.getUniqueId());
-		if (pSales != null) {
-			pSales.remove(sale);
-
-			if (pSales.size() == 0) {
-				playerSales.remove(player.getUniqueId());
-			}
-		}
+		sales.remove(sale);
+		getAuctionPlayer(player).getSales().remove(sale);
 
 		return sale.getItem();
 	}
@@ -146,6 +136,18 @@ public class AuctionShop {
 	}
 
 	/**
+	 * Sets the new sale price for a player.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param price
+	 *            the price
+	 */
+	public void setDefaultPrice(Player player, double price) {
+		getAuctionPlayer(player).setDefaultPrice(this, price);
+	}
+
+	/**
 	 * Gets the unique id of the shop.
 	 * 
 	 * @return the id
@@ -164,6 +166,15 @@ public class AuctionShop {
 	}
 
 	/**
+	 * Gets the registered shop entities for this shop.
+	 * 
+	 * @return the shop entities
+	 */
+	public List<ShopEntity> getRegistered() {
+		return registered;
+	}
+
+	/**
 	 * Gets the sales.
 	 * 
 	 * @return the sales
@@ -178,7 +189,30 @@ public class AuctionShop {
 	 * @return the sales
 	 */
 	public List<AuctionSale> getSales(OfflinePlayer player) {
-		return playerSales.get(player.getUniqueId());
+		return getAuctionPlayer(player).getSales();
+	}
+
+	/**
+	 * Gets the auction player, creating it if unknown.
+	 * 
+	 * @param player
+	 *            the player
+	 * @return the auction player
+	 */
+	public AuctionPlayer getAuctionPlayer(OfflinePlayer player) {
+		AuctionPlayer auctionPlayer = auctionPlayers.get(player.getUniqueId());
+
+		if (auctionPlayer == null) {
+			auctionPlayer = new AuctionPlayer(player);
+			auctionPlayers.put(player.getUniqueId(), auctionPlayer);
+		}
+
+		return auctionPlayer;
+	}
+
+	@Override
+	public String toString() {
+		return "AuctionShop [id=" + id + ", refItem=" + refItem + "]";
 	}
 
 	/**

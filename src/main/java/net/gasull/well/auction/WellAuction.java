@@ -4,13 +4,10 @@ import net.gasull.well.auction.event.AuctionBlockShopListener;
 import net.gasull.well.auction.event.AuctionShopInventoryListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.shop.AuctionShopManager;
-import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.milkbowl.vault.economy.Economy;
 
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -35,7 +32,7 @@ public class WellAuction extends JavaPlugin {
 	private AuctionInventoryManager inventoryManager;
 
 	/** The economy. */
-	public Economy economy;
+	private Economy economy;
 
 	@Override
 	public void onEnable() {
@@ -81,6 +78,15 @@ public class WellAuction extends JavaPlugin {
 	 */
 	public WellPermissionManager permission() {
 		return permission;
+	}
+
+	/**
+	 * Economy.
+	 * 
+	 * @return Vault's {@link Economy}
+	 */
+	public Economy economy() {
+		return economy;
 	}
 
 	/**

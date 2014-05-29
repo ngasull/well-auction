@@ -6,6 +6,7 @@ import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.inventory.AuctionMenu;
+import net.gasull.well.auction.shop.AuctionPlayer;
 import net.gasull.well.auction.shop.AuctionSale;
 import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopException;
@@ -17,6 +18,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -164,6 +167,32 @@ public class AuctionShopInventoryListener implements Listener {
 	}
 
 	/**
+	 * On chat message, to handle price sets.
+	 * 
+	 * @param evt
+	 *            the evt
+	 */
+	@EventHandler(ignoreCancelled = true)
+	public void onChatMessage(AsyncPlayerChatEvent evt) {
+		if (inventoryManager.handlePriceSet(evt.getPlayer(), evt.getMessage())) {
+			evt.setCancelled(true);
+		}
+	}
+
+	/**
+	 * On inventory open, to cancel price sets.
+	 * 
+	 * @param evt
+	 *            the evt
+	 */
+	@EventHandler
+	public void onInventoryOpen(InventoryOpenEvent evt) {
+		if (evt.getPlayer() instanceof Player) {
+			inventoryManager.cancelPriceSet((Player) evt.getPlayer(), false);
+		}
+	}
+
+	/**
 	 * Do buy action (of the type auction shop to player's inventory).
 	 * 
 	 * @param evt
@@ -175,14 +204,13 @@ public class AuctionShopInventoryListener implements Listener {
 
 		// Operations manually managed
 		evt.setCancelled(true);
+		Player player = (Player) evt.getWhoClicked();
 
 		// If current view is the buy view
 		if (inventoryManager.isBuyInventory(evt.getInventory())) {
 			ItemStack theItem = theItem(evt, action);
-			Player player = (Player) evt.getWhoClicked();
 
 			if (inventoryManager.checkBuy(evt.getView(), player, theItem)) {
-
 				try {
 					AuctionSale sale = shopManager.buy(player, theItem);
 					ItemStack bought = inventoryManager.handleBuy(sale);
@@ -197,21 +225,29 @@ public class AuctionShopInventoryListener implements Listener {
 		}
 		// If current view is the sell view
 		else if (inventoryManager.isSellInventory(evt.getInventory())) {
-			// Do nothing
+			if (evt.isShiftClick()) {
+				ItemStack theItem = theItem(evt, action);
+				AuctionPlayer auctionPlayer = shopManager.getShop(theItem).getAuctionPlayer(player);
+
+				inventoryManager.openPriceSet(player, auctionPlayer.getSale(theItem));
+			}
 		}
 		// Otherwise, it's the menu
 		else {
 			evt.setCancelled(true);
 			ItemStack refItem = evt.getInventory().getItem(AuctionMenu.REFITEM_SLOT);
 			AuctionShop shop = shopManager.getShop(refItem);
-			Player player = (Player) evt.getWhoClicked();
 
 			switch (evt.getRawSlot()) {
 			case AuctionMenu.BUY_SLOT:
 				inventoryManager.openBuy(player, shop);
 				break;
 			case AuctionMenu.SALE_SLOT:
-				inventoryManager.openSell(player, shop);
+				if (evt.isShiftClick()) {
+					inventoryManager.openDefaultPriceSet(player, shop);
+				} else {
+					inventoryManager.openSell(player, shop);
+				}
 				break;
 			default:
 				// Do nothing

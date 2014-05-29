@@ -60,4 +60,10 @@ public class BlockShopEntity extends ShopEntity {
 	public AuctionShop getShop() {
 		return shop;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s, x:%.0f z:%.0f y:%.0f (world %s)", block.getType(), block.getLocation().getX(), block.getLocation().getZ(), block.getLocation()
+				.getY(), block.getWorld().getName());
+	}
 }

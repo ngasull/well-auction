@@ -1,5 +1,6 @@
 package net.gasull.well.auction.shop;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,6 +10,7 @@ import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -75,8 +77,8 @@ public class AuctionShopManager {
 			throw new AuctionShopException("No registered shop for item " + theItem);
 		}
 
-		// TODO Fetch amounts
-		return shop.sell(player, theItem, 200);
+		AuctionPlayer seller = shop.getAuctionPlayer(player);
+		return shop.sell(seller, theItem);
 	}
 
 	/**
@@ -102,7 +104,7 @@ public class AuctionShopManager {
 		}
 
 		AuctionSale sale = shop.saleForStack(saleStack);
-		double money = plugin.economy.getBalance(player);
+		double money = plugin.economy().getBalance(player);
 
 		// Double check to avoid systematic synchronized
 		if (sale != null && money >= sale.getPrice()) {
@@ -110,22 +112,22 @@ public class AuctionShopManager {
 			synchronized (sale) {
 
 				sale = shop.saleForStack(saleStack);
-				money = plugin.economy.getBalance(player);
+				money = plugin.economy().getBalance(player);
 				if (sale != null && money >= sale.getPrice()) {
 
 					shop.buy(player, sale);
 					ItemStack item = sale.getItem();
 
 					// Notify both players
+					OfflinePlayer seller = sale.getSeller().getPlayer();
+					String priceStr = plugin.economy().format(sale.getPrice());
 					player.sendMessage(ChatColor.DARK_GREEN
-							+ MSG_BUY_NOTIFY.replace("%item%", item.toString()).replace("%player%", sale.getSeller().getName())
-									.replace("%price%", String.valueOf(sale.getPrice())));
+							+ MSG_BUY_NOTIFY.replace("%item%", item.toString()).replace("%player%", seller.getName()).replace("%price%", priceStr));
 					player.sendMessage(ChatColor.BLUE
-							+ MSG_SELL_NOTIFY.replace("%item%", item.toString()).replace("%player%", sale.getSeller().getName())
-									.replace("%price%", String.valueOf(sale.getPrice())));
+							+ MSG_SELL_NOTIFY.replace("%item%", item.toString()).replace("%player%", seller.getName()).replace("%price%", priceStr));
 
-					plugin.economy.withdrawPlayer(player, sale.getPrice());
-					plugin.economy.depositPlayer(sale.getSeller(), sale.getPrice());
+					plugin.economy().withdrawPlayer(player, sale.getPrice());
+					plugin.economy().depositPlayer(seller, sale.getPrice());
 
 					return sale;
 				}
@@ -173,6 +175,15 @@ public class AuctionShopManager {
 	 */
 	public AuctionShop getShop(Location location) {
 		return shopsByLocation.get(location);
+	}
+
+	/**
+	 * Gets the shops.
+	 * 
+	 * @return the shops
+	 */
+	public Collection<AuctionShop> getShops() {
+		return shops.values();
 	}
 
 	/**
