@@ -1,6 +1,7 @@
 package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,13 +76,13 @@ public class AuctionShop {
 	 */
 	AuctionSale sell(AuctionPlayer player, ItemStack item) throws AuctionShopException {
 
-		Double defaultPrice = player.getDefaultPrices().get(this);
+		Double defaultPrice = player.getSellerData(this).getDefaultPrice();
 		if (defaultPrice != null && defaultPrice < 0) {
 			throw new AuctionShopException("Can't sell for a price less than 0");
 		}
 
 		AuctionSale sale = new AuctionSale(plugin, player, this, item);
-		player.getSales().add(sale);
+		player.getSales(this).add(sale);
 
 		if (defaultPrice != null) {
 			sale.setPrice(defaultPrice * sale.getItem().getAmount());
@@ -107,7 +108,7 @@ public class AuctionShop {
 		}
 
 		sales.remove(sale);
-		getAuctionPlayer(player).getSales().remove(sale);
+		sale.getSeller().getSales(this).remove(sale);
 
 		return sale.getItem();
 	}
@@ -152,7 +153,7 @@ public class AuctionShop {
 	 *            the price
 	 */
 	public void setDefaultPrice(Player player, double price) {
-		getAuctionPlayer(player).setDefaultPrice(this, price);
+		getAuctionPlayer(player).getSellerData(this).setDefaultPrice(price);
 	}
 
 	/**
@@ -183,7 +184,7 @@ public class AuctionShop {
 	}
 
 	/**
-	 * Gets the sales.
+	 * Gets all the sales for the shop.
 	 * 
 	 * @return the sales
 	 */
@@ -192,12 +193,22 @@ public class AuctionShop {
 	}
 
 	/**
-	 * Gets the sales for a player.
+	 * Gets the sales of a player.
 	 * 
 	 * @return the sales
 	 */
-	public List<AuctionSale> getSales(OfflinePlayer player) {
-		return getAuctionPlayer(player).getSales();
+	public List<AuctionSale> getSalesOf(OfflinePlayer player) {
+		return getAuctionPlayer(player).getSales(this);
+	}
+
+	/**
+	 * Gets the sales of the shop for a player (shop's sales without player's
+	 * sales).
+	 * 
+	 * @return the sales
+	 */
+	public Collection<AuctionSale> getSales(OfflinePlayer player) {
+		return getAuctionPlayer(player).getSellerData(this).getOtherPlayersSales();
 	}
 
 	/**

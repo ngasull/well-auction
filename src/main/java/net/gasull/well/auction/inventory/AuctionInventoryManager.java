@@ -3,6 +3,7 @@
  */
 package net.gasull.well.auction.inventory;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -168,7 +169,7 @@ public class AuctionInventoryManager {
 	 */
 	public void openSell(Player player, AuctionShop shop) {
 		Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.SIZE, titleSell);
-		loadSellInventory(sellInv, shop.getSales(player));
+		loadSellInventory(sellInv, shop.getSalesOf(player));
 		openSubMenu(player, sellInv, shop, sellInventories, shopForSellInventory);
 	}
 
@@ -229,7 +230,7 @@ public class AuctionInventoryManager {
 	 *            the player
 	 */
 	public void handleSell(Inventory inv, AuctionShop shop, Player player) {
-		loadSellInventory(inv, shop.getSales(player));
+		loadSellInventory(inv, shop.getSalesOf(player));
 		refreshBuyInventories(shop);
 	}
 
@@ -456,7 +457,7 @@ public class AuctionInventoryManager {
 		if (viewMap != null) {
 			for (Entry<Player, InventoryView> pair : viewMap.entrySet()) {
 				inv = pair.getValue().getTopInventory();
-				loadSellInventory(inv, shop.getSales(pair.getKey()));
+				loadSellInventory(inv, shop.getSalesOf(pair.getKey()));
 			}
 		}
 	}
@@ -469,7 +470,7 @@ public class AuctionInventoryManager {
 	 * @param sales
 	 *            the sales
 	 */
-	private void loadBuyInventory(Inventory buyInv, List<AuctionSale> sales) {
+	private void loadBuyInventory(Inventory buyInv, Collection<AuctionSale> sales) {
 		buyInv.setContents(AuctionBuyInventory.generateContents(sales));
 	}
 

@@ -123,8 +123,11 @@ public class AuctionShopManager {
 					String priceStr = plugin.economy().format(sale.getPrice());
 					player.sendMessage(ChatColor.DARK_GREEN
 							+ MSG_BUY_NOTIFY.replace("%item%", item.toString()).replace("%player%", seller.getName()).replace("%price%", priceStr));
-					player.sendMessage(ChatColor.BLUE
-							+ MSG_SELL_NOTIFY.replace("%item%", item.toString()).replace("%player%", seller.getName()).replace("%price%", priceStr));
+
+					if (seller.isOnline() && seller instanceof Player) {
+						((Player) seller).sendMessage(ChatColor.BLUE
+								+ MSG_SELL_NOTIFY.replace("%item%", item.toString()).replace("%player%", player.getName()).replace("%price%", priceStr));
+					}
 
 					plugin.economy().withdrawPlayer(player, sale.getPrice());
 					plugin.economy().depositPlayer(seller, sale.getPrice());

@@ -1,6 +1,6 @@
 package net.gasull.well.auction.inventory;
 
-import java.util.List;
+import java.util.Collection;
 
 import net.gasull.well.auction.shop.AuctionSale;
 
@@ -21,7 +21,7 @@ public class AuctionBuyInventory {
 	 *            the sales
 	 * @return the item stack[]
 	 */
-	public static ItemStack[] generateContents(List<AuctionSale> sales) {
+	public static ItemStack[] generateContents(Collection<AuctionSale> sales) {
 		ItemStack[] contents = new ItemStack[SIZE];
 
 		if (sales != null) {

@@ -97,10 +97,13 @@ public class AuctionBlockShopListener implements Listener {
 	 */
 	private BlockShopEntity getShopForBlock(Block block) {
 		BlockShopEntity shop = null;
-		List<MetadataValue> meta = block.getMetadata(BlockShopEntity.META_KEY);
 
-		if (meta != null && !meta.isEmpty()) {
-			shop = (BlockShopEntity) meta.get(0).value();
+		if (block != null) {
+			List<MetadataValue> meta = block.getMetadata(BlockShopEntity.META_KEY);
+
+			if (meta != null && !meta.isEmpty()) {
+				shop = (BlockShopEntity) meta.get(0).value();
+			}
 		}
 
 		return shop;

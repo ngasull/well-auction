@@ -222,9 +222,9 @@ public class AuctionShopInventoryListener implements Listener {
 					player.setItemOnCursor(bought);
 					plugin.getLogger().info(player.getName() + " successfully bought " + bought);
 				} catch (AuctionShopException e) {
-					plugin.getLogger().log(Level.WARNING, player.getName() + " couldn't buy " + theItem, e);
+					plugin.getLogger().log(Level.WARNING, String.format("%s couldn't buy %s (%s)", player.getName(), theItem, e.getMessage()));
 				} catch (WellPermissionException e) {
-					plugin.getLogger().log(Level.INFO, player.getName() + " was not allowed to buy " + theItem);
+					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed to buy %s", player.getName(), theItem));
 				}
 			}
 		}
@@ -232,7 +232,8 @@ public class AuctionShopInventoryListener implements Listener {
 		else if (inventoryManager.isSellInventory(evt.getInventory())) {
 			if (evt.isShiftClick()) {
 				ItemStack theItem = theItem(evt, action);
-				AuctionSale sale = shopManager.getShop(theItem).getAuctionPlayer(player).getSale(theItem);
+				AuctionShop shop = shopManager.getShop(theItem);
+				AuctionSale sale = shop.getAuctionPlayer(player).getSellerData(shop).getSale(theItem);
 
 				if (sale != null) {
 					inventoryManager.openPriceSet(player, sale);

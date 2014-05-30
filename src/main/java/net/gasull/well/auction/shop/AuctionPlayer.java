@@ -1,12 +1,10 @@
 package net.gasull.well.auction.shop;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.bukkit.OfflinePlayer;
-import org.bukkit.inventory.ItemStack;
 
 /**
  * The Class AuctionPlayer.
@@ -16,11 +14,8 @@ public class AuctionPlayer {
 	/** The player. */
 	private OfflinePlayer player;
 
-	/** The player sales. */
-	private List<AuctionSale> sales = new ArrayList<>();
-
-	/** The default prices. */
-	private Map<AuctionShop, Double> defaultPrices = new HashMap<>();
+	/** The seller data map. */
+	private Map<AuctionShop, AuctionSellerData> sellerDataMap = new HashMap<>();
 
 	/**
 	 * Instantiates a new auction player.
@@ -30,23 +25,6 @@ public class AuctionPlayer {
 	 */
 	AuctionPlayer(OfflinePlayer player) {
 		this.player = player;
-	}
-
-	/**
-	 * Fetches a sale from an associated item.
-	 * 
-	 * @param theItem
-	 *            the the item
-	 * @return the sale
-	 */
-	public AuctionSale getSale(ItemStack theItem) {
-
-		for (AuctionSale sale : sales) {
-			if (sale.isSellingStack(theItem)) {
-				return sale;
-			}
-		}
-		return null;
 	}
 
 	/**
@@ -61,30 +39,29 @@ public class AuctionPlayer {
 	/**
 	 * Gets the sales.
 	 * 
-	 * @return the sales
-	 */
-	public List<AuctionSale> getSales() {
-		return sales;
-	}
-
-	/**
-	 * Gets the default prices.
-	 * 
-	 * @return the default prices
-	 */
-	public Map<AuctionShop, Double> getDefaultPrices() {
-		return defaultPrices;
-	}
-
-	/**
-	 * Sets the default price.
-	 * 
 	 * @param shop
 	 *            the shop
-	 * @param price
-	 *            the new default price
+	 * @return the sales
 	 */
-	public void setDefaultPrice(AuctionShop shop, double price) {
-		defaultPrices.put(shop, price);
+	public List<AuctionSale> getSales(AuctionShop shop) {
+		return getSellerData(shop).getSales();
+	}
+
+	/**
+	 * Gets the seller data.
+	 * 
+	 * @param shop
+	 *            the auction shop
+	 * @return the seller data
+	 */
+	public AuctionSellerData getSellerData(AuctionShop shop) {
+		AuctionSellerData data = sellerDataMap.get(shop);
+
+		if (data == null) {
+			data = new AuctionSellerData(shop, this);
+			sellerDataMap.put(shop, data);
+		}
+
+		return data;
 	}
 }
