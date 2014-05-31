@@ -2,40 +2,58 @@ package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import net.gasull.well.auction.WellAuction;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * The Class AuctionSale.
  */
+@Entity
+@Table(name = "well_auction_sale")
 public class AuctionSale {
 
-	private static long TMP_INC = 0;
-
 	/** The sale id. */
-	private long id;
+	@Id
+	private Integer id;
 
-	/** The seller. */
-	private AuctionPlayer seller;
+	/** The seller data id. */
+	private Integer sellerDataId;
+
+	/** The seller data. */
+	@Transient
+	private AuctionSellerData sellerData;
 
 	/** The plugin. */
+	@Transient
 	private WellAuction plugin;
 
-	/** The item shop. */
-	private AuctionShop shop;
-
 	/** The item (stack). */
+	@Transient
 	private ItemStack item;
+
+	/** The item serial. */
+	@Column(length = 2000)
+	private String itemSerial;
 
 	/** The price. */
 	private Double price;
 
 	/** The item displayed in shop. */
+	@Transient
 	private ItemStack tradeStack;
 
 	/** The Constant LORE_SEPARATOR. */
@@ -43,21 +61,8 @@ public class AuctionSale {
 
 	/**
 	 * Instantiates a new auction sale.
-	 * 
-	 * @param plugin
-	 *            the plugin
-	 * @param seller
-	 *            the seller
-	 * @param shop
-	 *            the shop
-	 * @param stack
-	 *            the stack
-	 * @param price
-	 *            the price
 	 */
-	public AuctionSale(WellAuction plugin, AuctionPlayer seller, AuctionShop shop, ItemStack stack, double price) {
-		this(plugin, seller, shop, stack);
-		setPrice(price);
+	public AuctionSale() {
 	}
 
 	/**
@@ -67,17 +72,15 @@ public class AuctionSale {
 	 *            the plugin
 	 * @param seller
 	 *            the seller
-	 * @param shop
+	 * @param auctionShop
 	 *            the shop
 	 * @param stack
 	 *            the stack
 	 */
-	public AuctionSale(WellAuction plugin, AuctionPlayer seller, AuctionShop shop, ItemStack stack) {
+	public AuctionSale(WellAuction plugin, AuctionSellerData data, ItemStack stack) {
 		this.plugin = plugin;
-		this.id = TMP_INC++;
-		this.seller = seller;
-		this.shop = shop;
 		this.item = stack;
+		this.sellerData = data;
 
 		refresh();
 	}
@@ -98,8 +101,37 @@ public class AuctionSale {
 	 * 
 	 * @return the id
 	 */
-	public long getId() {
+	public Integer getId() {
 		return id;
+	}
+
+	/**
+	 * Sets the id.
+	 * 
+	 * @param id
+	 *            the new id
+	 */
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	/**
+	 * Gets the seller data id.
+	 * 
+	 * @return the seller data id
+	 */
+	public Integer getSellerDataId() {
+		return sellerDataId;
+	}
+
+	/**
+	 * Sets the seller data id.
+	 * 
+	 * @param sellerDataId
+	 *            the new seller data id
+	 */
+	public void setSellerDataId(Integer sellerDataId) {
+		this.sellerDataId = sellerDataId;
 	}
 
 	/**
@@ -108,16 +140,36 @@ public class AuctionSale {
 	 * @return the seller
 	 */
 	public AuctionPlayer getSeller() {
-		return seller;
+		return sellerData.getAuctionPlayer();
 	}
 
 	/**
-	 * Gets the auction shop.
+	 * Gets the seller data.
 	 * 
-	 * @return the auction shop
+	 * @return the seller data
 	 */
-	public AuctionShop getShop() {
-		return shop;
+	public AuctionSellerData getSellerData() {
+		return sellerData;
+	}
+
+	/**
+	 * Sets the seller data.
+	 * 
+	 * @param sellerData
+	 *            the new seller data
+	 */
+	public void setSellerData(AuctionSellerData sellerData) {
+		this.sellerData = sellerData;
+	}
+
+	/**
+	 * Sets the plugin.
+	 * 
+	 * @param plugin
+	 *            the new plugin
+	 */
+	public void setPlugin(WellAuction plugin) {
+		this.plugin = plugin;
 	}
 
 	/**
@@ -130,11 +182,59 @@ public class AuctionSale {
 	}
 
 	/**
+	 * Sets the item.
+	 * 
+	 * @param item
+	 *            the new item
+	 */
+	public void setItem(ItemStack item) {
+		this.item = item;
+		setPrice(price);
+	}
+
+	/**
+	 * Gets the item serial.
+	 * 
+	 * @return the item serial
+	 */
+	public String getItemSerial() {
+		if (item == null) {
+			return null;
+		}
+		this.itemSerial = new Yaml().dump(getItem().serialize());
+		return this.itemSerial;
+	}
+
+	/**
+	 * Sets the item serial.
+	 * 
+	 * @param serial
+	 *            the serial
+	 * @return the item stack
+	 */
+	@SuppressWarnings("unchecked")
+	public void setItemSerial(String serial) {
+		this.itemSerial = serial;
+		Map<String, Object> map = (Map<String, Object>) new Yaml().load(serial);
+		ItemStack deserializeObject = (ItemStack) ConfigurationSerialization.deserializeObject(map, ItemStack.class);
+		setItem(deserializeObject);
+	}
+
+	/**
+	 * Gets the auction shop.
+	 * 
+	 * @return the auction shop
+	 */
+	public AuctionShop getShop() {
+		return sellerData.getShop();
+	}
+
+	/**
 	 * Gets the price.
 	 * 
 	 * @return the price
 	 */
-	public double getPrice() {
+	public Double getPrice() {
 		return price;
 	}
 
@@ -148,12 +248,14 @@ public class AuctionSale {
 		this.price = price;
 		refresh();
 
-		if (shop.getSales().contains(this)) {
-			shop.getSales().remove(this);
-		}
+		if (sellerData != null) {
+			if (sellerData.getShop().getSales().contains(this)) {
+				sellerData.getShop().getSales().remove(this);
+			}
 
-		if (price != null && price >= 0) {
-			shop.getSales().add(this);
+			if (price != null && price >= 0) {
+				sellerData.getShop().getSales().add(this);
+			}
 		}
 	}
 
@@ -163,6 +265,9 @@ public class AuctionSale {
 	 * @return the trade stack
 	 */
 	public ItemStack getTradeStack() {
+		if (tradeStack == null) {
+			refresh();
+		}
 		return tradeStack;
 	}
 
@@ -170,6 +275,10 @@ public class AuctionSale {
 	 * Refresh the displayed stack.
 	 */
 	private void refresh() {
+		if (plugin == null || sellerData == null) {
+			return;
+		}
+
 		this.tradeStack = new ItemStack(this.item);
 		ItemMeta realMeta = this.tradeStack.getItemMeta();
 		ItemMeta meta = this.item.getItemMeta();
@@ -195,12 +304,18 @@ public class AuctionSale {
 		}
 
 		desc.add(ChatColor.BLUE
-				+ this.plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%").replace("%player%", this.seller.getPlayer().getName()));
+				+ this.plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%")
+						.replace("%player%", sellerData.getAuctionPlayer().getPlayer().getName()));
 
 		meta.setLore(desc);
 		this.tradeStack.setItemMeta(meta);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -209,6 +324,11 @@ public class AuctionSale {
 		return result;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {

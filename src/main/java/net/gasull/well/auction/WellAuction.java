@@ -1,8 +1,19 @@
 package net.gasull.well.auction;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+
+import javax.persistence.PersistenceException;
+
+import net.gasull.well.auction.db.ShopEntityModel;
 import net.gasull.well.auction.event.AuctionBlockShopListener;
 import net.gasull.well.auction.event.AuctionShopInventoryListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
+import net.gasull.well.auction.shop.AuctionPlayer;
+import net.gasull.well.auction.shop.AuctionSale;
+import net.gasull.well.auction.shop.AuctionSellerData;
+import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopManager;
 import net.milkbowl.vault.economy.Economy;
 
@@ -41,8 +52,11 @@ public class WellAuction extends JavaPlugin {
 		wellConfig = new WellConfig(this, "well-auction.yml");
 		permission = new WellPermissionManager(this, wellConfig);
 
-		shopManager = new AuctionShopManager(this);
-		inventoryManager = new AuctionInventoryManager(this);
+		if (shopManager == null || shopManager.isLastSaveOk()) {
+			shopManager = new AuctionShopManager(this);
+			inventoryManager = new AuctionInventoryManager(this, shopManager);
+			setupDb();
+		}
 
 		// Listeners
 		getServer().getPluginManager().registerEvents(new AuctionShopInventoryListener(this, shopManager, inventoryManager), this);
@@ -54,7 +68,19 @@ public class WellAuction extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		shopManager.save();
 		shopManager.clean();
+	}
+
+	@Override
+	public List<Class<?>> getDatabaseClasses() {
+		List<Class<?>> list = new ArrayList<Class<?>>();
+		list.add(AuctionShop.class);
+		list.add(ShopEntityModel.class);
+		list.add(AuctionPlayer.class);
+		list.add(AuctionSellerData.class);
+		list.add(AuctionSale.class);
+		return list;
 	}
 
 	@Override
@@ -100,5 +126,18 @@ public class WellAuction extends JavaPlugin {
 		}
 
 		economy = economyProvider.getProvider();
+	}
+
+	/**
+	 * Setup DB.
+	 */
+	private void setupDb() {
+		try {
+			getDatabase().find(AuctionShop.class).findRowCount();
+			shopManager.load();
+		} catch (PersistenceException e) {
+			getLogger().log(Level.WARNING, "Installing database for " + getDescription().getName() + " due to first time usage", e);
+			installDDL();
+		}
 	}
 }

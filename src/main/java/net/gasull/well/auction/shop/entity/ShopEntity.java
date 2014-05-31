@@ -1,5 +1,6 @@
 package net.gasull.well.auction.shop.entity;
 
+import net.gasull.well.auction.db.ShopEntityModel;
 import net.gasull.well.auction.shop.AuctionShop;
 
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,4 +27,11 @@ public abstract class ShopEntity {
 	 *            the plugin
 	 */
 	public abstract void unregister(JavaPlugin plugin);
+
+	/**
+	 * Gets the model.
+	 * 
+	 * @return the model
+	 */
+	public abstract ShopEntityModel getModel();
 }

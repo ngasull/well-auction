@@ -233,7 +233,7 @@ public class AuctionShopInventoryListener implements Listener {
 			if (evt.isShiftClick()) {
 				ItemStack theItem = theItem(evt, action);
 				AuctionShop shop = shopManager.getShop(theItem);
-				AuctionSale sale = shop.getAuctionPlayer(player).getSellerData(shop).getSale(theItem);
+				AuctionSale sale = shopManager.getAuctionPlayer(player).getSellerData(shop).getSale(theItem);
 
 				if (sale != null) {
 					inventoryManager.openPriceSet(player, sale);

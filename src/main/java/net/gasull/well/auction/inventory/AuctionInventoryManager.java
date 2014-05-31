@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.shop.AuctionSale;
 import net.gasull.well.auction.shop.AuctionShop;
+import net.gasull.well.auction.shop.AuctionShopManager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -27,6 +28,9 @@ public class AuctionInventoryManager {
 
 	/** The plugin. */
 	private WellAuction plugin;
+
+	/** The shop manager. */
+	private AuctionShopManager shopManager;
 
 	/** The auction menu. */
 	private AuctionMenu auctionMenu;
@@ -78,9 +82,12 @@ public class AuctionInventoryManager {
 	 * 
 	 * @param plugin
 	 *            the plugin
+	 * @param shopManager
+	 *            the shop manager
 	 */
-	public AuctionInventoryManager(WellAuction plugin) {
+	public AuctionInventoryManager(WellAuction plugin, AuctionShopManager shopManager) {
 		this.plugin = plugin;
+		this.shopManager = shopManager;
 		this.auctionMenu = new AuctionMenu(plugin);
 		this.titleBase = plugin.wellConfig().getString("inventory.menu.title", "Auction House");
 		this.titleSell = titleBase + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.sell.title", "Sell");
@@ -169,7 +176,7 @@ public class AuctionInventoryManager {
 	 */
 	public void openSell(Player player, AuctionShop shop) {
 		Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.SIZE, titleSell);
-		loadSellInventory(sellInv, shop.getSalesOf(player));
+		loadSellInventory(sellInv, shop.getSalesOf(shopManager.getAuctionPlayer(player)));
 		openSubMenu(player, sellInv, shop, sellInventories, shopForSellInventory);
 	}
 
@@ -230,7 +237,7 @@ public class AuctionInventoryManager {
 	 *            the player
 	 */
 	public void handleSell(Inventory inv, AuctionShop shop, Player player) {
-		loadSellInventory(inv, shop.getSalesOf(player));
+		loadSellInventory(inv, shop.getSalesOf(shopManager.getAuctionPlayer(player)));
 		refreshBuyInventories(shop);
 	}
 
@@ -268,7 +275,7 @@ public class AuctionInventoryManager {
 			AuctionShop shop = task.getShop();
 			if (price != null) {
 				if (task.sale == null) {
-					shop.setDefaultPrice(player, price);
+					shop.setDefaultPrice(shopManager.getAuctionPlayer(player), price);
 				} else {
 					task.sale.setPrice(price);
 				}
@@ -457,7 +464,7 @@ public class AuctionInventoryManager {
 		if (viewMap != null) {
 			for (Entry<Player, InventoryView> pair : viewMap.entrySet()) {
 				inv = pair.getValue().getTopInventory();
-				loadSellInventory(inv, shop.getSalesOf(pair.getKey()));
+				loadSellInventory(inv, shop.getSalesOf(shopManager.getAuctionPlayer(pair.getKey())));
 			}
 		}
 	}

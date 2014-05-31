@@ -2,6 +2,7 @@ name: well-auction
 main: net.gasull.well.auction.WellAuction
 version: 0.0.1
 depend: [Vault]
+database: true
 commands:
   wellauction:
     description: This allow you to manage Auction Houses.

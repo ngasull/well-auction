@@ -1,53 +1,81 @@
 package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.yaml.snakeyaml.Yaml;
+
+import com.avaje.ebean.validation.NotNull;
 
 /**
  * The actual Auction Shop, shared all over the world for a given refItem
  * {@link ItemStack}.
  */
+@Entity
+@Table(name = "well_auction_shop")
 public class AuctionShop {
 
-	/** The id. */
-	private final UUID id = UUID.randomUUID();
-
 	/** The plugin. */
-	private final WellAuction plugin;
+	@Transient
+	private WellAuction plugin;
+
+	/** The id. */
+	@Id
+	private int id;
 
 	/** The ref item. */
-	private final ItemStack refItem;
+	@Transient
+	private ItemStack refItem;
+
+	/** The ref item serial. */
+	@NotNull
+	@Column(length = 2000)
+	private String refItemSerial;
 
 	/** The registered shop-entities. */
-	private final List<ShopEntity> registered = new ArrayList<>();
+	@Transient
+	private List<AuctionSellerData> sellerData = new ArrayList<>();
+
+	/** The registered shop-entities. */
+	@Transient
+	private List<ShopEntity> registered = new ArrayList<>();
 
 	/** The sales. */
-	private final List<AuctionSale> sales = new ArrayList<>();
+	@Transient
+	private List<AuctionSale> sales = new ArrayList<>();
 
-	/** The auction player. */
-	private final Map<UUID, AuctionPlayer> auctionPlayers = new HashMap<>();
+	/**
+	 * Instantiates a new auction shop.
+	 */
+	public AuctionShop() {
+	}
 
 	/**
 	 * Instantiates a new auction shop.
 	 * 
+	 * @param plugin
+	 *            the plugin
 	 * @param stack
 	 *            the reference item
 	 */
 	AuctionShop(WellAuction plugin, ItemStack stack) {
 		this.plugin = plugin;
 		this.refItem = refItemFor(stack);
+		this.refItemSerial = new Yaml().dump(refItem.serialize());
 	}
 
 	/**
@@ -81,7 +109,7 @@ public class AuctionShop {
 			throw new AuctionShopException("Can't sell for a price less than 0");
 		}
 
-		AuctionSale sale = new AuctionSale(plugin, player, this, item);
+		AuctionSale sale = new AuctionSale(plugin, player.getSellerData(this), item);
 		player.getSales(this).add(sale);
 
 		if (defaultPrice != null) {
@@ -152,17 +180,37 @@ public class AuctionShop {
 	 * @param price
 	 *            the price
 	 */
-	public void setDefaultPrice(Player player, double price) {
-		getAuctionPlayer(player).getSellerData(this).setDefaultPrice(price);
+	public void setDefaultPrice(AuctionPlayer player, double price) {
+		player.getSellerData(this).setDefaultPrice(price);
 	}
 
 	/**
-	 * Gets the unique id of the shop.
+	 * Gets the id.
 	 * 
 	 * @return the id
 	 */
-	public UUID getId() {
+	public int getId() {
 		return id;
+	}
+
+	/**
+	 * Sets the id.
+	 * 
+	 * @param id
+	 *            the new id
+	 */
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	/**
+	 * Sets the plugin.
+	 * 
+	 * @param plugin
+	 *            the new plugin
+	 */
+	void setPlugin(WellAuction plugin) {
+		this.plugin = plugin;
 	}
 
 	/**
@@ -175,12 +223,52 @@ public class AuctionShop {
 	}
 
 	/**
+	 * Gets the ref item serial.
+	 * 
+	 * @return the ref item serial
+	 */
+	public String getRefItemSerial() {
+		return refItemSerial;
+	}
+
+	/**
+	 * Sets the ref item serial.
+	 * 
+	 * @param refItemSerial
+	 *            the new ref item serial
+	 */
+	@SuppressWarnings("unchecked")
+	public void setRefItemSerial(String refItemSerial) {
+		this.refItemSerial = refItemSerial;
+		this.refItem = (ItemStack) ConfigurationSerialization.deserializeObject((Map<String, ?>) new Yaml().load(refItemSerial), ItemStack.class);
+	}
+
+	/**
+	 * Gets the seller data.
+	 * 
+	 * @return the seller data
+	 */
+	public List<AuctionSellerData> getSellerData() {
+		return sellerData;
+	}
+
+	/**
 	 * Gets the registered shop entities for this shop.
 	 * 
 	 * @return the shop entities
 	 */
 	public List<ShopEntity> getRegistered() {
 		return registered;
+	}
+
+	/**
+	 * Sets the registered.
+	 * 
+	 * @param registered
+	 *            the new registered
+	 */
+	public void setRegistered(List<ShopEntity> registered) {
+		this.registered = registered;
 	}
 
 	/**
@@ -195,38 +283,12 @@ public class AuctionShop {
 	/**
 	 * Gets the sales of a player.
 	 * 
-	 * @return the sales
-	 */
-	public List<AuctionSale> getSalesOf(OfflinePlayer player) {
-		return getAuctionPlayer(player).getSales(this);
-	}
-
-	/**
-	 * Gets the sales of the shop for a player (shop's sales without player's
-	 * sales).
-	 * 
-	 * @return the sales
-	 */
-	public Collection<AuctionSale> getSales(OfflinePlayer player) {
-		return getAuctionPlayer(player).getSellerData(this).getOtherPlayersSales();
-	}
-
-	/**
-	 * Gets the auction player, creating it if unknown.
-	 * 
 	 * @param player
 	 *            the player
-	 * @return the auction player
+	 * @return the sales
 	 */
-	public AuctionPlayer getAuctionPlayer(OfflinePlayer player) {
-		AuctionPlayer auctionPlayer = auctionPlayers.get(player.getUniqueId());
-
-		if (auctionPlayer == null) {
-			auctionPlayer = new AuctionPlayer(player);
-			auctionPlayers.put(player.getUniqueId(), auctionPlayer);
-		}
-
-		return auctionPlayer;
+	public List<AuctionSale> getSalesOf(AuctionPlayer player) {
+		return player.getSales(this);
 	}
 
 	@Override

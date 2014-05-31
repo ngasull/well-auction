@@ -1,29 +1,53 @@
 package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
-import javax.annotation.Nullable;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.bukkit.inventory.ItemStack;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 
 /**
  * Data for a seller, for a single shop.
  */
+@Entity
+@Table(name = "well_auction_sellerData")
 public class AuctionSellerData {
 
-	/** The sales. */
-	private final List<AuctionSale> sales = new ArrayList<>();
+	/** The sale id. */
+	@Id
+	private Integer id;
 
-	/** The other players' sales, filtered from the current shop's sales. */
-	private final Collection<AuctionSale> otherPlayersSales;
+	/** The shop id. */
+	private Integer shopId;
+
+	/** The auction player id. */
+	private UUID auctionPlayerId;
+
+	/** The shop. */
+	@Transient
+	private AuctionShop shop;
+
+	/** The auction player. */
+	@Transient
+	private AuctionPlayer auctionPlayer;
+
+	/** The sales. */
+	@Transient
+	private List<AuctionSale> sales = new ArrayList<>();
 
 	/** The default price. */
 	private Double defaultPrice;
+
+	/**
+	 * Instantiates a new auction seller data.
+	 */
+	public AuctionSellerData() {
+	}
 
 	/**
 	 * Instantiates a new auction seller data.
@@ -33,17 +57,106 @@ public class AuctionSellerData {
 	 * @param auctionPlayer
 	 *            the auction player
 	 */
-	public AuctionSellerData(final AuctionShop shop, final AuctionPlayer auctionPlayer) {
-		this.otherPlayersSales = Collections2.filter(shop.getSales(), new Predicate<AuctionSale>() {
-			public boolean apply(@Nullable AuctionSale input) {
-				return !auctionPlayer.equals(input.getSeller());
-			}
+	public AuctionSellerData(AuctionShop shop, AuctionPlayer auctionPlayer) {
+		this.shop = shop;
+		this.shopId = shop.getId();
+		this.auctionPlayer = auctionPlayer;
+		this.auctionPlayerId = auctionPlayer.getPlayerId();
+	}
 
-			@Override
-			public boolean equals(@Nullable Object object) {
-				return super.equals(object);
-			}
-		});
+	/**
+	 * Gets the id.
+	 * 
+	 * @return the id
+	 */
+	public Integer getId() {
+		return id;
+	}
+
+	/**
+	 * Sets the id.
+	 * 
+	 * @param id
+	 *            the new id
+	 */
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	/**
+	 * Gets the shop id.
+	 * 
+	 * @return the shop id
+	 */
+	public Integer getShopId() {
+		return shopId;
+	}
+
+	/**
+	 * Sets the shop id.
+	 * 
+	 * @param shopId
+	 *            the new shop id
+	 */
+	public void setShopId(Integer shopId) {
+		this.shopId = shopId;
+	}
+
+	/**
+	 * Gets the auction player id.
+	 * 
+	 * @return the auction player id
+	 */
+	public UUID getAuctionPlayerId() {
+		return auctionPlayerId;
+	}
+
+	/**
+	 * Sets the auction player id.
+	 * 
+	 * @param auctionPlayerId
+	 *            the new auction player id
+	 */
+	public void setAuctionPlayerId(UUID auctionPlayerId) {
+		this.auctionPlayerId = auctionPlayerId;
+	}
+
+	/**
+	 * Gets the shop.
+	 * 
+	 * @return the shop
+	 */
+	public AuctionShop getShop() {
+		return shop;
+	}
+
+	/**
+	 * Sets the shop.
+	 * 
+	 * @param shop
+	 *            the new shop
+	 */
+	public void setShop(AuctionShop shop) {
+		this.shop = shop;
+	}
+
+	/**
+	 * Gets the auction player.
+	 * 
+	 * @return the auction player
+	 */
+	public AuctionPlayer getAuctionPlayer() {
+		return auctionPlayer;
+	}
+
+	/**
+	 * Sets the auction player.
+	 * 
+	 * @param auctionPlayer
+	 *            the new auction player
+	 */
+	public void setAuctionPlayer(AuctionPlayer auctionPlayer) {
+		this.auctionPlayer = auctionPlayer;
 	}
 
 	/**
@@ -53,6 +166,16 @@ public class AuctionSellerData {
 	 */
 	public List<AuctionSale> getSales() {
 		return sales;
+	}
+
+	/**
+	 * Sets the sales.
+	 * 
+	 * @param sales
+	 *            the new sales
+	 */
+	public void setSales(List<AuctionSale> sales) {
+		this.sales = sales;
 	}
 
 	/**
@@ -70,15 +193,6 @@ public class AuctionSellerData {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Gets the other players sales.
-	 * 
-	 * @return the other players sales
-	 */
-	public Collection<AuctionSale> getOtherPlayersSales() {
-		return otherPlayersSales;
 	}
 
 	/**
