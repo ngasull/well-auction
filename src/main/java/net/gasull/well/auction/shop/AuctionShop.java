@@ -13,10 +13,8 @@ import javax.persistence.Transient;
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.yaml.snakeyaml.Yaml;
 
 import com.avaje.ebean.validation.NotNull;
@@ -79,66 +77,23 @@ public class AuctionShop {
 	}
 
 	/**
-	 * Register entity for it to "contain" the shop.
+	 * Refresh price.
 	 * 
-	 * @param plugin
-	 *            the plugin
-	 * @param shopEntity
-	 *            the shop entity
-	 */
-	void registerEntity(JavaPlugin plugin, ShopEntity shopEntity) {
-		shopEntity.register(plugin, this);
-		registered.add(shopEntity);
-	}
-
-	/**
-	 * Sell.
-	 * 
-	 * @param player
-	 *            the player
-	 * @param item
-	 *            the item
-	 * @return the auction sale
-	 * @throws AuctionShopException
-	 *             the auction shop exception
-	 */
-	AuctionSale sell(AuctionPlayer player, ItemStack item) throws AuctionShopException {
-
-		Double defaultPrice = player.getSellerData(this).getDefaultPrice();
-		if (defaultPrice != null && defaultPrice < 0) {
-			throw new AuctionShopException("Can't sell for a price less than 0");
-		}
-
-		AuctionSale sale = new AuctionSale(plugin, player.getSellerData(this), item);
-		player.getSales(this).add(sale);
-
-		if (defaultPrice != null) {
-			sale.setPrice(defaultPrice * sale.getItem().getAmount());
-		}
-
-		return sale;
-	}
-
-	/**
-	 * Buy.
-	 * 
-	 * @param player
-	 *            the player
 	 * @param sale
 	 *            the sale
-	 * @return the bought stack
-	 * @throws AuctionShopException
-	 *             the auction shop exception
 	 */
-	ItemStack buy(OfflinePlayer player, AuctionSale sale) throws AuctionShopException {
-		if (!sales.remove(sale)) {
-			throw new AuctionShopException("Sale not found but should have been");
+	void refreshPrice(AuctionSale sale) {
+		sale.refresh();
+
+		Double price = sale.getTradePrice();
+
+		if (price != null && price >= 0) {
+			if (!sales.contains(sale)) {
+				sales.add(sale);
+			}
+		} else if (sales.contains(sale)) {
+			sales.remove(sale);
 		}
-
-		sales.remove(sale);
-		sale.getSeller().getSales(this).remove(sale);
-
-		return sale.getItem();
 	}
 
 	/**

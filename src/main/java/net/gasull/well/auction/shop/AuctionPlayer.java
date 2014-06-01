@@ -11,6 +11,7 @@ import javax.persistence.Transient;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 /**
  * The Class AuctionPlayer.
@@ -68,7 +69,21 @@ public class AuctionPlayer {
 	 * @return the player
 	 */
 	public OfflinePlayer getPlayer() {
-		return Bukkit.getPlayer(this.playerId);
+		return Bukkit.getOfflinePlayer(this.playerId);
+	}
+
+	/**
+	 * Gets the player.
+	 * 
+	 * @return the player
+	 */
+	public String getName() {
+		OfflinePlayer player = getPlayer();
+
+		if (player == null) {
+			return null;
+		}
+		return player.getName();
 	}
 
 	/**
@@ -108,5 +123,19 @@ public class AuctionPlayer {
 		AuctionSellerData data = new AuctionSellerData(shop, this);
 		getSellerData().add(data);
 		return data;
+	}
+
+	/**
+	 * Sends a message to an AuctionPlayer.
+	 * 
+	 * @param message
+	 *            the message
+	 */
+	public void sendMessage(String message) {
+		OfflinePlayer offPlayer = getPlayer();
+		Player player = offPlayer.getPlayer();
+		if (player != null) {
+			player.sendMessage(message);
+		}
 	}
 }

@@ -10,7 +10,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.auction.shop.AuctionPlayer;
 import net.gasull.well.auction.shop.AuctionSale;
+import net.gasull.well.auction.shop.AuctionSellerData;
 import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopManager;
 
@@ -65,9 +67,6 @@ public class AuctionInventoryManager {
 	/** The message for set price please. */
 	private final String msgSetPricePlease;
 
-	/** The message for set price success. */
-	private final String msgSetPriceSuccess;
-
 	/** The message set invalid price. */
 	private final String msgSetPriceInvalid;
 
@@ -95,7 +94,6 @@ public class AuctionInventoryManager {
 		this.setPriceTimeout = plugin.wellConfig().getLong("player.setPrice.timeout", 140);
 
 		this.msgSetPricePlease = plugin.wellConfig().getString("lang.player.setPrice.please", "Please type in the chat the price you want to sell %item% at");
-		this.msgSetPriceSuccess = plugin.wellConfig().getString("lang.player.setPrice.success", "You're now selling %item% at %price%");
 		this.msgSetPriceInvalid = plugin.wellConfig().getString("lang.player.setPrice.invalid", "Invalid price, operation canceled");
 		this.msgSetPriceCanceled = plugin.wellConfig().getString("lang.player.setPrice.canceled", "Price set canceled");
 	}
@@ -119,10 +117,10 @@ public class AuctionInventoryManager {
 	 * 
 	 * @param player
 	 *            the player
-	 * @param shop
-	 *            the shop
+	 * @param auctionSellerData
+	 *            the auction seller data
 	 */
-	public void openDefaultPriceSet(Player player, AuctionShop shop) {
+	public void openDefaultPriceSet(Player player, AuctionSellerData auctionSellerData) {
 
 		// Cancel any pending task for the player
 		AuctionSetPriceCancelTask task = setPriceTasks.remove(player);
@@ -131,13 +129,13 @@ public class AuctionInventoryManager {
 		}
 
 		// Create the new task
-		task = new AuctionSetPriceCancelTask(player, shop);
+		task = new AuctionSetPriceCancelTask(player, auctionSellerData);
 		int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, task, setPriceTimeout);
 		task.id = taskId;
 
 		setPriceTasks.put(player, task);
 		player.closeInventory();
-		player.sendMessage(msgSetPricePlease.replace("%item%", shop.getRefItem().toString()));
+		player.sendMessage(msgSetPricePlease.replace("%item%", auctionSellerData.getShop().getRefItem().toString()));
 	}
 
 	/**
@@ -272,20 +270,17 @@ public class AuctionInventoryManager {
 			Bukkit.getScheduler().cancelTask(task.id);
 			Double price = checkPriceSet(player, message);
 
-			AuctionShop shop = task.getShop();
 			if (price != null) {
 				if (task.sale == null) {
-					shop.setDefaultPrice(shopManager.getAuctionPlayer(player), price);
+					shopManager.setDefaultPrice(task.sellerData, price);
 				} else {
-					task.sale.setPrice(price);
+					shopManager.changeSalePrice(task.sale, price);
 				}
 
 				refreshBuyInventories(task.shop);
-				player.sendMessage(ChatColor.BLUE
-						+ msgSetPriceSuccess.replace("%item%", shop.getRefItem().toString()).replace("%price%", plugin.economy().format(price)));
+				reOpenSell(task);
 			}
 
-			reOpenSell(task);
 			return true;
 		}
 
@@ -506,7 +501,15 @@ public class AuctionInventoryManager {
 		try {
 			return Double.valueOf(Integer.valueOf(price).doubleValue());
 		} catch (NumberFormatException e) {
-			player.sendMessage(ChatColor.DARK_RED + msgSetPriceInvalid);
+			switch (price) {
+			case "unset":
+			case "reset":
+			case "-":
+				// Arbitrary negative value will unset price
+				return -1d;
+			default:
+				player.sendMessage(ChatColor.DARK_RED + msgSetPriceInvalid);
+			}
 			return null;
 		}
 	}
@@ -518,7 +521,7 @@ public class AuctionInventoryManager {
 	 *            the task
 	 */
 	private void reOpenSell(AuctionSetPriceCancelTask task) {
-		openSell(task.player, task.getShop());
+		openSell(task.player, task.shop);
 	}
 
 	/**
@@ -540,10 +543,16 @@ public class AuctionInventoryManager {
 		private int id;
 
 		/** The player. */
-		private Player player;
+		private final Player player;
+
+		/** The player. */
+		private final AuctionPlayer auctionPlayer;
 
 		/** The shop. */
-		private AuctionShop shop;
+		private final AuctionShop shop;
+
+		/** The seller data. */
+		private AuctionSellerData sellerData;
 
 		/** The sale. */
 		private AuctionSale sale;
@@ -553,12 +562,14 @@ public class AuctionInventoryManager {
 		 * 
 		 * @param player
 		 *            the player
-		 * @param shop
-		 *            the shop
+		 * @param sellerData
+		 *            the seller data
 		 */
-		private AuctionSetPriceCancelTask(Player player, AuctionShop shop) {
+		private AuctionSetPriceCancelTask(Player player, AuctionSellerData sellerData) {
 			this.player = player;
-			this.shop = shop;
+			this.sellerData = sellerData;
+			this.auctionPlayer = sellerData.getAuctionPlayer();
+			this.shop = sellerData.getShop();
 		}
 
 		/**
@@ -572,23 +583,15 @@ public class AuctionInventoryManager {
 		private AuctionSetPriceCancelTask(Player player, AuctionSale sale) {
 			this.player = player;
 			this.sale = sale;
+			this.auctionPlayer = sale.getSeller();
+			this.shop = sale.getShop();
 		}
 
 		@Override
 		public void run() {
 			if (setPriceTasks.remove(player) != null) {
-				reOpenSell(this);
-				player.sendMessage(ChatColor.YELLOW + msgSetPriceCanceled);
+				auctionPlayer.sendMessage(ChatColor.YELLOW + msgSetPriceCanceled);
 			}
-		}
-
-		/**
-		 * Gets the shop.
-		 * 
-		 * @return the shop
-		 */
-		private AuctionShop getShop() {
-			return shop == null ? sale.getShop() : shop;
 		}
 	}
 }

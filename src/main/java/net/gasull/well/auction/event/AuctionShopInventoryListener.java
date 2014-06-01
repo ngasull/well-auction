@@ -251,7 +251,7 @@ public class AuctionShopInventoryListener implements Listener {
 				break;
 			case AuctionMenu.SALE_SLOT:
 				if (evt.isShiftClick()) {
-					inventoryManager.openDefaultPriceSet(player, shop);
+					inventoryManager.openDefaultPriceSet(player, shopManager.getSellerData(player, refItem));
 				} else {
 					inventoryManager.openSell(player, shop);
 				}

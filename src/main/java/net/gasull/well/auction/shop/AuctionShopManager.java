@@ -52,6 +52,18 @@ public class AuctionShopManager {
 	/** The buy not enough money message. */
 	private final String MSG_BUY_NO_MONEY;
 
+	/** The message for set price success. */
+	private final String msgSetPriceSuccess;
+
+	/** The message for price unset. */
+	private final String msgSetPriceUnset;
+
+	/** The message for set default price success. */
+	private final String msgSetDefaultPriceSuccess;
+
+	/** The message for default price unset. */
+	private final String msgSetDefaultPriceUnset;
+
 	/**
 	 * Instantiates a new auction shop manager.
 	 * 
@@ -65,6 +77,11 @@ public class AuctionShopManager {
 		this.MSG_BUY_NOTIFY = plugin.wellConfig().getString("lang.buy.notification", "You've just bought %item% to %player% for %price%");
 		this.MSG_BUY_SORRY = plugin.wellConfig().getString("lang.buy.sorry", "Sorry, %item% is not available in the shop any more..!");
 		this.MSG_BUY_NO_MONEY = plugin.wellConfig().getString("lang.buy.noMoney", "You don't have enough money to buy %item%");
+
+		this.msgSetPriceSuccess = plugin.wellConfig().getString("lang.player.setPrice.success", "You're now selling %item% at %price%");
+		this.msgSetPriceUnset = plugin.wellConfig().getString("lang.player.setPrice.unset", "You've unset the price of %item%");
+		this.msgSetDefaultPriceSuccess = plugin.wellConfig().getString("lang.player.setPrice.success", "You're now selling %item% at %price% by default");
+		this.msgSetDefaultPriceUnset = plugin.wellConfig().getString("lang.player.setPrice.unset", "You've unset the default price of %item%");
 	}
 
 	/**
@@ -89,7 +106,10 @@ public class AuctionShopManager {
 			throw new AuctionShopException("No registered shop for item " + theItem);
 		}
 
-		return shop.sell(getAuctionPlayer(player), theItem);
+		AuctionSale sale = new AuctionSale(plugin, getAuctionPlayer(player).getSellerData(shop), theItem);
+		shop.refreshPrice(sale);
+
+		return sale;
 	}
 
 	/**
@@ -126,7 +146,11 @@ public class AuctionShopManager {
 				money = plugin.economy().getBalance(player);
 				if (sale != null && money >= sale.getPrice()) {
 
-					shop.buy(player, sale);
+					if (!shop.getSales().remove(sale)) {
+						throw new AuctionShopException("Sale not found but should have been");
+					}
+
+					sale.getSeller().getSales(shop).remove(sale);
 					ItemStack item = sale.getItem();
 
 					// Notify both players
@@ -158,6 +182,66 @@ public class AuctionShopManager {
 
 		player.sendMessage(ChatColor.RED + msg);
 		throw new AuctionShopException("To " + player.getName() + " : " + msg);
+	}
+
+	/**
+	 * Change sale price.
+	 * 
+	 * @param sale
+	 *            the sale
+	 * @param price
+	 *            the price
+	 */
+	public void changeSalePrice(AuctionSale sale, Double price) {
+		if (price < 0) {
+			unsetSalePrice(sale);
+		} else {
+			sale.setPrice(price);
+			sale.getSeller().sendMessage(
+					ChatColor.BLUE + msgSetPriceSuccess.replace("%item%", sale.getItem().toString()).replace("%price%", plugin.economy().format(price)));
+		}
+	}
+
+	/**
+	 * Unset sale price.
+	 * 
+	 * @param sale
+	 *            the sale
+	 */
+	public void unsetSalePrice(AuctionSale sale) {
+		sale.setPrice(null);
+		sale.getSeller().sendMessage(ChatColor.BLUE + msgSetPriceUnset.replace("%item%", sale.getItem().toString()));
+	}
+
+	/**
+	 * Sets the default price.
+	 * 
+	 * @param sellerData
+	 *            the seller data
+	 * @param price
+	 *            the price
+	 */
+	public void setDefaultPrice(AuctionSellerData sellerData, Double price) {
+		if (price < 0) {
+			unsetDefaultPrice(sellerData);
+		} else {
+			sellerData.setDefaultPrice(price);
+			sellerData.getAuctionPlayer().sendMessage(
+					ChatColor.BLUE
+							+ msgSetDefaultPriceSuccess.replace("%item%", sellerData.getShop().getRefItem().toString()).replace("%price%",
+									plugin.economy().format(price)));
+		}
+	}
+
+	/**
+	 * Unset default price.
+	 * 
+	 * @param sellerData
+	 *            the seller data
+	 */
+	public void unsetDefaultPrice(AuctionSellerData sellerData) {
+		sellerData.setDefaultPrice(null);
+		sellerData.getAuctionPlayer().sendMessage(ChatColor.BLUE + msgSetDefaultPriceUnset.replace("%item%", sellerData.getShop().getRefItem().toString()));
 	}
 
 	/**
@@ -228,6 +312,19 @@ public class AuctionShopManager {
 	}
 
 	/**
+	 * Gets the seller data.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param refItem
+	 *            the ref item
+	 * @return the seller data
+	 */
+	public AuctionSellerData getSellerData(Player player, ItemStack refItem) {
+		return getAuctionPlayer(player).getSellerData(getShop(refItem));
+	}
+
+	/**
 	 * Registers a {@link ShopEntity} as a shop. Instantiates a new
 	 * {@link AuctionShop} if none exist for shopEntity.
 	 * 
@@ -239,7 +336,8 @@ public class AuctionShopManager {
 	 */
 	public AuctionShop registerEntityAsShop(AuctionShop shop, ShopEntity shopEntity) {
 		shopsByLocation.put(shopEntity, shop);
-		shop.registerEntity(plugin, shopEntity);
+		shopEntity.register(plugin, shop);
+		shop.getRegistered().add(shopEntity);
 		return shop;
 	}
 
@@ -327,9 +425,7 @@ public class AuctionShopManager {
 					sale.setPlugin(plugin);
 					sale.setSellerData(data);
 
-					if (sale.getPrice() != null) {
-						shop.getSales().add(sale);
-					}
+					shop.refreshPrice(sale);
 				}
 			}
 		}

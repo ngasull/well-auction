@@ -81,8 +81,6 @@ public class AuctionSale {
 		this.plugin = plugin;
 		this.item = stack;
 		this.sellerData = data;
-
-		refresh();
 	}
 
 	/**
@@ -189,7 +187,6 @@ public class AuctionSale {
 	 */
 	public void setItem(ItemStack item) {
 		this.item = item;
-		setPrice(price);
 	}
 
 	/**
@@ -246,16 +243,9 @@ public class AuctionSale {
 	 */
 	public void setPrice(Double price) {
 		this.price = price;
-		refresh();
 
 		if (sellerData != null) {
-			if (sellerData.getShop().getSales().contains(this)) {
-				sellerData.getShop().getSales().remove(this);
-			}
-
-			if (price != null && price >= 0) {
-				sellerData.getShop().getSales().add(this);
-			}
+			sellerData.getShop().refreshPrice(this);
 		}
 	}
 
@@ -265,16 +255,22 @@ public class AuctionSale {
 	 * @return the trade stack
 	 */
 	public ItemStack getTradeStack() {
-		if (tradeStack == null) {
-			refresh();
-		}
 		return tradeStack;
+	}
+
+	/**
+	 * Gets the trade stack.
+	 * 
+	 * @return the trade stack
+	 */
+	public Double getTradePrice() {
+		return price == null ? sellerData.getDefaultPrice() : price;
 	}
 
 	/**
 	 * Refresh the displayed stack.
 	 */
-	private void refresh() {
+	void refresh() {
 		if (plugin == null || sellerData == null) {
 			return;
 		}
@@ -297,15 +293,15 @@ public class AuctionSale {
 
 		desc.add(ChatColor.DARK_GRAY + "#" + id);
 
-		if (this.price == null) {
+		if (getTradePrice() == null) {
 			desc.add(this.plugin.wellConfig().getString("lang.shop.item.noPrice", "No price set up yet!"));
 		} else {
-			desc.add(ChatColor.GREEN + this.plugin.economy().format(this.price));
+			desc.add(ChatColor.GREEN + this.plugin.economy().format(getTradePrice()));
 		}
 
+		String playerName = sellerData.getAuctionPlayer().getName();
 		desc.add(ChatColor.BLUE
-				+ this.plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%")
-						.replace("%player%", sellerData.getAuctionPlayer().getPlayer().getName()));
+				+ this.plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%").replace("%player%", playerName == null ? "???" : playerName));
 
 		meta.setLore(desc);
 		this.tradeStack.setItemMeta(meta);

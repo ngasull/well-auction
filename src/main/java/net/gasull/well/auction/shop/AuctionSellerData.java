@@ -212,5 +212,12 @@ public class AuctionSellerData {
 	 */
 	public void setDefaultPrice(Double defaultPrice) {
 		this.defaultPrice = defaultPrice;
+
+		// Refresh the price of sales that depend on default price
+		if (shop != null) {
+			for (AuctionSale sale : sales) {
+				shop.refreshPrice(sale);
+			}
+		}
 	}
 }
