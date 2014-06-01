@@ -2,6 +2,7 @@ package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +53,9 @@ public class AuctionSale {
 
 	/** The price. */
 	private Double price;
+
+	/** The creation date. */
+	private Date created = new Date();
 
 	/** The item displayed in shop. */
 	@Transient
@@ -263,6 +267,25 @@ public class AuctionSale {
 		sellerData.getShop().getSales().remove(this);
 		setPrice(price);
 		sellerData.getShop().refreshPrice(this);
+	}
+
+	/**
+	 * Gets the created.
+	 * 
+	 * @return the created
+	 */
+	public Date getCreated() {
+		return created;
+	}
+
+	/**
+	 * Sets the created.
+	 * 
+	 * @param created
+	 *            the new created
+	 */
+	public void setCreated(Date created) {
+		this.created = created;
 	}
 
 	/**
