@@ -1,6 +1,7 @@
 package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -92,7 +93,12 @@ public class AuctionSale {
 	 * @return true, if is selling stack
 	 */
 	public boolean isSellingStack(ItemStack saleStack) {
-		return tradeStack.equals(saleStack);
+		if (!tradeStack.equals(saleStack) || saleStack.getItemMeta() == null || saleStack.getItemMeta().getLore() == null) {
+			return false;
+		}
+
+		// Test ID equality
+		return tradeStack.getItemMeta().getLore().get(0).equals(saleStack.getItemMeta().getLore().get(0));
 	}
 
 	/**
@@ -244,10 +250,19 @@ public class AuctionSale {
 	 */
 	public void setPrice(Double price) {
 		this.price = price;
+	}
 
-		if (sellerData != null) {
-			sellerData.getShop().refreshPrice(this);
-		}
+	/**
+	 * Change price. Not directly changing setter directly because of Avaje
+	 * wrapping.
+	 * 
+	 * @param price
+	 *            the price
+	 */
+	public void changePrice(Double price) {
+		sellerData.getShop().getSales().remove(this);
+		setPrice(price);
+		sellerData.getShop().refreshPrice(this);
 	}
 
 	/**
@@ -307,7 +322,7 @@ public class AuctionSale {
 			desc.add(ChatColor.GREEN + plugin.economy().format(getTradePrice()));
 
 			String pricePerUnit = plugin.wellConfig().getString("lang.shop.item.pricePerUnit", "%price% p.u.");
-			desc.add(ChatColor.DARK_GREEN + pricePerUnit.replace("%price%", plugin.economy().format(getTradePrice() / item.getAmount())));
+			desc.add(ChatColor.DARK_GREEN + pricePerUnit.replace("%price%", plugin.economy().format(getTradePrice() / (double) item.getAmount())));
 		}
 
 		String playerName = sellerData.getAuctionPlayer().getName();
@@ -352,5 +367,28 @@ public class AuctionSale {
 			return false;
 		}
 		return true;
+	}
+
+	static class BestPriceComparator implements Comparator<AuctionSale> {
+
+		@Override
+		public int compare(AuctionSale o1, AuctionSale o2) {
+			Double thisPrice = o1.getTradePrice();
+			Double theirPrice = o2.getTradePrice();
+
+			if (thisPrice == null) {
+				if (theirPrice != null) {
+					return 1;
+				}
+			} else if (theirPrice == null) {
+				return -1;
+			} else {
+				// Ascending price per unit
+				int comp = (int) (thisPrice / (double) o1.item.getAmount() - theirPrice / (double) o2.item.getAmount());
+				return comp == 0 ? o1.id - o2.id : comp;
+			}
+
+			return 0;
+		}
 	}
 }

@@ -1,8 +1,11 @@
 package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -54,7 +57,7 @@ public class AuctionShop {
 
 	/** The sales. */
 	@Transient
-	private List<AuctionSale> sales = new ArrayList<>();
+	private Set<AuctionSale> sales = new TreeSet<>(new AuctionSale.BestPriceComparator());
 
 	/**
 	 * Instantiates a new auction shop.
@@ -125,18 +128,6 @@ public class AuctionShop {
 	 */
 	public boolean sells(ItemStack item) {
 		return refItem.equals(refItemFor(item));
-	}
-
-	/**
-	 * Sets the new sale price for a player.
-	 * 
-	 * @param player
-	 *            the player
-	 * @param price
-	 *            the price
-	 */
-	public void setDefaultPrice(AuctionPlayer player, double price) {
-		player.getSellerData(this).setDefaultPrice(price);
 	}
 
 	/**
@@ -231,7 +222,7 @@ public class AuctionShop {
 	 * 
 	 * @return the sales
 	 */
-	public List<AuctionSale> getSales() {
+	public Collection<AuctionSale> getSales() {
 		return sales;
 	}
 
@@ -277,6 +268,11 @@ public class AuctionShop {
 	 * @return the best price
 	 */
 	public Double getBestPrice() {
-		return sales.isEmpty() ? null : sales.get(0).getTradePrice() / sales.get(0).getItem().getAmount();
+		if (sales.isEmpty()) {
+			return null;
+		}
+
+		AuctionSale bestSale = sales.iterator().next();
+		return bestSale.getTradePrice() / (double) bestSale.getItem().getAmount();
 	}
 }

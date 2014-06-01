@@ -217,7 +217,7 @@ public class AuctionShopManager {
 		if (price < 0) {
 			unsetSalePrice(player, sale);
 		} else {
-			sale.setPrice(price);
+			sale.changePrice(price);
 			sale.getSeller().sendMessage(
 					ChatColor.BLUE + msgSetPriceSuccess.replace("%item%", sale.getItem().toString()).replace("%price%", plugin.economy().format(price)));
 		}
@@ -232,7 +232,7 @@ public class AuctionShopManager {
 	 */
 	public void unsetSalePrice(Player player, AuctionSale sale) throws AuctionShopException {
 		checkEnabled(player);
-		sale.setPrice(null);
+		sale.changePrice(null);
 		sale.getSeller().sendMessage(ChatColor.BLUE + msgSetPriceUnset.replace("%item%", sale.getItem().toString()));
 	}
 
