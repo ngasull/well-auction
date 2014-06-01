@@ -264,7 +264,14 @@ public class AuctionSale {
 	 * @return the trade stack
 	 */
 	public Double getTradePrice() {
-		return price == null ? sellerData.getDefaultPrice() : price;
+		if (price == null) {
+			if (sellerData.getDefaultPrice() != null) {
+				return sellerData.getDefaultPrice() * item.getAmount();
+			}
+		} else {
+			return price;
+		}
+		return null;
 	}
 
 	/**

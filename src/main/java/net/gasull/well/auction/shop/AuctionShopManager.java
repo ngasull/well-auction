@@ -138,13 +138,14 @@ public class AuctionShopManager {
 		double money = plugin.economy().getBalance(player);
 
 		// Double check to avoid systematic synchronized
-		if (sale != null && money >= sale.getPrice()) {
+		if (sale != null && money >= sale.getTradePrice()) {
 
 			synchronized (sale) {
 
 				sale = shop.saleForStack(saleStack);
+				Double price = sale.getTradePrice();
 				money = plugin.economy().getBalance(player);
-				if (sale != null && money >= sale.getPrice()) {
+				if (sale != null && money >= price) {
 
 					if (!shop.getSales().remove(sale)) {
 						throw new AuctionShopException("Sale not found but should have been");
@@ -155,7 +156,7 @@ public class AuctionShopManager {
 
 					// Notify both players
 					OfflinePlayer seller = sale.getSeller().getPlayer();
-					String priceStr = plugin.economy().format(sale.getPrice());
+					String priceStr = plugin.economy().format(price);
 					player.sendMessage(ChatColor.DARK_GREEN
 							+ MSG_BUY_NOTIFY.replace("%item%", item.toString()).replace("%player%", seller.getName()).replace("%price%", priceStr));
 
@@ -164,8 +165,8 @@ public class AuctionShopManager {
 								+ MSG_SELL_NOTIFY.replace("%item%", item.toString()).replace("%player%", player.getName()).replace("%price%", priceStr));
 					}
 
-					plugin.economy().withdrawPlayer(player, sale.getPrice());
-					plugin.economy().depositPlayer(seller, sale.getPrice());
+					plugin.economy().withdrawPlayer(player, price);
+					plugin.economy().depositPlayer(seller, price);
 
 					return sale;
 				}
