@@ -1,7 +1,5 @@
 package net.gasull.well.auction;
 
-import java.util.logging.Level;
-
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,11 +30,6 @@ public class WellPermissionManager {
 		String notAllowedKey = "lang.permission.notAllowed";
 		String defaultNotAllowed = "You're not allowed to %thing%";
 		String notAllowed = config.getString(notAllowedKey, defaultNotAllowed);
-
-		if (notAllowed == null || !notAllowed.contains("%s")) {
-			this.plugin.getLogger().log(Level.WARNING, "Not allowed permission message not containing \"%thing%\" sequence, restoring default value");
-			config.getConfig().set(notAllowedKey, defaultNotAllowed);
-		}
 
 		this.notAllowedMsg = notAllowed;
 	}
