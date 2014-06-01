@@ -1,5 +1,6 @@
 package net.gasull.well.auction.shop;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,12 @@ public class AuctionShopManager {
 
 	/** The auction player. */
 	private final Map<UUID, AuctionPlayer> auctionPlayers = new HashMap<>();
+
+	/** The max sale id. */
+	private int maxSaleId = 0;
+
+	/** The deleted sales. */
+	private final Collection<AuctionSale> deletedSales = new ArrayList<>();
 
 	/** The sell notification message. */
 	private final String MSG_SELL_NOTIFY;
@@ -106,7 +113,9 @@ public class AuctionShopManager {
 			throw new AuctionShopException("No registered shop for item " + theItem);
 		}
 
-		AuctionSale sale = new AuctionSale(plugin, getAuctionPlayer(player).getSellerData(shop), theItem);
+		AuctionPlayer auctionPlayer = getAuctionPlayer(player);
+		AuctionSale sale = new AuctionSale(++maxSaleId, plugin, auctionPlayer.getSellerData(shop), theItem);
+		auctionPlayer.getSales(shop).add(sale);
 		shop.refreshPrice(sale);
 
 		return sale;
@@ -152,6 +161,7 @@ public class AuctionShopManager {
 					}
 
 					sale.getSeller().getSales(shop).remove(sale);
+					deletedSales.add(sale);
 					ItemStack item = sale.getItem();
 
 					// Notify both players
@@ -431,6 +441,11 @@ public class AuctionShopManager {
 			}
 		}
 
+		AuctionSale lastSale = plugin.getDatabase().find(AuctionSale.class).order("id desc").setMaxRows(1).findUnique();
+
+		if (lastSale != null) {
+			maxSaleId = lastSale.getId();
+		}
 	}
 
 	/**
@@ -439,6 +454,8 @@ public class AuctionShopManager {
 	public void save() {
 		lastSaveOk = false;
 		Transaction t = plugin.getDatabase().beginTransaction();
+
+		plugin.getDatabase().delete(deletedSales);
 
 		for (AuctionPlayer player : auctionPlayers.values()) {
 			plugin.getDatabase().save(player);

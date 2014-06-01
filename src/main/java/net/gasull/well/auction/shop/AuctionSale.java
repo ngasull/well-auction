@@ -68,16 +68,17 @@ public class AuctionSale {
 	/**
 	 * Instantiates a new auction sale.
 	 * 
+	 * @param id
+	 *            the id
 	 * @param plugin
 	 *            the plugin
-	 * @param seller
-	 *            the seller
-	 * @param auctionShop
-	 *            the shop
+	 * @param data
+	 *            the data
 	 * @param stack
 	 *            the stack
 	 */
-	public AuctionSale(WellAuction plugin, AuctionSellerData data, ItemStack stack) {
+	public AuctionSale(int id, WellAuction plugin, AuctionSellerData data, ItemStack stack) {
+		this.id = id;
 		this.plugin = plugin;
 		this.item = stack;
 		this.sellerData = data;
