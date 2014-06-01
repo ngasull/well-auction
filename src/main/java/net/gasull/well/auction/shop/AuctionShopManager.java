@@ -32,6 +32,9 @@ public class AuctionShopManager {
 	/** The last save ok. */
 	private boolean lastSaveOk = true;
 
+	/** The enabled, to avoid using this between reloads. */
+	private boolean enabled = false;
+
 	/** The registered shops by location. */
 	private Map<ShopEntity, AuctionShop> shopsByLocation = new HashMap<ShopEntity, AuctionShop>();
 
@@ -107,6 +110,7 @@ public class AuctionShopManager {
 	public AuctionSale sell(Player player, ItemStack theItem) throws AuctionShopException, WellPermissionException {
 
 		plugin.permission().can(player, "sell items", "well.auction.sell");
+		checkEnabled(player);
 		AuctionShop shop = getShop(theItem);
 
 		if (shop == null) {
@@ -137,6 +141,7 @@ public class AuctionShopManager {
 	public AuctionSale buy(Player player, ItemStack saleStack) throws AuctionShopException, WellPermissionException {
 
 		plugin.permission().can(player, "buy items", "well.auction.buy");
+		checkEnabled(player);
 		AuctionShop shop = getShop(saleStack);
 
 		if (shop == null) {
@@ -198,14 +203,19 @@ public class AuctionShopManager {
 	/**
 	 * Change sale price.
 	 * 
+	 * @param player
+	 *            the player
 	 * @param sale
 	 *            the sale
 	 * @param price
 	 *            the price
+	 * @throws AuctionShopException
+	 *             the auction shop exception
 	 */
-	public void changeSalePrice(AuctionSale sale, Double price) {
+	public void changeSalePrice(Player player, AuctionSale sale, Double price) throws AuctionShopException {
+		checkEnabled(player);
 		if (price < 0) {
-			unsetSalePrice(sale);
+			unsetSalePrice(player, sale);
 		} else {
 			sale.setPrice(price);
 			sale.getSeller().sendMessage(
@@ -215,11 +225,13 @@ public class AuctionShopManager {
 
 	/**
 	 * Unset sale price.
-	 * 
-	 * @param sale
-	 *            the sale
+	 *
+	 * @param player the player
+	 * @param sale            the sale
+	 * @throws AuctionShopException the auction shop exception
 	 */
-	public void unsetSalePrice(AuctionSale sale) {
+	public void unsetSalePrice(Player player, AuctionSale sale) throws AuctionShopException {
+		checkEnabled(player);
 		sale.setPrice(null);
 		sale.getSeller().sendMessage(ChatColor.BLUE + msgSetPriceUnset.replace("%item%", sale.getItem().toString()));
 	}
@@ -227,14 +239,18 @@ public class AuctionShopManager {
 	/**
 	 * Sets the default price.
 	 * 
+	 * @param player
+	 *            the player
 	 * @param sellerData
 	 *            the seller data
 	 * @param price
 	 *            the price
+	 * @throws AuctionShopException
+	 *             the auction shop exception
 	 */
-	public void setDefaultPrice(AuctionSellerData sellerData, Double price) {
+	public void setDefaultPrice(Player player, AuctionSellerData sellerData, Double price) throws AuctionShopException {
 		if (price < 0) {
-			unsetDefaultPrice(sellerData);
+			unsetDefaultPrice(player, sellerData);
 		} else {
 			sellerData.setDefaultPrice(price);
 			sellerData.getAuctionPlayer().sendMessage(
@@ -247,10 +263,15 @@ public class AuctionShopManager {
 	/**
 	 * Unset default price.
 	 * 
+	 * @param player
+	 *            the player
 	 * @param sellerData
 	 *            the seller data
+	 * @throws AuctionShopException
+	 *             the auction shop exception
 	 */
-	public void unsetDefaultPrice(AuctionSellerData sellerData) {
+	public void unsetDefaultPrice(Player player, AuctionSellerData sellerData) throws AuctionShopException {
+		checkEnabled(player);
 		sellerData.setDefaultPrice(null);
 		sellerData.getAuctionPlayer().sendMessage(ChatColor.BLUE + msgSetDefaultPriceUnset.replace("%item%", sellerData.getShop().getRefItem().toString()));
 	}
@@ -262,6 +283,44 @@ public class AuctionShopManager {
 	 */
 	public boolean isLastSaveOk() {
 		return lastSaveOk;
+	}
+
+	/**
+	 * Checks if is enabled.
+	 * 
+	 * @return true, if is enabled
+	 */
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	/**
+	 * Enable.
+	 */
+	public void enable() {
+		enabled = true;
+	}
+
+	/**
+	 * Disable.
+	 */
+	public void disable() {
+		enabled = false;
+	}
+
+	/**
+	 * Check enabled.
+	 * 
+	 * @param player
+	 *            the player
+	 * @throws AuctionShopException
+	 *             the auction shop exception
+	 */
+	public void checkEnabled(Player player) throws AuctionShopException {
+		if (!isEnabled()) {
+			player.sendMessage(ChatColor.RED + plugin.wellConfig().getString("lang.db.error.sync", "Sorry, Auction Houses are syncing. Please try again!"));
+			throw new AuctionShopException("");
+		}
 	}
 
 	/**
@@ -365,6 +424,12 @@ public class AuctionShopManager {
 		return registerEntityAsShop(getShop(refItem), shopEntity);
 	}
 
+	/**
+	 * Unregister.
+	 * 
+	 * @param shopEntity
+	 *            the shop entity
+	 */
 	public void unregister(ShopEntity shopEntity) {
 		shopEntity.unregister(plugin);
 		shopsByLocation.remove(shopEntity);
@@ -452,6 +517,7 @@ public class AuctionShopManager {
 	 * Save the shop manager to DB.
 	 */
 	public void save() {
+		enable();
 		lastSaveOk = false;
 		Transaction t = plugin.getDatabase().beginTransaction();
 

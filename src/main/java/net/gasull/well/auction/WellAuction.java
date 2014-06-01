@@ -68,6 +68,7 @@ public class WellAuction extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		shopManager.disable();
 		shopManager.save();
 		shopManager.clean();
 	}
@@ -139,5 +140,6 @@ public class WellAuction extends JavaPlugin {
 			getLogger().log(Level.WARNING, "Installing database for " + getDescription().getName() + " due to first time usage", e);
 			installDDL();
 		}
+		shopManager.enable();
 	}
 }

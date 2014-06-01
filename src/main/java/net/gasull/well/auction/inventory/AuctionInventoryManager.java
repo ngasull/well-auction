@@ -8,12 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.shop.AuctionPlayer;
 import net.gasull.well.auction.shop.AuctionSale;
 import net.gasull.well.auction.shop.AuctionSellerData;
 import net.gasull.well.auction.shop.AuctionShop;
+import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
 
 import org.bukkit.Bukkit;
@@ -271,14 +273,18 @@ public class AuctionInventoryManager {
 			Double price = checkPriceSet(player, message);
 
 			if (price != null) {
-				if (task.sale == null) {
-					shopManager.setDefaultPrice(task.sellerData, price);
-				} else {
-					shopManager.changeSalePrice(task.sale, price);
-				}
+				try {
+					if (task.sale == null) {
+						shopManager.setDefaultPrice(player, task.sellerData, price);
+					} else {
+						shopManager.changeSalePrice(player, task.sale, price);
+					}
 
-				refreshBuyInventories(task.shop);
-				reOpenSell(task);
+					refreshBuyInventories(task.shop);
+					reOpenSell(task);
+				} catch (AuctionShopException e) {
+					plugin.getLogger().log(Level.WARNING, "Error while changing price", e);
+				}
 			}
 
 			return true;

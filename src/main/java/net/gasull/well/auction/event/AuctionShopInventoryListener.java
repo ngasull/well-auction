@@ -291,9 +291,9 @@ public class AuctionShopInventoryListener implements Listener {
 					plugin.getLogger().info(player.getName() + " successfully put on sale " + theItem);
 					removeTheItem(evt, action);
 				} catch (AuctionShopException e) {
-					plugin.getLogger().log(Level.WARNING, player.getName() + " couldn't sell " + theItem, e);
+					plugin.getLogger().log(Level.WARNING, String.format("%s couldn't sell %s", player.getName(), theItem.toString()), e);
 				} catch (WellPermissionException e) {
-					plugin.getLogger().log(Level.INFO, player.getName() + " was not allowed to sell " + theItem);
+					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed to sell %s", player.getName(), theItem));
 				}
 			}
 		}
