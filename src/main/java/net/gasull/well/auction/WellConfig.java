@@ -251,7 +251,7 @@ public class WellConfig {
 	 * @return the boolean list
 	 */
 	public List<Boolean> getBooleanList(final String key, final List<Boolean> def) {
-		if (conf.contains(key)) {
+		if (!conf.contains(key)) {
 			conf.set(key, def);
 		}
 		return conf.getBooleanList(key);
@@ -278,7 +278,7 @@ public class WellConfig {
 	 * @return the character list
 	 */
 	public List<Character> getCharacterList(final String key, final List<Character> def) {
-		if (conf.contains(key)) {
+		if (!conf.contains(key)) {
 			conf.set(key, def);
 		}
 		return conf.getCharacterList(key);
@@ -305,7 +305,7 @@ public class WellConfig {
 	 * @return the double list
 	 */
 	public List<Double> getDoubleList(final String key, final List<Double> def) {
-		if (conf.contains(key)) {
+		if (!conf.contains(key)) {
 			conf.set(key, def);
 		}
 		return conf.getDoubleList(key);
@@ -332,7 +332,7 @@ public class WellConfig {
 	 * @return the integer list
 	 */
 	public List<Integer> getIntegerList(final String key, final List<Integer> def) {
-		if (conf.contains(key)) {
+		if (!conf.contains(key)) {
 			conf.set(key, def);
 		}
 		return conf.getIntegerList(key);
@@ -359,7 +359,7 @@ public class WellConfig {
 	 * @return the long list
 	 */
 	public List<Long> getLongList(final String key, final List<Long> def) {
-		if (conf.contains(key)) {
+		if (!conf.contains(key)) {
 			conf.set(key, def);
 		}
 		return conf.getLongList(key);
@@ -386,7 +386,7 @@ public class WellConfig {
 	 * @return the short list
 	 */
 	public List<Short> getShortList(final String key, final List<Short> def) {
-		if (conf.contains(key)) {
+		if (!conf.contains(key)) {
 			conf.set(key, def);
 		}
 		return conf.getShortList(key);
@@ -413,7 +413,7 @@ public class WellConfig {
 	 * @return the map list
 	 */
 	public List<Map<?, ?>> getMapList(final String key, final List<Map<?, ?>> def) {
-		if (conf.contains(key)) {
+		if (!conf.contains(key)) {
 			conf.set(key, def);
 		}
 		return conf.getMapList(key);
@@ -440,7 +440,7 @@ public class WellConfig {
 	 * @return the string list
 	 */
 	public List<String> getStringList(final String key, final List<String> def) {
-		if (conf.contains(key)) {
+		if (!conf.contains(key)) {
 			conf.set(key, def);
 		}
 		return conf.getStringList(key);

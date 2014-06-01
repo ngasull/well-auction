@@ -110,7 +110,8 @@ public class AuctionInventoryManager {
 	 */
 	public void openMenu(Player player, AuctionShop shop) {
 		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, titleBase);
-		inv.setContents(auctionMenu.getMenuForShop(shop));
+		AuctionSellerData sellerData = shopManager.getAuctionPlayer(player).getSellerData(shop);
+		inv.setContents(auctionMenu.getMenuForShop(sellerData));
 		player.openInventory(inv);
 	}
 

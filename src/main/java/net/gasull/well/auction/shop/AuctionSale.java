@@ -302,14 +302,17 @@ public class AuctionSale {
 		desc.add(ChatColor.DARK_GRAY + "#" + id);
 
 		if (getTradePrice() == null) {
-			desc.add(this.plugin.wellConfig().getString("lang.shop.item.noPrice", "No price set up yet!"));
+			desc.add(plugin.wellConfig().getString("lang.shop.item.noPrice", "No price set up yet!"));
 		} else {
-			desc.add(ChatColor.GREEN + this.plugin.economy().format(getTradePrice()));
+			desc.add(ChatColor.GREEN + plugin.economy().format(getTradePrice()));
+
+			String pricePerUnit = plugin.wellConfig().getString("lang.shop.item.pricePerUnit", "%price% p.u.");
+			desc.add(ChatColor.DARK_GREEN + pricePerUnit.replace("%price%", plugin.economy().format(getTradePrice() / item.getAmount())));
 		}
 
 		String playerName = sellerData.getAuctionPlayer().getName();
 		desc.add(ChatColor.BLUE
-				+ this.plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%").replace("%player%", playerName == null ? "???" : playerName));
+				+ plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%").replace("%player%", playerName == null ? "???" : playerName));
 
 		meta.setLore(desc);
 		this.tradeStack.setItemMeta(meta);

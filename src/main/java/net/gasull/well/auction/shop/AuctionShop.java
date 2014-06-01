@@ -270,4 +270,13 @@ public class AuctionShop {
 		refItem.setAmount(1);
 		return refItem;
 	}
+
+	/**
+	 * Gets the best price.
+	 * 
+	 * @return the best price
+	 */
+	public Double getBestPrice() {
+		return sales.isEmpty() ? null : sales.get(0).getTradePrice() / sales.get(0).getItem().getAmount();
+	}
 }

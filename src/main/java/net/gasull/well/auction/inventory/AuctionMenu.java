@@ -1,9 +1,14 @@
 package net.gasull.well.auction.inventory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.auction.shop.AuctionSellerData;
 import net.gasull.well.auction.shop.AuctionShop;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -14,7 +19,25 @@ import org.bukkit.inventory.meta.ItemMeta;
 public class AuctionMenu {
 
 	/** The plugin. */
-	private WellAuction plugin;
+	private final WellAuction plugin;
+
+	/** The sell button. */
+	private final ItemStack sellButton;
+
+	/** The buy button. */
+	private final ItemStack buyButton;
+
+	/** The info. */
+	private final ItemStack info;
+
+	/** The msg sale no price. */
+	private final String msgSaleNoPrice;
+
+	/** The msg sale price. */
+	private final String msgSalePrice;
+
+	/** The msg best sale price. */
+	private final String msgBestSalePrice;
 
 	/** The Constant INFO_SLOT. */
 	public static final int INFO_SLOT = 13;
@@ -33,44 +56,88 @@ public class AuctionMenu {
 
 	/**
 	 * Instantiates a new auction menu.
+	 * 
+	 * @param plugin
+	 *            the plugin
 	 */
 	public AuctionMenu(WellAuction plugin) {
 		this.plugin = plugin;
+
+		sellButton = new ItemStack(Material.matchMaterial(plugin.wellConfig().getString("inventory.menu.button.sell.item", Material.GOLD_INGOT.name())));
+		buyButton = new ItemStack(Material.matchMaterial(plugin.wellConfig().getString("inventory.menu.button.buy.item", Material.EMERALD.name())));
+		info = new ItemStack(Material.matchMaterial(plugin.wellConfig().getString("inventory.menu.button.info.item", Material.PAPER.name())));
+
+		ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(sellButton.getType());
+		itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.sell.title", "Sell"));
+		sellButton.setItemMeta(itemMeta);
+
+		itemMeta = Bukkit.getItemFactory().getItemMeta(buyButton.getType());
+		itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.buy.title", "Buy"));
+		buyButton.setItemMeta(itemMeta);
+
+		msgSaleNoPrice = plugin.wellConfig().getString("lang.inventory.menu.button.sell.noPrice", "No price set up yet!");
+		msgSalePrice = plugin.wellConfig().getString("lang.inventory.menu.button.sell.price", "Your price: %price% p.u.");
+		msgBestSalePrice = plugin.wellConfig().getString("lang.inventory.menu.button.buy.bestSale", "Best price: %price% p.u");
+
+		List<String> defaultInfo = new ArrayList<>();
+		defaultInfo.add(ChatColor.AQUA + "Either click Sell button on the left");
+		defaultInfo.add(ChatColor.AQUA + "or click Buy button on the right.");
+		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
+		defaultInfo.add(ChatColor.AQUA + "You can setup defaut sell price by");
+		defaultInfo.add(ChatColor.AQUA + "right-clicking Sell button.");
+		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
+		defaultInfo.add(ChatColor.AQUA + "You can setup the price of your");
+		defaultInfo.add(ChatColor.AQUA + "individual sales by right-clicking");
+		defaultInfo.add(ChatColor.AQUA + "your sale.");
+
+		itemMeta = Bukkit.getItemFactory().getItemMeta(info.getType());
+		itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.info.title", "Welcome to the Auction House!"));
+		itemMeta.setLore(plugin.wellConfig().getStringList("lang.inventory.menu.button.info.desc", defaultInfo));
+		info.setItemMeta(itemMeta);
 	}
 
 	/**
 	 * Gets the menu for type.
 	 * 
-	 * @param shop
-	 *            the shop
+	 * @param sellerData
+	 *            the seller data
 	 * @return the menu for shop
 	 */
-	@SuppressWarnings("deprecation")
-	public ItemStack[] getMenuForShop(AuctionShop shop) {
+	public ItemStack[] getMenuForShop(AuctionSellerData sellerData) {
 
+		AuctionShop shop = sellerData.getShop();
 		ItemStack[] contents = new ItemStack[MENU_SIZE];
 
 		for (int i = 0; i < MENU_SIZE; i++) {
 			if (isSaleSlot(i)) {
-				contents[i] = new ItemStack(plugin.wellConfig().getInt("inventory.menu.button.sell.item", Material.GOLD_INGOT.getId()));
+				contents[i] = new ItemStack(sellButton);
+				ItemMeta itemMeta = contents[i].getItemMeta();
+				List<String> desc = new ArrayList<>();
 
-				ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(contents[i].getType());
-				itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.sell.title", "Sell"));
+				if (sellerData.getDefaultPrice() == null) {
+					desc.add(ChatColor.YELLOW + msgSaleNoPrice);
+				} else {
+					;
+					desc.add(ChatColor.GREEN + msgSalePrice.replace("%price%", plugin.economy().format(sellerData.getDefaultPrice())));
+				}
+
+				itemMeta.setLore(desc);
 				contents[i].setItemMeta(itemMeta);
 			} else if (isBuySlot(i)) {
-				contents[i] = new ItemStack(plugin.wellConfig().getInt("inventory.menu.button.buy.item", Material.EMERALD.getId()));
+				contents[i] = new ItemStack(buyButton);
+				ItemMeta itemMeta = contents[i].getItemMeta();
+				List<String> desc = new ArrayList<>();
+				Double bestPrice = shop.getBestPrice();
 
-				ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(contents[i].getType());
-				itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.buy.title", "Buy"));
+				if (bestPrice != null) {
+					desc.add(ChatColor.YELLOW + msgBestSalePrice.replace("%price%", plugin.economy().format(bestPrice)));
+					itemMeta.setLore(desc);
+				}
+
+				itemMeta.setLore(desc);
 				contents[i].setItemMeta(itemMeta);
 			} else if (isInfoSlot(i)) {
-				contents[i] = new ItemStack(plugin.wellConfig().getInt("inventory.menu.button.info.item", Material.PAPER.getId()));
-
-				ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(contents[i].getType());
-				itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.info.title", "Info"));
-				contents[i].setItemMeta(itemMeta);
-				// contents[i].getItemMeta().setDisplayName(plugin.wellConfig().getString("lang.inventory.buy",
-				// "Buy"));
+				contents[i] = info;
 			} else {
 				switch (i) {
 				case REFITEM_SLOT:
