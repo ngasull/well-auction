@@ -14,5 +14,7 @@ public enum AuctionInventoryAction {
 	/** The move. */
 	MOVE,
 	/** The swap. */
-	SWAP
+	SWAP,
+	/** The right click. */
+	RIGHT_CLICK
 }

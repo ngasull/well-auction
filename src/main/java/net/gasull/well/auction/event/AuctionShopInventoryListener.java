@@ -96,10 +96,12 @@ public class AuctionShopInventoryListener implements Listener {
 			 */
 			switch (evt.getAction()) {
 			case PICKUP_ALL:
-			case PICKUP_HALF:
 			case PICKUP_ONE:
 			case PICKUP_SOME:
 				action = AuctionInventoryAction.PICKUP;
+				break;
+			case PICKUP_HALF:
+				action = AuctionInventoryAction.RIGHT_CLICK;
 				break;
 			case PLACE_ALL:
 			case PLACE_SOME:
@@ -130,6 +132,7 @@ public class AuctionShopInventoryListener implements Listener {
 				switch (action) {
 				case MOVE:
 				case PICKUP:
+				case RIGHT_CLICK:
 					doBuyAction(evt, action);
 					break;
 				case PLACE:
@@ -230,13 +233,24 @@ public class AuctionShopInventoryListener implements Listener {
 		}
 		// If current view is the sell view
 		else if (inventoryManager.isSellInventory(evt.getInventory())) {
+			ItemStack theItem = theItem(evt, action);
+			AuctionShop shop = shopManager.getShop(theItem);
+			AuctionSale sale = shopManager.getAuctionPlayer(player).getSellerData(shop).getSale(theItem);
+			
 			if (evt.isShiftClick()) {
-				ItemStack theItem = theItem(evt, action);
-				AuctionShop shop = shopManager.getShop(theItem);
-				AuctionSale sale = shopManager.getAuctionPlayer(player).getSellerData(shop).getSale(theItem);
-
 				if (sale != null) {
 					inventoryManager.openPriceSet(player, sale);
+				}
+			} else if (action == AuctionInventoryAction.RIGHT_CLICK) {
+				try {
+					ItemStack unsold = shopManager.unsell(player, theItem);
+					inventoryManager.handleBuy(sale);
+					player.setItemOnCursor(unsold);
+					plugin.getLogger().info(String.format("%s successfully unsold %s", player.getName(), unsold));
+				} catch (AuctionShopException e) {
+					plugin.getLogger().log(Level.WARNING, String.format("%s couldn't unsell %s (%s)", player.getName(), theItem, e.getMessage()));
+				} catch (WellPermissionException e) {
+					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed manage sale %s", player.getName(), theItem));
 				}
 			}
 		}
@@ -312,6 +326,7 @@ public class AuctionShopInventoryListener implements Listener {
 		switch (action) {
 		case MOVE:
 		case PICKUP:
+		case RIGHT_CLICK:
 			return evt.getCurrentItem();
 		case PLACE:
 		case SWAP:
@@ -339,6 +354,7 @@ public class AuctionShopInventoryListener implements Listener {
 			}
 			break;
 		case PICKUP:
+		case RIGHT_CLICK:
 			evt.getInventory().setItem(evt.getRawSlot(), null);
 			break;
 		case PLACE:

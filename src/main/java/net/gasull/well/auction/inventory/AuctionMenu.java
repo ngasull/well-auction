@@ -89,6 +89,9 @@ public class AuctionMenu {
 		defaultInfo.add(ChatColor.AQUA + "You can setup the price of your");
 		defaultInfo.add(ChatColor.AQUA + "individual sales by right-clicking");
 		defaultInfo.add(ChatColor.AQUA + "your sale.");
+		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
+		defaultInfo.add(ChatColor.AQUA + "You can remove your sales by");
+		defaultInfo.add(ChatColor.AQUA + "right-clicking them.");
 
 		itemMeta = Bukkit.getItemFactory().getItemMeta(info.getType());
 		itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.info.title", "Welcome to the Auction House!"));

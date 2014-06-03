@@ -47,6 +47,9 @@ public class AuctionShopManager {
 	/** The max sale id. */
 	private int maxSaleId = 0;
 
+	/** The new sales. */
+	private final Collection<AuctionSale> newSales = new ArrayList<>();
+
 	/** The deleted sales. */
 	private final Collection<AuctionSale> deletedSales = new ArrayList<>();
 
@@ -119,10 +122,54 @@ public class AuctionShopManager {
 
 		AuctionPlayer auctionPlayer = getAuctionPlayer(player);
 		AuctionSale sale = new AuctionSale(++maxSaleId, plugin, auctionPlayer.getSellerData(shop), theItem);
-		auctionPlayer.getSales(shop).add(sale);
-		shop.refreshPrice(sale);
+		addSale(shop, auctionPlayer, sale);
 
 		return sale;
+	}
+
+	/**
+	 * Unsell.
+	 * 
+	 * @param player
+	 *            the player
+	 * @param theItem
+	 *            the the item
+	 * @return the item stack
+	 * @throws AuctionShopException
+	 *             the auction shop exception
+	 * @throws WellPermissionException
+	 *             the well permission exception
+	 */
+	public ItemStack unsell(Player player, ItemStack theItem) throws AuctionShopException, WellPermissionException {
+		plugin.permission().can(player, "sell items", "well.auction.sell");
+		checkEnabled(player);
+		AuctionShop shop = getShop(theItem);
+
+		if (shop == null) {
+			throw new AuctionShopException("No registered shop for item " + theItem);
+		}
+
+		AuctionPlayer auctionPlayer = getAuctionPlayer(player);
+		AuctionSellerData sellerData = auctionPlayer.getSellerData(shop);
+		AuctionSale sale = sellerData.getSale(theItem);
+
+		if (sale != null) {
+
+			synchronized (sale) {
+
+				sale = sellerData.getSale(theItem);
+				if (sale != null) {
+
+					return removeSale(shop, sale);
+				}
+			}
+		}
+
+		// Handle failure here
+		String msg = MSG_BUY_SORRY.replace("%item%", theItem.toString());
+
+		player.sendMessage(ChatColor.RED + msg);
+		throw new AuctionShopException("To " + player.getName() + " : " + msg);
 	}
 
 	/**
@@ -161,13 +208,7 @@ public class AuctionShopManager {
 				money = plugin.economy().getBalance(player);
 				if (sale != null && money >= price) {
 
-					if (!shop.getSales().remove(sale)) {
-						throw new AuctionShopException("Sale not found but should have been");
-					}
-
-					sale.getSeller().getSales(shop).remove(sale);
-					deletedSales.add(sale);
-					ItemStack item = sale.getItem();
+					ItemStack item = removeSale(shop, sale);
 
 					// Notify both players
 					OfflinePlayer seller = sale.getSeller().getPlayer();
@@ -225,10 +266,13 @@ public class AuctionShopManager {
 
 	/**
 	 * Unset sale price.
-	 *
-	 * @param player the player
-	 * @param sale            the sale
-	 * @throws AuctionShopException the auction shop exception
+	 * 
+	 * @param player
+	 *            the player
+	 * @param sale
+	 *            the sale
+	 * @throws AuctionShopException
+	 *             the auction shop exception
 	 */
 	public void unsetSalePrice(Player player, AuctionSale sale) throws AuctionShopException {
 		checkEnabled(player);
@@ -433,6 +477,51 @@ public class AuctionShopManager {
 	public void unregister(ShopEntity shopEntity) {
 		shopEntity.unregister(plugin);
 		shopsByLocation.remove(shopEntity);
+	}
+
+	/**
+	 * Removes the sale.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @param sale
+	 *            the sale
+	 * @return the item stack
+	 * @throws AuctionShopException
+	 *             the auction shop exception
+	 */
+	private ItemStack removeSale(AuctionShop shop, AuctionSale sale) throws AuctionShopException {
+
+		if (!shop.getSales().remove(sale) || !sale.getSeller().getSales(shop).remove(sale)) {
+			throw new AuctionShopException("Sale not found but should have been");
+		}
+
+		if (newSales.contains(sale)) {
+			newSales.remove(sale);
+		} else {
+			deletedSales.add(sale);
+		}
+
+		return sale.getItem();
+	}
+
+	/**
+	 * Adds the sale.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @param player
+	 *            the player
+	 * @param sale
+	 *            the sale
+	 * @throws AuctionShopException
+	 *             the auction shop exception
+	 */
+	private void addSale(AuctionShop shop, AuctionPlayer player, AuctionSale sale) throws AuctionShopException {
+
+		player.getSales(shop).add(sale);
+		shop.refreshPrice(sale);
+		newSales.add(sale);
 	}
 
 	/**
