@@ -236,7 +236,7 @@ public class AuctionShopInventoryListener implements Listener {
 			ItemStack theItem = theItem(evt, action);
 			AuctionShop shop = shopManager.getShop(theItem);
 			AuctionSale sale = shopManager.getAuctionPlayer(player).getSellerData(shop).getSale(theItem);
-			
+
 			if (evt.isShiftClick()) {
 				if (sale != null) {
 					inventoryManager.openPriceSet(player, sale);
@@ -305,7 +305,7 @@ public class AuctionShopInventoryListener implements Listener {
 					plugin.getLogger().info(player.getName() + " successfully put on sale " + theItem);
 					removeTheItem(evt, action);
 				} catch (AuctionShopException e) {
-					plugin.getLogger().log(Level.WARNING, String.format("%s couldn't sell %s", player.getName(), theItem.toString()), e);
+					plugin.getLogger().log(Level.WARNING, String.format("%s couldn't sell %s (%s)", player.getName(), theItem.toString(), e.getMessage()));
 				} catch (WellPermissionException e) {
 					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed to sell %s", player.getName(), theItem));
 				}

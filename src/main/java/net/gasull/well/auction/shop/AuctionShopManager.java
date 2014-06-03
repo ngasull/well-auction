@@ -13,6 +13,7 @@ import net.gasull.well.auction.db.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -118,6 +119,12 @@ public class AuctionShopManager {
 
 		if (shop == null) {
 			throw new AuctionShopException("No registered shop for item " + theItem);
+		}
+		if (!shop.getStackSizes().contains(theItem.getAmount())) {
+			String msg = plugin.wellConfig().getString("lang.sell.invalidStackSize", "You can't sell %amount% of this item. Valid amounts: %amounts%");
+			msg = msg.replace("%amount%", String.valueOf(theItem.getAmount())).replace("%amounts%", StringUtils.join(shop.getStackSizes(), ", "));
+			player.sendMessage(ChatColor.RED + msg);
+			throw new AuctionShopException(String.format("To %s : %s", player.getName(), msg));
 		}
 
 		AuctionPlayer auctionPlayer = getAuctionPlayer(player);
@@ -547,8 +554,8 @@ public class AuctionShopManager {
 		}
 
 		for (AuctionShop shop : dbShops) {
-			shopById.put(shop.getId(), shop);
 			shop.setPlugin(plugin);
+			shopById.put(shop.getId(), shop);
 			shops.put(shop.getRefItem(), shop);
 
 			List<ShopEntityModel> registered = plugin.getDatabase().find(ShopEntityModel.class).where().eq("shopId", shop.getId()).findList();

@@ -1,11 +1,10 @@
 package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -55,9 +54,13 @@ public class AuctionShop {
 	@Transient
 	private List<ShopEntity> registered = new ArrayList<>();
 
+	/** The stack sizes. */
+	@Transient
+	private List<Integer> stackSizes;
+
 	/** The sales. */
 	@Transient
-	private Set<AuctionSale> sales = new TreeSet<>(new AuctionSale.BestPriceComparator());
+	private Collection<AuctionSale> sales;
 
 	/**
 	 * Instantiates a new auction shop.
@@ -74,7 +77,7 @@ public class AuctionShop {
 	 *            the reference item
 	 */
 	AuctionShop(WellAuction plugin, ItemStack stack) {
-		this.plugin = plugin;
+		setPlugin(plugin);
 		this.refItem = refItemFor(stack);
 		this.refItemSerial = new Yaml().dump(refItem.serialize());
 	}
@@ -157,6 +160,18 @@ public class AuctionShop {
 	 */
 	void setPlugin(WellAuction plugin) {
 		this.plugin = plugin;
+
+		this.stackSizes = plugin.wellConfig().getIntegerList("shop.buy.possibleStackSizes", Arrays.asList(1, 4, 8, 16, 32, 64));
+		this.sales = new AuctionSalesCollection(this.stackSizes);
+	}
+
+	/**
+	 * Gets the stack sizes.
+	 * 
+	 * @return the stack sizes
+	 */
+	public List<Integer> getStackSizes() {
+		return stackSizes;
 	}
 
 	/**

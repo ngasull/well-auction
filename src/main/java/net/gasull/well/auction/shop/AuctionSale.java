@@ -1,7 +1,6 @@
 package net.gasull.well.auction.shop;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,7 @@ import org.yaml.snakeyaml.Yaml;
  */
 @Entity
 @Table(name = "well_auction_sale")
-public class AuctionSale {
+public class AuctionSale implements Comparable<AuctionSale> {
 
 	/** The sale id. */
 	@Id
@@ -392,26 +391,23 @@ public class AuctionSale {
 		return true;
 	}
 
-	static class BestPriceComparator implements Comparator<AuctionSale> {
+	@Override
+	public int compareTo(AuctionSale sale) {
+		Double thisPrice = this.getTradePrice();
+		Double theirPrice = sale.getTradePrice();
 
-		@Override
-		public int compare(AuctionSale o1, AuctionSale o2) {
-			Double thisPrice = o1.getTradePrice();
-			Double theirPrice = o2.getTradePrice();
-
-			if (thisPrice == null) {
-				if (theirPrice != null) {
-					return 1;
-				}
-			} else if (theirPrice == null) {
-				return -1;
-			} else {
-				// Ascending price per unit
-				int comp = (int) (thisPrice / (double) o1.item.getAmount() - theirPrice / (double) o2.item.getAmount());
-				return comp == 0 ? o1.id - o2.id : comp;
+		if (thisPrice == null) {
+			if (theirPrice != null) {
+				return 1;
 			}
-
-			return 0;
+		} else if (theirPrice == null) {
+			return -1;
+		} else {
+			// Ascending price per unit
+			int comp = (int) (thisPrice / (double) this.item.getAmount() - theirPrice / (double) sale.item.getAmount());
+			return comp == 0 ? this.id - sale.id : comp;
 		}
+
+		return 0;
 	}
 }

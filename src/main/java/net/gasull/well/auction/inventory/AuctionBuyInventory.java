@@ -12,7 +12,7 @@ import org.bukkit.inventory.ItemStack;
 public class AuctionBuyInventory {
 
 	/** The size of the selling inventory. */
-	public static final int SIZE = 6 * 9;
+	public static final int SIZE = 3 * 9;
 
 	/**
 	 * Generate contents.
