@@ -84,10 +84,10 @@ public class AuctionMenu {
 		defaultInfo.add(ChatColor.AQUA + "or click Buy button on the right.");
 		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
 		defaultInfo.add(ChatColor.AQUA + "You can setup defaut sell price by");
-		defaultInfo.add(ChatColor.AQUA + "right-clicking Sell button.");
+		defaultInfo.add(ChatColor.AQUA + "shift-clicking Sell button.");
 		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
 		defaultInfo.add(ChatColor.AQUA + "You can setup the price of your");
-		defaultInfo.add(ChatColor.AQUA + "individual sales by right-clicking");
+		defaultInfo.add(ChatColor.AQUA + "individual sales by shift-clicking");
 		defaultInfo.add(ChatColor.AQUA + "your sale.");
 		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
 		defaultInfo.add(ChatColor.AQUA + "You can remove your sales by");
