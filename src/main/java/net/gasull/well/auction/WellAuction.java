@@ -6,14 +6,15 @@ import java.util.logging.Level;
 
 import javax.persistence.PersistenceException;
 
-import net.gasull.well.auction.db.ShopEntityModel;
+import net.gasull.well.auction.db.WellAuctionDao;
+import net.gasull.well.auction.db.model.AuctionPlayer;
+import net.gasull.well.auction.db.model.AuctionSale;
+import net.gasull.well.auction.db.model.AuctionSellerData;
+import net.gasull.well.auction.db.model.AuctionShop;
+import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.event.AuctionBlockShopListener;
 import net.gasull.well.auction.event.AuctionShopInventoryListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
-import net.gasull.well.auction.shop.AuctionPlayer;
-import net.gasull.well.auction.shop.AuctionSale;
-import net.gasull.well.auction.shop.AuctionSellerData;
-import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopManager;
 import net.milkbowl.vault.economy.Economy;
 
@@ -29,6 +30,9 @@ public class WellAuction extends JavaPlugin {
 
 	/** The well config. */
 	private WellConfig wellConfig;
+
+	/** The database access object for Well Auction . */
+	private WellAuctionDao db;
 
 	/** The permission. */
 	private WellPermissionManager permission;
@@ -52,7 +56,7 @@ public class WellAuction extends JavaPlugin {
 		wellConfig = new WellConfig(this, "well-auction.yml");
 		permission = new WellPermissionManager(this, wellConfig);
 
-		if (shopManager == null || shopManager.isLastSaveOk()) {
+		if (shopManager == null) {
 			shopManager = new AuctionShopManager(this);
 			inventoryManager = new AuctionInventoryManager(this, shopManager);
 			setupDb();
@@ -69,7 +73,6 @@ public class WellAuction extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		shopManager.disable();
-		shopManager.save();
 		shopManager.clean();
 	}
 
@@ -96,6 +99,15 @@ public class WellAuction extends JavaPlugin {
 	 */
 	public WellConfig wellConfig() {
 		return wellConfig;
+	}
+
+	/**
+	 * Returns the plugin's DAO.
+	 * 
+	 * @return the well auction dao
+	 */
+	public WellAuctionDao db() {
+		return db;
 	}
 
 	/**
@@ -133,6 +145,8 @@ public class WellAuction extends JavaPlugin {
 	 * Setup DB.
 	 */
 	private void setupDb() {
+		this.db = new WellAuctionDao(this);
+
 		try {
 			getDatabase().find(AuctionShop.class).findRowCount();
 			shopManager.load();
@@ -140,6 +154,7 @@ public class WellAuction extends JavaPlugin {
 			getLogger().log(Level.WARNING, "Installing database for " + getDescription().getName() + " due to first time usage", e);
 			installDDL();
 		}
+
 		shopManager.enable();
 	}
 }

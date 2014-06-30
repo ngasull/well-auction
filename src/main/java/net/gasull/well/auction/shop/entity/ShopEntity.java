@@ -1,7 +1,7 @@
 package net.gasull.well.auction.shop.entity;
 
-import net.gasull.well.auction.db.ShopEntityModel;
-import net.gasull.well.auction.shop.AuctionShop;
+import net.gasull.well.auction.db.model.AuctionShop;
+import net.gasull.well.auction.db.model.ShopEntityModel;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

@@ -1,12 +1,11 @@
-package net.gasull.well.auction.db;
+package net.gasull.well.auction.db.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
-import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import com.avaje.ebean.validation.NotNull;
@@ -23,10 +22,7 @@ public class ShopEntityModel {
 	private int id;
 
 	/** The shop. */
-	private int shopId;
-
-	/** The shop. */
-	@Transient
+	@ManyToOne
 	private AuctionShop shop;
 
 	/** The type. */
@@ -57,25 +53,6 @@ public class ShopEntityModel {
 	}
 
 	/**
-	 * Gets the shop id.
-	 * 
-	 * @return the shop id
-	 */
-	public int getShopId() {
-		return shopId;
-	}
-
-	/**
-	 * Sets the shop id.
-	 * 
-	 * @param shopId
-	 *            the new shop id
-	 */
-	public void setShopId(int shopId) {
-		this.shopId = shopId;
-	}
-
-	/**
 	 * Gets the shop.
 	 * 
 	 * @return the shop
@@ -92,7 +69,6 @@ public class ShopEntityModel {
 	 */
 	public void setShop(AuctionShop shop) {
 		this.shop = shop;
-		this.shopId = shop.getId();
 	}
 
 	/**

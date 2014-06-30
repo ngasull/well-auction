@@ -2,10 +2,9 @@ package net.gasull.well.auction.shop.entity;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 
-import net.gasull.well.auction.db.ShopEntityModel;
-import net.gasull.well.auction.shop.AuctionShop;
+import net.gasull.well.auction.db.model.AuctionShop;
+import net.gasull.well.auction.db.model.ShopEntityModel;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -64,7 +63,7 @@ public class BlockShopEntity extends ShopEntity {
 			block = loc.getBlock();
 
 			if (block == null) {
-				plugin.getLogger().log(Level.SEVERE, "Couldn't find block at pos" + loc.toString());
+				throw new RuntimeException("Couldn't find block at pos" + loc.toString());
 			}
 		}
 

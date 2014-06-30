@@ -1,26 +1,23 @@
 package net.gasull.well.auction.shop;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
-import net.gasull.well.auction.db.ShopEntityModel;
+import net.gasull.well.auction.db.model.AuctionSale;
+import net.gasull.well.auction.db.model.AuctionSellerData;
+import net.gasull.well.auction.db.model.AuctionShop;
+import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import com.avaje.ebean.Transaction;
 
 /**
  * The AuctionShop manager.
@@ -30,29 +27,14 @@ public class AuctionShopManager {
 	/** The plugin. */
 	private WellAuction plugin;
 
-	/** The last save ok. */
-	private boolean lastSaveOk = true;
-
 	/** The enabled, to avoid using this between reloads. */
 	private boolean enabled = false;
-
-	/** The registered shops by location. */
-	private Map<ShopEntity, AuctionShop> shopsByLocation = new HashMap<ShopEntity, AuctionShop>();
 
 	/** The registered shops by type. */
 	private Map<ItemStack, AuctionShop> shops = new HashMap<ItemStack, AuctionShop>();
 
-	/** The auction player. */
-	private final Map<UUID, AuctionPlayer> auctionPlayers = new HashMap<>();
-
 	/** The max sale id. */
 	private int maxSaleId = 0;
-
-	/** The new sales. */
-	private final Collection<AuctionSale> newSales = new ArrayList<>();
-
-	/** The deleted sales. */
-	private final Collection<AuctionSale> deletedSales = new ArrayList<>();
 
 	/** The sell notification message. */
 	private final String MSG_SELL_NOTIFY;
@@ -127,9 +109,13 @@ public class AuctionShopManager {
 			throw new AuctionShopException(String.format("To %s : %s", player.getName(), msg));
 		}
 
-		AuctionPlayer auctionPlayer = getAuctionPlayer(player);
-		AuctionSale sale = new AuctionSale(++maxSaleId, plugin, auctionPlayer.getSellerData(shop), theItem);
-		addSale(shop, auctionPlayer, sale);
+		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
+		AuctionSale sale = new AuctionSale(++maxSaleId, plugin, sellerData, theItem);
+		plugin.db().save(sale);
+
+		// FIXME Convert this
+		shop.getSales().add(sale);
+		refreshPrice(shop, sale);
 
 		return sale;
 	}
@@ -156,20 +142,12 @@ public class AuctionShopManager {
 			throw new AuctionShopException("No registered shop for item " + theItem);
 		}
 
-		AuctionPlayer auctionPlayer = getAuctionPlayer(player);
-		AuctionSellerData sellerData = auctionPlayer.getSellerData(shop);
-		AuctionSale sale = sellerData.getSale(theItem);
+		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
+		AuctionSale sale = getSale(sellerData, theItem);
 
+		// TODO Find another way to lock on sale
 		if (sale != null) {
-
-			synchronized (sale) {
-
-				sale = sellerData.getSale(theItem);
-				if (sale != null) {
-
-					return removeSale(shop, sale);
-				}
-			}
+			return removeSale(shop, sale);
 		}
 
 		// Handle failure here
@@ -202,7 +180,7 @@ public class AuctionShopManager {
 			throw new AuctionShopException("No registered shop for type " + saleStack.getType());
 		}
 
-		AuctionSale sale = shop.saleForStack(saleStack);
+		AuctionSale sale = saleForStack(shop, saleStack);
 		double money = plugin.economy().getBalance(player);
 
 		// Double check to avoid systematic synchronized
@@ -210,7 +188,7 @@ public class AuctionShopManager {
 
 			synchronized (sale) {
 
-				sale = shop.saleForStack(saleStack);
+				sale = saleForStack(shop, saleStack);
 				Double price = sale.getTradePrice();
 				money = plugin.economy().getBalance(player);
 				if (sale != null && money >= price) {
@@ -265,7 +243,7 @@ public class AuctionShopManager {
 		if (price < 0) {
 			unsetSalePrice(player, sale);
 		} else {
-			sale.changePrice(price);
+			changePrice(sale, price);
 			sale.getSeller().sendMessage(
 					ChatColor.BLUE + msgSetPriceSuccess.replace("%item%", sale.getItem().toString()).replace("%price%", plugin.economy().format(price)));
 		}
@@ -283,8 +261,25 @@ public class AuctionShopManager {
 	 */
 	public void unsetSalePrice(Player player, AuctionSale sale) throws AuctionShopException {
 		checkEnabled(player);
-		sale.changePrice(null);
+		changePrice(sale, null);
 		sale.getSeller().sendMessage(ChatColor.BLUE + msgSetPriceUnset.replace("%item%", sale.getItem().toString()));
+	}
+
+	/**
+	 * Change price. Not directly changing setter directly because of Avaje
+	 * wrapping.
+	 * 
+	 * @param sale
+	 *            the sale
+	 * @param price
+	 *            the price
+	 */
+	private void changePrice(AuctionSale sale, Double price) {
+		sale.getSellerData().getShop().getSales().remove(sale);
+		sale.setPrice(price);
+		plugin.db().save(sale);
+
+		refreshPrice(sale.getSellerData().getShop(), sale);
 	}
 
 	/**
@@ -303,11 +298,33 @@ public class AuctionShopManager {
 		if (price < 0) {
 			unsetDefaultPrice(player, sellerData);
 		} else {
-			sellerData.setDefaultPrice(price);
+			setDefaultPrice(sellerData, price);
 			sellerData.getAuctionPlayer().sendMessage(
 					ChatColor.BLUE
-							+ msgSetDefaultPriceSuccess.replace("%item%", sellerData.getShop().getRefItem().toString()).replace("%price%",
+							+ msgSetDefaultPriceSuccess.replace("%item%", sellerData.getShop().getRefItemCopy().toString()).replace("%price%",
 									plugin.economy().format(price)));
+		}
+	}
+
+	/**
+	 * Sets the default price.
+	 * 
+	 * @param sellerData
+	 *            the seller data
+	 * @param price
+	 *            the price
+	 */
+	public void setDefaultPrice(AuctionSellerData sellerData, Double price) {
+		sellerData.setDefaultPrice(price);
+		plugin.db().save(sellerData);
+
+		// Refresh the price of sales that depend on default price
+		AuctionShop shop = sellerData.getShop();
+		if (shop != null) {
+			List<AuctionSale> sales = plugin.db().findSales(sellerData);
+			for (AuctionSale sale : sales) {
+				refreshPrice(shop, sale);
+			}
 		}
 	}
 
@@ -323,17 +340,8 @@ public class AuctionShopManager {
 	 */
 	public void unsetDefaultPrice(Player player, AuctionSellerData sellerData) throws AuctionShopException {
 		checkEnabled(player);
-		sellerData.setDefaultPrice(null);
-		sellerData.getAuctionPlayer().sendMessage(ChatColor.BLUE + msgSetDefaultPriceUnset.replace("%item%", sellerData.getShop().getRefItem().toString()));
-	}
-
-	/**
-	 * Checks if is last save ok.
-	 * 
-	 * @return true, if is last save ok
-	 */
-	public boolean isLastSaveOk() {
-		return lastSaveOk;
+		setDefaultPrice(sellerData, null);
+		sellerData.getAuctionPlayer().sendMessage(ChatColor.BLUE + msgSetDefaultPriceUnset.replace("%item%", sellerData.getShop().getRefItemCopy().toString()));
 	}
 
 	/**
@@ -387,6 +395,8 @@ public class AuctionShopManager {
 
 		if (singletonShop == null) {
 			AuctionShop shop = new AuctionShop(plugin, refType);
+			plugin.db().save(shop);
+			plugin.db().registerShop(shop);
 			shops.put(refType, shop);
 			return shop;
 		} else {
@@ -395,54 +405,80 @@ public class AuctionShopManager {
 	}
 
 	/**
-	 * Gets the shop for a given {@link Location}.
+	 * Gets the best price.
 	 * 
-	 * @param location
-	 *            the location
-	 * @return the shop if exists for the associated location, null otherwise.
+	 * @param shop
+	 *            the shop
+	 * @return the best price
 	 */
-	public AuctionShop getShop(Location location) {
-		return shopsByLocation.get(location);
-	}
-
-	/**
-	 * Gets the shops.
-	 * 
-	 * @return the shops
-	 */
-	public Collection<AuctionShop> getShops() {
-		return shops.values();
-	}
-
-	/**
-	 * Gets the auction player, creating it if unknown.
-	 * 
-	 * @param player
-	 *            the player
-	 * @return the auction player
-	 */
-	public AuctionPlayer getAuctionPlayer(OfflinePlayer player) {
-		AuctionPlayer auctionPlayer = auctionPlayers.get(player.getUniqueId());
-
-		if (auctionPlayer == null) {
-			auctionPlayer = new AuctionPlayer(player);
-			auctionPlayers.put(player.getUniqueId(), auctionPlayer);
+	public Double getBestPrice(AuctionShop shop) {
+		if (shop.getSales().isEmpty()) {
+			return null;
 		}
 
-		return auctionPlayer;
+		AuctionSale bestSale = shop.getSales().iterator().next();
+		return bestSale.getTradePrice() / (double) bestSale.getItem().getAmount();
 	}
 
 	/**
-	 * Gets the seller data.
+	 * Gets the sale.
 	 * 
-	 * @param player
-	 *            the player
-	 * @param refItem
-	 *            the ref item
-	 * @return the seller data
+	 * @param sellerData
+	 *            the seller data
+	 * @param theItem
+	 *            the the item
+	 * @return the sale
 	 */
-	public AuctionSellerData getSellerData(Player player, ItemStack refItem) {
-		return getAuctionPlayer(player).getSellerData(getShop(refItem));
+	public AuctionSale getSale(AuctionSellerData sellerData, ItemStack theItem) {
+		List<AuctionSale> sales = plugin.db().findSales(sellerData);
+		for (AuctionSale sale : sales) {
+			if (sale.isSellingStack(theItem)) {
+				return sale;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Fetches a sale for stack.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @param saleStack
+	 *            the sale stack
+	 * @return the auction sale
+	 */
+	public AuctionSale saleForStack(AuctionShop shop, ItemStack saleStack) {
+		AuctionSale sale = null;
+
+		for (AuctionSale s : shop.getSales()) {
+			if (s.isSellingStack(saleStack)) {
+				sale = s;
+				break;
+			}
+		}
+
+		return sale;
+	}
+
+	/**
+	 * Refresh price.
+	 * 
+	 * @param sale
+	 *            the sale
+	 */
+	public void refreshPrice(AuctionShop shop, AuctionSale sale) {
+		plugin.db().refreshSale(sale);
+
+		Double price = sale.getTradePrice();
+
+		if (price != null && price >= 0) {
+			if (!shop.getSales().contains(sale)) {
+				shop.getSales().add(sale);
+			}
+		} else if (shop.getSales().contains(sale)) {
+			shop.getSales().remove(sale);
+		}
 	}
 
 	/**
@@ -456,9 +492,9 @@ public class AuctionShopManager {
 	 * @return the auction shop
 	 */
 	public AuctionShop registerEntityAsShop(AuctionShop shop, ShopEntity shopEntity) {
-		shopsByLocation.put(shopEntity, shop);
 		shopEntity.register(plugin, shop);
 		shop.getRegistered().add(shopEntity);
+		plugin.db().save(shopEntity.getModel());
 		return shop;
 	}
 
@@ -483,7 +519,6 @@ public class AuctionShopManager {
 	 */
 	public void unregister(ShopEntity shopEntity) {
 		shopEntity.unregister(plugin);
-		shopsByLocation.remove(shopEntity);
 	}
 
 	/**
@@ -499,66 +534,42 @@ public class AuctionShopManager {
 	 */
 	private ItemStack removeSale(AuctionShop shop, AuctionSale sale) throws AuctionShopException {
 
-		if (!shop.getSales().remove(sale) || !sale.getSeller().getSales(shop).remove(sale)) {
+		if (!shop.getSales().remove(sale)) {
 			throw new AuctionShopException("Sale not found but should have been");
 		}
 
-		if (newSales.contains(sale)) {
-			newSales.remove(sale);
-		} else {
-			deletedSales.add(sale);
-		}
-
+		plugin.db().delete(sale);
 		return sale.getItem();
-	}
-
-	/**
-	 * Adds the sale.
-	 * 
-	 * @param shop
-	 *            the shop
-	 * @param player
-	 *            the player
-	 * @param sale
-	 *            the sale
-	 * @throws AuctionShopException
-	 *             the auction shop exception
-	 */
-	private void addSale(AuctionShop shop, AuctionPlayer player, AuctionSale sale) throws AuctionShopException {
-
-		player.getSales(shop).add(sale);
-		shop.refreshPrice(sale);
-		newSales.add(sale);
 	}
 
 	/**
 	 * Clean.
 	 */
 	public void clean() {
-		for (ShopEntity shopEntity : shopsByLocation.keySet()) {
-			shopEntity.unregister(plugin);
+		for (AuctionShop shop : shops.values()) {
+			for (ShopEntity shopEntity : shop.getRegistered()) {
+				shopEntity.unregister(plugin);
+			}
 		}
-		shopsByLocation.clear();
 	}
 
 	/**
 	 * Load the shop manager from DB.
 	 */
 	public void load() {
-		List<AuctionPlayer> players = plugin.getDatabase().find(AuctionPlayer.class).findList();
-		List<AuctionShop> dbShops = plugin.getDatabase().find(AuctionShop.class).findList();
-		Map<Integer, AuctionShop> shopById = new HashMap<>();
-
-		for (AuctionPlayer player : players) {
-			this.auctionPlayers.put(player.getPlayerId(), player);
-		}
+		List<AuctionShop> dbShops = plugin.db().listShops();
 
 		for (AuctionShop shop : dbShops) {
-			shop.setPlugin(plugin);
-			shopById.put(shop.getId(), shop);
-			shops.put(shop.getRefItem(), shop);
+			shop.setup(plugin);
+			shops.put(shop.getRefItemCopy(), shop);
+			plugin.db().registerShop(shop);
 
-			List<ShopEntityModel> registered = plugin.getDatabase().find(ShopEntityModel.class).where().eq("shopId", shop.getId()).findList();
+			List<AuctionSale> sales = plugin.db().findSales(shop);
+			for (AuctionSale sale : sales) {
+				shop.getSales().add(sale);
+			}
+
+			List<ShopEntityModel> registered = plugin.db().findShopEntities(shop);
 
 			for (ShopEntityModel shopEntityModel : registered) {
 				shopEntityModel.setShop(shop);
@@ -574,31 +585,6 @@ public class AuctionShopManager {
 
 				shopEntity.register(plugin, shop);
 				shop.getRegistered().add(shopEntity);
-				shopsByLocation.put(shopEntity, shop);
-			}
-
-			List<AuctionSellerData> sellerData = plugin.getDatabase().find(AuctionSellerData.class).where().eq("shopId", shop.getId()).findList();
-
-			for (AuctionSellerData data : sellerData) {
-				shop.getSellerData().add(data);
-
-				data.setShop(shop);
-				data.setAuctionPlayer(auctionPlayers.get(data.getAuctionPlayerId()));
-
-				AuctionPlayer player = data.getAuctionPlayer();
-				player.getSellerData().add(data);
-				this.auctionPlayers.put(player.getPlayerId(), player);
-
-				List<AuctionSale> sales = plugin.getDatabase().find(AuctionSale.class).where().eq("sellerDataId", data.getId()).findList();
-
-				for (AuctionSale sale : sales) {
-					data.getSales().add(sale);
-
-					sale.setPlugin(plugin);
-					sale.setSellerData(data);
-
-					shop.refreshPrice(sale);
-				}
 			}
 		}
 
@@ -607,43 +593,5 @@ public class AuctionShopManager {
 		if (lastSale != null) {
 			maxSaleId = lastSale.getId();
 		}
-	}
-
-	/**
-	 * Save the shop manager to DB.
-	 */
-	public void save() {
-		enable();
-		lastSaveOk = false;
-		Transaction t = plugin.getDatabase().beginTransaction();
-
-		plugin.getDatabase().delete(deletedSales);
-
-		for (AuctionPlayer player : auctionPlayers.values()) {
-			plugin.getDatabase().save(player);
-		}
-
-		for (AuctionShop shop : shops.values()) {
-			plugin.getDatabase().save(shop);
-
-			for (ShopEntity shopEntity : shop.getRegistered()) {
-				shopEntity.getModel().setShopId(shop.getId());
-				plugin.getDatabase().save(shopEntity.getModel());
-			}
-
-			for (AuctionPlayer player : auctionPlayers.values()) {
-				AuctionSellerData sellerData = player.getSellerData(shop);
-				sellerData.setShopId(shop.getId());
-				plugin.getDatabase().save(sellerData);
-
-				for (AuctionSale sale : player.getSales(shop)) {
-					sale.setSellerDataId(sellerData.getId());
-					plugin.getDatabase().save(sale);
-				}
-			}
-		}
-
-		t.commit();
-		lastSaveOk = true;
 	}
 }

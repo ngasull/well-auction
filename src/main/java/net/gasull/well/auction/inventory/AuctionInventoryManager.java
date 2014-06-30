@@ -11,10 +11,10 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.shop.AuctionPlayer;
-import net.gasull.well.auction.shop.AuctionSale;
-import net.gasull.well.auction.shop.AuctionSellerData;
-import net.gasull.well.auction.shop.AuctionShop;
+import net.gasull.well.auction.db.model.AuctionPlayer;
+import net.gasull.well.auction.db.model.AuctionSale;
+import net.gasull.well.auction.db.model.AuctionSellerData;
+import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
 
@@ -110,8 +110,8 @@ public class AuctionInventoryManager {
 	 */
 	public void openMenu(Player player, AuctionShop shop) {
 		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, titleBase);
-		AuctionSellerData sellerData = shopManager.getAuctionPlayer(player).getSellerData(shop);
-		inv.setContents(auctionMenu.getMenuForShop(sellerData));
+		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
+		inv.setContents(auctionMenu.getMenuForShop(sellerData, shopManager.getBestPrice(shop)));
 		player.openInventory(inv);
 	}
 
@@ -138,7 +138,7 @@ public class AuctionInventoryManager {
 
 		setPriceTasks.put(player, task);
 		player.closeInventory();
-		player.sendMessage(msgSetPricePlease.replace("%item%", auctionSellerData.getShop().getRefItem().toString()));
+		player.sendMessage(msgSetPricePlease.replace("%item%", auctionSellerData.getShop().getRefItemCopy().toString()));
 	}
 
 	/**
@@ -177,7 +177,7 @@ public class AuctionInventoryManager {
 	 */
 	public void openSell(Player player, AuctionShop shop) {
 		Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.SIZE, titleSell);
-		loadSellInventory(sellInv, shop.getSalesOf(shopManager.getAuctionPlayer(player)));
+		loadSellInventory(sellInv, plugin.db().getSalesOf(shop, player));
 		openSubMenu(player, sellInv, shop, sellInventories, shopForSellInventory);
 	}
 
@@ -238,7 +238,7 @@ public class AuctionInventoryManager {
 	 *            the player
 	 */
 	public void handleSell(Inventory inv, AuctionShop shop, Player player) {
-		loadSellInventory(inv, shop.getSalesOf(shopManager.getAuctionPlayer(player)));
+		loadSellInventory(inv, plugin.db().getSalesOf(shop, player));
 		refreshBuyInventories(shop);
 	}
 
@@ -466,7 +466,7 @@ public class AuctionInventoryManager {
 		if (viewMap != null) {
 			for (Entry<Player, InventoryView> pair : viewMap.entrySet()) {
 				inv = pair.getValue().getTopInventory();
-				loadSellInventory(inv, shop.getSalesOf(shopManager.getAuctionPlayer(pair.getKey())));
+				loadSellInventory(inv, plugin.db().getSalesOf(shop, pair.getKey()));
 			}
 		}
 	}

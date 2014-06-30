@@ -4,10 +4,10 @@ import java.util.logging.Level;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
+import net.gasull.well.auction.db.model.AuctionSale;
+import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.inventory.AuctionMenu;
-import net.gasull.well.auction.shop.AuctionSale;
-import net.gasull.well.auction.shop.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
 
@@ -234,8 +234,7 @@ public class AuctionShopInventoryListener implements Listener {
 		// If current view is the sell view
 		else if (inventoryManager.isSellInventory(evt.getInventory())) {
 			ItemStack theItem = theItem(evt, action);
-			AuctionShop shop = shopManager.getShop(theItem);
-			AuctionSale sale = shopManager.getAuctionPlayer(player).getSellerData(shop).getSale(theItem);
+			AuctionSale sale = plugin.db().getSale(theItem);
 
 			if (evt.isShiftClick()) {
 				if (sale != null) {
@@ -265,7 +264,7 @@ public class AuctionShopInventoryListener implements Listener {
 				break;
 			case AuctionMenu.SALE_SLOT:
 				if (evt.isShiftClick()) {
-					inventoryManager.openDefaultPriceSet(player, shopManager.getSellerData(player, refItem));
+					inventoryManager.openDefaultPriceSet(player, plugin.db().findSellerData(player, shop));
 				} else {
 					inventoryManager.openSell(player, shop);
 				}

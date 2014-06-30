@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import net.gasull.well.auction.shop.AuctionShop;
+import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopManager;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
 import net.gasull.well.auction.shop.entity.ShopEntity;
@@ -166,7 +166,7 @@ public class WellAuctionCommandHandler {
 		}
 
 		AuctionShop shop = shopManager.registerEntityAsShop(refItem, shopEntity);
-		player.sendMessage(SUCC_CREATION.replace("%item%", shop.getRefItem().toString()));
+		player.sendMessage(SUCC_CREATION.replace("%item%", shop.getRefItemCopy().toString()));
 	}
 
 	/**
@@ -177,7 +177,7 @@ public class WellAuctionCommandHandler {
 	 */
 	private void handleList(CommandSender sender) {
 		StringBuilder msg;
-		Collection<AuctionShop> shops = shopManager.getShops();
+		Collection<AuctionShop> shops = plugin.db().listShops();
 
 		if (shops.isEmpty()) {
 			sender.sendMessage(LIST_NO_SHOP);

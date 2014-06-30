@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.shop.AuctionSellerData;
-import net.gasull.well.auction.shop.AuctionShop;
+import net.gasull.well.auction.db.model.AuctionSellerData;
+import net.gasull.well.auction.db.model.AuctionShop;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -106,7 +106,7 @@ public class AuctionMenu {
 	 *            the seller data
 	 * @return the menu for shop
 	 */
-	public ItemStack[] getMenuForShop(AuctionSellerData sellerData) {
+	public ItemStack[] getMenuForShop(AuctionSellerData sellerData, Double bestPrice) {
 
 		AuctionShop shop = sellerData.getShop();
 		ItemStack[] contents = new ItemStack[MENU_SIZE];
@@ -130,7 +130,6 @@ public class AuctionMenu {
 				contents[i] = new ItemStack(buyButton);
 				ItemMeta itemMeta = contents[i].getItemMeta();
 				List<String> desc = new ArrayList<>();
-				Double bestPrice = shop.getBestPrice();
 
 				if (bestPrice != null) {
 					desc.add(ChatColor.YELLOW + msgBestSalePrice.replace("%price%", plugin.economy().format(bestPrice)));
@@ -149,7 +148,7 @@ public class AuctionMenu {
 				case 17:
 				case 19:
 				case 25:
-					contents[i] = new ItemStack(shop.getRefItem());
+					contents[i] = new ItemStack(shop.getRefItemCopy());
 					break;
 				}
 			}

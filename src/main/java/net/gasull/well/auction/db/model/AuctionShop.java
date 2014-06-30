@@ -1,4 +1,4 @@
-package net.gasull.well.auction.shop;
+package net.gasull.well.auction.db.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,9 +13,11 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.auction.shop.AuctionSalesCollection;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.yaml.snakeyaml.Yaml;
 
@@ -28,10 +30,6 @@ import com.avaje.ebean.validation.NotNull;
 @Entity
 @Table(name = "well_auction_shop")
 public class AuctionShop {
-
-	/** The plugin. */
-	@Transient
-	private WellAuction plugin;
 
 	/** The id. */
 	@Id
@@ -48,10 +46,6 @@ public class AuctionShop {
 
 	/** The registered shop-entities. */
 	@Transient
-	private List<AuctionSellerData> sellerData = new ArrayList<>();
-
-	/** The registered shop-entities. */
-	@Transient
 	private List<ShopEntity> registered = new ArrayList<>();
 
 	/** The stack sizes. */
@@ -61,6 +55,10 @@ public class AuctionShop {
 	/** The sales. */
 	@Transient
 	private Collection<AuctionSale> sales;
+
+	/** The inventory view. */
+	@Transient
+	private InventoryView inventoryView;
 
 	/**
 	 * Instantiates a new auction shop.
@@ -76,50 +74,9 @@ public class AuctionShop {
 	 * @param stack
 	 *            the reference item
 	 */
-	AuctionShop(WellAuction plugin, ItemStack stack) {
-		setPlugin(plugin);
-		this.refItem = refItemFor(stack);
-		this.refItemSerial = new Yaml().dump(refItem.serialize());
-	}
-
-	/**
-	 * Refresh price.
-	 * 
-	 * @param sale
-	 *            the sale
-	 */
-	void refreshPrice(AuctionSale sale) {
-		sale.refresh();
-
-		Double price = sale.getTradePrice();
-
-		if (price != null && price >= 0) {
-			if (!sales.contains(sale)) {
-				sales.add(sale);
-			}
-		} else if (sales.contains(sale)) {
-			sales.remove(sale);
-		}
-	}
-
-	/**
-	 * Fetches a sale for stack.
-	 * 
-	 * @param saleStack
-	 *            the sale stack
-	 * @return the auction sale
-	 */
-	public AuctionSale saleForStack(ItemStack saleStack) {
-		AuctionSale sale = null;
-
-		for (AuctionSale s : sales) {
-			if (s.isSellingStack(saleStack)) {
-				sale = s;
-				break;
-			}
-		}
-
-		return sale;
+	public AuctionShop(WellAuction plugin, ItemStack stack) {
+		setup(plugin);
+		setRefItemSerial(new Yaml().dump(refItemFor(stack).serialize()));
 	}
 
 	/**
@@ -130,7 +87,7 @@ public class AuctionShop {
 	 * @return the check
 	 */
 	public boolean sells(ItemStack item) {
-		return refItem.equals(refItemFor(item));
+		return getRefItem().equals(refItemFor(item));
 	}
 
 	/**
@@ -153,16 +110,14 @@ public class AuctionShop {
 	}
 
 	/**
-	 * Sets the plugin.
+	 * Sets the shop up.
 	 * 
 	 * @param plugin
-	 *            the new plugin
+	 *            the plugin
 	 */
-	void setPlugin(WellAuction plugin) {
-		this.plugin = plugin;
-
-		this.stackSizes = plugin.wellConfig().getIntegerList("shop.buy.possibleStackSizes", Arrays.asList(1, 4, 8, 16, 32, 64));
-		this.sales = new AuctionSalesCollection(this.stackSizes);
+	public void setup(WellAuction plugin) {
+		setStackSizes(plugin.wellConfig().getIntegerList("shop.buy.possibleStackSizes", Arrays.asList(1, 4, 8, 16, 32, 64)));
+		setSales(new AuctionSalesCollection(this.stackSizes));
 	}
 
 	/**
@@ -175,12 +130,38 @@ public class AuctionShop {
 	}
 
 	/**
+	 * Sets the stack sizes.
+	 * 
+	 * @param stackSizes
+	 *            the new stack sizes
+	 */
+	public void setStackSizes(List<Integer> stackSizes) {
+		this.stackSizes = stackSizes;
+	}
+
+	/**
 	 * Gets the ref item.
 	 * 
 	 * @return the ref item
 	 */
 	public ItemStack getRefItem() {
-		return new ItemStack(refItem);
+		return refItem;
+	}
+
+	/**
+	 * Sets the ref item.
+	 */
+	public void setRefItem(ItemStack refItem) {
+		this.refItem = refItem;
+	}
+
+	/**
+	 * Gets a copy of the ref item.
+	 * 
+	 * @return the ref item
+	 */
+	public ItemStack getRefItemCopy() {
+		return new ItemStack(getRefItem());
 	}
 
 	/**
@@ -201,16 +182,7 @@ public class AuctionShop {
 	@SuppressWarnings("unchecked")
 	public void setRefItemSerial(String refItemSerial) {
 		this.refItemSerial = refItemSerial;
-		this.refItem = (ItemStack) ConfigurationSerialization.deserializeObject((Map<String, ?>) new Yaml().load(refItemSerial), ItemStack.class);
-	}
-
-	/**
-	 * Gets the seller data.
-	 * 
-	 * @return the seller data
-	 */
-	public List<AuctionSellerData> getSellerData() {
-		return sellerData;
+		setRefItem((ItemStack) ConfigurationSerialization.deserializeObject((Map<String, ?>) new Yaml().load(refItemSerial), ItemStack.class));
 	}
 
 	/**
@@ -242,19 +214,37 @@ public class AuctionShop {
 	}
 
 	/**
-	 * Gets the sales of a player.
+	 * Sets the sales.
 	 * 
-	 * @param player
-	 *            the player
-	 * @return the sales
+	 * @param sales
+	 *            the new sales
 	 */
-	public List<AuctionSale> getSalesOf(AuctionPlayer player) {
-		return player.getSales(this);
+	public void setSales(Collection<AuctionSale> sales) {
+		this.sales = sales;
+	}
+
+	/**
+	 * Gets the inventory view.
+	 * 
+	 * @return the inventory view
+	 */
+	public InventoryView getInventoryView() {
+		return inventoryView;
+	}
+
+	/**
+	 * Sets the inventory view.
+	 * 
+	 * @param inventoryView
+	 *            the new inventory view
+	 */
+	public void setInventoryView(InventoryView inventoryView) {
+		this.inventoryView = inventoryView;
 	}
 
 	@Override
 	public String toString() {
-		return "AuctionShop [id=" + id + ", refItem=" + refItem + "]";
+		return "AuctionShop [id=" + getId() + ", refItem=" + getRefItemCopy() + "]";
 	}
 
 	/**
@@ -275,19 +265,5 @@ public class AuctionShop {
 
 		refItem.setAmount(1);
 		return refItem;
-	}
-
-	/**
-	 * Gets the best price.
-	 * 
-	 * @return the best price
-	 */
-	public Double getBestPrice() {
-		if (sales.isEmpty()) {
-			return null;
-		}
-
-		AuctionSale bestSale = sales.iterator().next();
-		return bestSale.getTradePrice() / (double) bestSale.getItem().getAmount();
 	}
 }

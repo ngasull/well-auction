@@ -1,23 +1,19 @@
-package net.gasull.well.auction.shop;
+package net.gasull.well.auction.db.model;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import net.gasull.well.auction.WellAuction;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -31,11 +27,8 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	@Id
 	private Integer id;
 
-	/** The seller data id. */
-	private Integer sellerDataId;
-
 	/** The seller data. */
-	@Transient
+	@ManyToOne
 	private AuctionSellerData sellerData;
 
 	/** The plugin. */
@@ -59,6 +52,9 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	/** The item displayed in shop. */
 	@Transient
 	private ItemStack tradeStack;
+
+	/** Prefixes item id's. */
+	public static final String N = "#";
 
 	/** The Constant LORE_SEPARATOR. */
 	public static final String LORE_SEPARATOR = "====================";
@@ -121,25 +117,6 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	 */
 	public void setId(Integer id) {
 		this.id = id;
-	}
-
-	/**
-	 * Gets the seller data id.
-	 * 
-	 * @return the seller data id
-	 */
-	public Integer getSellerDataId() {
-		return sellerDataId;
-	}
-
-	/**
-	 * Sets the seller data id.
-	 * 
-	 * @param sellerDataId
-	 *            the new seller data id
-	 */
-	public void setSellerDataId(Integer sellerDataId) {
-		this.sellerDataId = sellerDataId;
 	}
 
 	/**
@@ -256,19 +233,6 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	}
 
 	/**
-	 * Change price. Not directly changing setter directly because of Avaje
-	 * wrapping.
-	 * 
-	 * @param price
-	 *            the price
-	 */
-	public void changePrice(Double price) {
-		sellerData.getShop().getSales().remove(this);
-		setPrice(price);
-		sellerData.getShop().refreshPrice(this);
-	}
-
-	/**
 	 * Gets the created.
 	 * 
 	 * @return the created
@@ -297,6 +261,16 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	}
 
 	/**
+	 * Sets the trade stack.
+	 * 
+	 * @param tradeStack
+	 *            the new trade stack
+	 */
+	public void setTradeStack(ItemStack tradeStack) {
+		this.tradeStack = tradeStack;
+	}
+
+	/**
 	 * Gets the trade stack.
 	 * 
 	 * @return the trade stack
@@ -310,49 +284,6 @@ public class AuctionSale implements Comparable<AuctionSale> {
 			return price;
 		}
 		return null;
-	}
-
-	/**
-	 * Refresh the displayed stack.
-	 */
-	void refresh() {
-		if (plugin == null || sellerData == null) {
-			return;
-		}
-
-		this.tradeStack = new ItemStack(this.item);
-		ItemMeta realMeta = this.tradeStack.getItemMeta();
-		ItemMeta meta = this.item.getItemMeta();
-
-		if (!this.tradeStack.hasItemMeta()) {
-			meta = Bukkit.getItemFactory().getItemMeta(this.tradeStack.getType());
-		}
-
-		List<String> desc;
-		if (this.tradeStack.hasItemMeta() && realMeta.getLore() != null && !realMeta.getLore().isEmpty()) {
-			desc = realMeta.getLore();
-			desc.add(LORE_SEPARATOR);
-		} else {
-			desc = new ArrayList<>();
-		}
-
-		desc.add(ChatColor.DARK_GRAY + "#" + id);
-
-		if (getTradePrice() == null) {
-			desc.add(plugin.wellConfig().getString("lang.shop.item.noPrice", "No price set up yet!"));
-		} else {
-			desc.add(ChatColor.GREEN + plugin.economy().format(getTradePrice()));
-
-			String pricePerUnit = plugin.wellConfig().getString("lang.shop.item.pricePerUnit", "%price% p.u.");
-			desc.add(ChatColor.DARK_GREEN + pricePerUnit.replace("%price%", plugin.economy().format(getTradePrice() / (double) item.getAmount())));
-		}
-
-		String playerName = sellerData.getAuctionPlayer().getName();
-		desc.add(ChatColor.BLUE
-				+ plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%").replace("%player%", playerName == null ? "???" : playerName));
-
-		meta.setLore(desc);
-		this.tradeStack.setItemMeta(meta);
 	}
 
 	/*

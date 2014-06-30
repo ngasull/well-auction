@@ -2,7 +2,7 @@ package net.gasull.well.auction.inventory;
 
 import java.util.List;
 
-import net.gasull.well.auction.shop.AuctionSale;
+import net.gasull.well.auction.db.model.AuctionSale;
 
 import org.bukkit.inventory.ItemStack;
 

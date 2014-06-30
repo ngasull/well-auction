@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.gasull.well.auction.db.model.AuctionSale;
+import net.gasull.well.auction.db.model.AuctionShop;
+
 import org.bukkit.inventory.ItemStack;
 
 /**

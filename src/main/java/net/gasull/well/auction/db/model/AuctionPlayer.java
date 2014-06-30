@@ -1,4 +1,4 @@
-package net.gasull.well.auction.shop;
+package net.gasull.well.auction.db.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +40,7 @@ public class AuctionPlayer {
 	 * @param player
 	 *            the player
 	 */
-	AuctionPlayer(OfflinePlayer player) {
+	public AuctionPlayer(OfflinePlayer player) {
 		this.playerId = player.getUniqueId();
 	}
 
@@ -87,42 +87,12 @@ public class AuctionPlayer {
 	}
 
 	/**
-	 * Gets the sales.
-	 * 
-	 * @param shop
-	 *            the shop
-	 * @return the sales
-	 */
-	public List<AuctionSale> getSales(AuctionShop shop) {
-		return getSellerData(shop).getSales();
-	}
-
-	/**
 	 * Gets the seller data.
 	 * 
 	 * @return the seller data
 	 */
 	public List<AuctionSellerData> getSellerData() {
 		return sellerData;
-	}
-
-	/**
-	 * Gets the seller data.
-	 * 
-	 * @param shop
-	 *            the auction shop
-	 * @return the seller data
-	 */
-	public AuctionSellerData getSellerData(AuctionShop shop) {
-		for (AuctionSellerData d : sellerData) {
-			if (d.getShop().equals(shop)) {
-				return d;
-			}
-		}
-
-		AuctionSellerData data = new AuctionSellerData(shop, this);
-		getSellerData().add(data);
-		return data;
 	}
 
 	/**
