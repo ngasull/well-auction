@@ -256,7 +256,7 @@ public class AuctionShopInventoryListener implements Listener {
 		// Otherwise, it's the menu
 		else {
 			ItemStack refItem = evt.getInventory().getItem(AuctionMenu.REFITEM_SLOT);
-			AuctionShop shop = shopManager.getShop(refItem);
+			AuctionShop shop = plugin.db().getShop(refItem);
 
 			switch (evt.getRawSlot()) {
 			case AuctionMenu.BUY_SLOT:

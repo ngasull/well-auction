@@ -84,7 +84,9 @@ public class AuctionBlockShopListener implements Listener {
 		BlockShopEntity shopBlock = getShopForBlock(evt.getBlock());
 
 		if (shopBlock != null) {
-			shopManager.unregister(shopBlock);
+			shopBlock.unregister(plugin);
+			plugin.db().refresh(shopBlock.getModel());
+			plugin.db().delete(shopBlock.getModel());
 		}
 	}
 

@@ -165,7 +165,10 @@ public class WellAuctionCommandHandler {
 			return;
 		}
 
-		AuctionShop shop = shopManager.registerEntityAsShop(refItem, shopEntity);
+		AuctionShop shop = plugin.db().getShop(refItem);
+		shopEntity.register(plugin, shop);
+		plugin.db().save(shopEntity.getModel());
+
 		player.sendMessage(SUCC_CREATION.replace("%item%", shop.getRefItemCopy().toString()));
 	}
 

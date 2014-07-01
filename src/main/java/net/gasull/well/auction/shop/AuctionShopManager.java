@@ -1,8 +1,7 @@
 package net.gasull.well.auction.shop;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
@@ -29,9 +28,6 @@ public class AuctionShopManager {
 
 	/** The enabled, to avoid using this between reloads. */
 	private boolean enabled = false;
-
-	/** The registered shops by type. */
-	private Map<ItemStack, AuctionShop> shops = new HashMap<ItemStack, AuctionShop>();
 
 	/** The max sale id. */
 	private int maxSaleId = 0;
@@ -97,7 +93,7 @@ public class AuctionShopManager {
 
 		plugin.permission().can(player, "sell items", "well.auction.sell");
 		checkEnabled(player);
-		AuctionShop shop = getShop(theItem);
+		AuctionShop shop = plugin.db().getShop(theItem);
 
 		if (shop == null) {
 			throw new AuctionShopException("No registered shop for item " + theItem);
@@ -136,7 +132,7 @@ public class AuctionShopManager {
 	public ItemStack unsell(Player player, ItemStack theItem) throws AuctionShopException, WellPermissionException {
 		plugin.permission().can(player, "sell items", "well.auction.sell");
 		checkEnabled(player);
-		AuctionShop shop = getShop(theItem);
+		AuctionShop shop = plugin.db().getShop(theItem);
 
 		if (shop == null) {
 			throw new AuctionShopException("No registered shop for item " + theItem);
@@ -174,7 +170,7 @@ public class AuctionShopManager {
 
 		plugin.permission().can(player, "buy items", "well.auction.buy");
 		checkEnabled(player);
-		AuctionShop shop = getShop(saleStack);
+		AuctionShop shop = plugin.db().getShop(saleStack);
 
 		if (shop == null) {
 			throw new AuctionShopException("No registered shop for type " + saleStack.getType());
@@ -383,28 +379,6 @@ public class AuctionShopManager {
 	}
 
 	/**
-	 * Gets the shop from a given item.
-	 * 
-	 * @param type
-	 *            the auction type
-	 * @return the shop if exists for the associated material, null otherwise.
-	 */
-	public AuctionShop getShop(ItemStack type) {
-		ItemStack refType = AuctionShop.refItemFor(type);
-		AuctionShop singletonShop = shops.get(refType);
-
-		if (singletonShop == null) {
-			AuctionShop shop = new AuctionShop(plugin, refType);
-			plugin.db().save(shop);
-			plugin.db().registerShop(shop);
-			shops.put(refType, shop);
-			return shop;
-		} else {
-			return singletonShop;
-		}
-	}
-
-	/**
 	 * Gets the best price.
 	 * 
 	 * @param shop
@@ -482,46 +456,6 @@ public class AuctionShopManager {
 	}
 
 	/**
-	 * Registers a {@link ShopEntity} as a shop. Instantiates a new
-	 * {@link AuctionShop} if none exist for shopEntity.
-	 * 
-	 * @param shop
-	 *            the shop
-	 * @param shopEntity
-	 *            the shop entity
-	 * @return the auction shop
-	 */
-	public AuctionShop registerEntityAsShop(AuctionShop shop, ShopEntity shopEntity) {
-		shopEntity.register(plugin, shop);
-		shop.getRegistered().add(shopEntity);
-		plugin.db().save(shopEntity.getModel());
-		return shop;
-	}
-
-	/**
-	 * Register entity as shop.
-	 * 
-	 * @param refItem
-	 *            the ref item
-	 * @param shopEntity
-	 *            the shop entity
-	 * @return the auction shop
-	 */
-	public AuctionShop registerEntityAsShop(ItemStack refItem, ShopEntity shopEntity) {
-		return registerEntityAsShop(getShop(refItem), shopEntity);
-	}
-
-	/**
-	 * Unregister.
-	 * 
-	 * @param shopEntity
-	 *            the shop entity
-	 */
-	public void unregister(ShopEntity shopEntity) {
-		shopEntity.unregister(plugin);
-	}
-
-	/**
 	 * Removes the sale.
 	 * 
 	 * @param shop
@@ -546,8 +480,9 @@ public class AuctionShopManager {
 	 * Clean.
 	 */
 	public void clean() {
-		for (AuctionShop shop : shops.values()) {
-			for (ShopEntity shopEntity : shop.getRegistered()) {
+		for (AuctionShop shop : plugin.db().getShops()) {
+			// Copy shop entity list to avoid concurrent list modification
+			for (ShopEntity shopEntity : new ArrayList<>(shop.getRegistered())) {
 				shopEntity.unregister(plugin);
 			}
 		}
@@ -561,7 +496,6 @@ public class AuctionShopManager {
 
 		for (AuctionShop shop : dbShops) {
 			shop.setup(plugin);
-			shops.put(shop.getRefItemCopy(), shop);
 			plugin.db().registerShop(shop);
 
 			List<AuctionSale> sales = plugin.db().findSales(shop);

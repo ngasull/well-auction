@@ -1,9 +1,8 @@
 package net.gasull.well.auction.shop.entity;
 
+import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
-
-import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Modelizes what can be a clickable shop.
@@ -18,7 +17,10 @@ public abstract class ShopEntity {
 	 * @param auctionShop
 	 *            the auction shop
 	 */
-	public abstract void register(JavaPlugin plugin, AuctionShop auctionShop);
+	public void register(WellAuction plugin, AuctionShop auctionShop) {
+		getModel().setShop(auctionShop);
+		auctionShop.getRegistered().add(this);
+	}
 
 	/**
 	 * Unregister.
@@ -26,7 +28,9 @@ public abstract class ShopEntity {
 	 * @param plugin
 	 *            the plugin
 	 */
-	public abstract void unregister(JavaPlugin plugin);
+	public void unregister(WellAuction plugin) {
+		getModel().getShop().getRegistered().remove(this);
+	}
 
 	/**
 	 * Gets the model.

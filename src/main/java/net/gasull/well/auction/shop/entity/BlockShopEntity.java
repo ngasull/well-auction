@@ -3,6 +3,7 @@ package net.gasull.well.auction.shop.entity;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 
@@ -12,7 +13,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -53,9 +53,7 @@ public class BlockShopEntity extends ShopEntity {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void register(JavaPlugin plugin, AuctionShop auctionShop) {
-		model.setShop(auctionShop);
-
+	public void register(WellAuction plugin, AuctionShop auctionShop) {
 		if (block == null) {
 			Map<String, Object> dataMap = (Map<String, Object>) new Yaml().load(model.getData());
 			World world = Bukkit.getWorld((String) dataMap.get("w"));
@@ -69,10 +67,13 @@ public class BlockShopEntity extends ShopEntity {
 
 		MetadataValue meta = new FixedMetadataValue(plugin, this);
 		block.setMetadata(META_KEY, meta);
+
+		super.register(plugin, auctionShop);
 	}
 
 	@Override
-	public void unregister(JavaPlugin plugin) {
+	public void unregister(WellAuction plugin) {
+		super.unregister(plugin);
 		block.removeMetadata(META_KEY, plugin);
 	}
 

@@ -1,6 +1,7 @@
 package net.gasull.well.auction.db;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
+import net.gasull.well.db.WellDao;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -25,13 +27,16 @@ import com.avaje.ebean.EbeanServer;
 /**
  * The Class WellAuctionDao.
  */
-public class WellAuctionDao {
+public class WellAuctionDao extends WellDao {
 
 	/** The plugin. */
 	private final WellAuction plugin;
 
 	/** The actual db object. */
 	private final EbeanServer db;
+
+	/** The registered shops by type. */
+	private Map<ItemStack, AuctionShop> shops = new HashMap<ItemStack, AuctionShop>();
 
 	/** The shops by id. */
 	private Map<Integer, AuctionShop> shopById = new HashMap<>();
@@ -46,28 +51,9 @@ public class WellAuctionDao {
 	 *            the plugin
 	 */
 	public WellAuctionDao(WellAuction plugin) {
+		super(plugin);
 		this.plugin = plugin;
 		this.db = plugin.getDatabase();
-	}
-
-	/**
-	 * Save.
-	 * 
-	 * @param model
-	 *            the model
-	 */
-	public void save(Object model) {
-		this.db.save(model);
-	}
-
-	/**
-	 * Delete.
-	 * 
-	 * @param model
-	 *            the model
-	 */
-	public void delete(Object model) {
-		this.db.delete(model);
 	}
 
 	/**
@@ -255,12 +241,35 @@ public class WellAuctionDao {
 	}
 
 	/**
+	 * Gets the shop from a given item.
+	 * 
+	 * @param type
+	 *            the auction type
+	 * @return the shop if exists for the associated material, null otherwise.
+	 */
+	public AuctionShop getShop(ItemStack type) {
+		ItemStack refType = AuctionShop.refItemFor(type);
+		AuctionShop singletonShop = shops.get(refType);
+
+		if (singletonShop == null) {
+			AuctionShop shop = new AuctionShop(plugin, refType);
+			plugin.db().save(shop);
+			plugin.db().registerShop(shop);
+			shops.put(refType, shop);
+			return shop;
+		} else {
+			return singletonShop;
+		}
+	}
+
+	/**
 	 * Register shop for singleton fetching id-fetching.
 	 * 
 	 * @param shop
 	 *            the shop
 	 */
 	public void registerShop(AuctionShop shop) {
+		shops.put(shop.getRefItemCopy(), shop);
 		shopById.put(shop.getId(), shop);
 	}
 
@@ -282,5 +291,14 @@ public class WellAuctionDao {
 	 */
 	public List<AuctionShop> listShops() {
 		return db.find(AuctionShop.class).findList();
+	}
+
+	/**
+	 * Get shops already loaded shops
+	 * 
+	 * @return the list
+	 */
+	public Collection<AuctionShop> getShops() {
+		return shops.values();
 	}
 }
