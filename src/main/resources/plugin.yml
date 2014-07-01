@@ -6,6 +6,6 @@ database: true
 commands:
   wellauction:
     description: This allow you to manage Auction Houses.
-    usage: /<command> create [player]
+    usage: /<command> attach|detach|list
     permission: well.auction
     permission-message: You don't have <permission>

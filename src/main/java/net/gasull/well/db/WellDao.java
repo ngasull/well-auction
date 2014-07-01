@@ -39,6 +39,7 @@ public abstract class WellDao {
 	 *            the model
 	 */
 	public void delete(Object model) {
+		refresh(model);
 		this.db.delete(model);
 	}
 

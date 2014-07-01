@@ -78,7 +78,6 @@ public class AuctionBlockShopListener implements Listener {
 
 		if (shopBlock != null) {
 			shopBlock.unregister(plugin);
-			plugin.db().refresh(shopBlock.getModel());
 			plugin.db().delete(shopBlock.getModel());
 		}
 	}

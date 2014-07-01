@@ -66,7 +66,7 @@ public class WellAuction extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new AuctionShopInventoryListener(this, shopManager, inventoryManager), this);
 		getServer().getPluginManager().registerEvents(new AuctionBlockShopListener(this, inventoryManager), this);
 
-		commandHandler = new WellAuctionCommandHandler(this, shopManager);
+		commandHandler = new WellAuctionCommandHandler(this);
 		wellConfig.save();
 	}
 

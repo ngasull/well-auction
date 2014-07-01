@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 
 import net.gasull.well.auction.db.model.AuctionShop;
-import net.gasull.well.auction.shop.AuctionShopManager;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
@@ -26,9 +25,6 @@ public class WellAuctionCommandHandler {
 	/** The plugin. */
 	private WellAuction plugin;
 
-	/** The shop manager. */
-	private AuctionShopManager shopManager;
-
 	/** "unknown command" error message. */
 	private final String ERR_UNKNOWN_CMD;
 
@@ -47,6 +43,9 @@ public class WellAuctionCommandHandler {
 	/** Shop creation success message. */
 	private final String SUCC_CREATION;
 
+	/** Shop detach success message. */
+	private final String SUCC_DETACH;
+
 	/** Shop listing message for no shops registered. */
 	private final String LIST_NO_SHOP;
 
@@ -56,9 +55,8 @@ public class WellAuctionCommandHandler {
 	 * @param plugin
 	 *            the well auction plugin
 	 */
-	public WellAuctionCommandHandler(WellAuction plugin, AuctionShopManager shopManager) {
+	public WellAuctionCommandHandler(WellAuction plugin) {
 		this.plugin = plugin;
-		this.shopManager = shopManager;
 
 		this.ERR_UNKNOWN_CMD = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.unknownCommand", "You specified an unknown command");
 		this.ERR_MUST_BE_PLAYER = ChatColor.DARK_RED
@@ -68,6 +66,7 @@ public class WellAuctionCommandHandler {
 		this.ERR_CANT_SELL_AIR = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.cantSellAir", "You can't put air on sale!");
 
 		this.SUCC_CREATION = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.creation.success", "Successfully created an AuctionShop for %item%");
+		this.SUCC_DETACH = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.detach.success", "Successfully detached an AuctionShop for %item%");
 		this.LIST_NO_SHOP = ChatColor.YELLOW + plugin.wellConfig().getString("lang.command.list.noShop", "No AuctionShop registered yet");
 	}
 
@@ -94,8 +93,15 @@ public class WellAuctionCommandHandler {
 				String[] subArgs = Arrays.copyOfRange(args, 1, args.length);
 
 				switch (args[0]) {
-				case "create":
-					handleCreate(sender, subArgs);
+				case "attach":
+					if (isPlayerCheck(sender)) {
+						handleCreate(sender, subArgs);
+					}
+					break;
+				case "detach":
+					if (isPlayerCheck(sender)) {
+						handleDelete(sender, subArgs);
+					}
 					break;
 				case "list":
 					handleList(sender);
@@ -119,44 +125,13 @@ public class WellAuctionCommandHandler {
 	 * @param args
 	 *            the args for the sub-command
 	 */
-	/**
-	 * @param sender
-	 * @param args
-	 */
 	private void handleCreate(CommandSender sender, String[] args) {
-
-		if (!(sender instanceof Player)) {
-			sender.sendMessage(ERR_MUST_BE_PLAYER);
-			return;
-		}
-
 		Player player = (Player) sender;
-		ShopEntity shopEntity = null;
 		ItemStack refItem = null;
+		ShopEntity shopEntity = getTargetShop(args, player);
 
-		if (args.length > 0) {
-			player.sendMessage("NOT SUPPORTED YET!");
-			return;
-		}
-
-		// Take the block seen by default as a shop
 		if (shopEntity == null) {
-			Block solidBlock = null;
-			Block block = null;
-			BlockIterator blockIterator = new BlockIterator(player, 3);
-
-			while (blockIterator.hasNext() && solidBlock == null) {
-				block = blockIterator.next();
-				if (block.getType() != Material.AIR) {
-					solidBlock = block;
-				}
-			}
-			if (solidBlock == null) {
-				player.sendMessage(ERR_NO_BLOCK_SEEN);
-				return;
-			}
-
-			shopEntity = new BlockShopEntity(solidBlock);
+			return;
 		}
 
 		if (plugin.db().similarShopEntityExists(shopEntity)) {
@@ -179,6 +154,29 @@ public class WellAuctionCommandHandler {
 		plugin.db().save(shopEntity.getModel());
 
 		player.sendMessage(SUCC_CREATION.replace("%item%", shop.getRefItemCopy().toString()));
+	}
+
+	/**
+	 * Handle delete.
+	 * 
+	 * @param sender
+	 *            the sender
+	 * @param args
+	 *            the args
+	 */
+	private void handleDelete(CommandSender sender, String[] args) {
+		Player player = (Player) sender;
+		ShopEntity shopEntity = getTargetShop(args, player);
+
+		if (shopEntity == null) {
+			return;
+		}
+
+		AuctionShop shop = shopEntity.getModel().getShop();
+		shopEntity.unregister(plugin);
+		plugin.db().delete(shopEntity.getModel());
+
+		player.sendMessage(SUCC_DETACH.replace("%item%", shop.getRefItemCopy().toString()));
 	}
 
 	/**
@@ -212,5 +210,61 @@ public class WellAuctionCommandHandler {
 				sender.sendMessage(msg.toString());
 			}
 		}
+	}
+
+	/**
+	 * Checks if is player.
+	 * 
+	 * @param sender
+	 *            the sender
+	 * @return true, if is player check
+	 */
+	private boolean isPlayerCheck(CommandSender sender) {
+		if (!(sender instanceof Player)) {
+			sender.sendMessage(ERR_MUST_BE_PLAYER);
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Gets the target shop.
+	 * 
+	 * @param args
+	 *            the args
+	 * @param player
+	 *            the player
+	 * @return the target shop
+	 */
+	private ShopEntity getTargetShop(String[] args, Player player) {
+		ShopEntity shopEntity = null;
+
+		if (args.length > 0) {
+			player.sendMessage("NOT SUPPORTED YET!");
+			return null;
+		}
+
+		// Take the block seen by default as a shop
+		if (shopEntity == null) {
+			Block solidBlock = null;
+			Block block = null;
+			BlockIterator blockIterator = new BlockIterator(player, 3);
+
+			while (blockIterator.hasNext() && solidBlock == null) {
+				block = blockIterator.next();
+				if (block.getType() != Material.AIR) {
+					solidBlock = block;
+				}
+			}
+			if (solidBlock == null) {
+				player.sendMessage(ERR_NO_BLOCK_SEEN);
+				return null;
+			}
+
+			shopEntity = new BlockShopEntity(solidBlock);
+		}
+
+		return shopEntity;
 	}
 }

@@ -518,7 +518,6 @@ public class AuctionShopManager {
 				}
 
 				shopEntity.register(plugin, shop);
-				shop.getRegistered().add(shopEntity);
 			}
 		}
 
