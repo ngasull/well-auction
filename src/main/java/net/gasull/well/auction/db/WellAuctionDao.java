@@ -14,6 +14,7 @@ import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
+import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.db.WellDao;
 
 import org.bukkit.Bukkit;
@@ -300,5 +301,16 @@ public class WellAuctionDao extends WellDao {
 	 */
 	public Collection<AuctionShop> getShops() {
 		return shops.values();
+	}
+
+	/**
+	 * Similar shop entity exists.
+	 * 
+	 * @param shopEntity
+	 *            the shop entity
+	 * @return true, if successful
+	 */
+	public boolean similarShopEntityExists(ShopEntity shopEntity) {
+		return db.find(shopEntity.getModel().getClass()).where().eq("data", shopEntity.getModel().getData()).findRowCount() > 0;
 	}
 }

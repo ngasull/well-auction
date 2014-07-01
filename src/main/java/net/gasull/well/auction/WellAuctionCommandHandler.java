@@ -38,6 +38,9 @@ public class WellAuctionCommandHandler {
 	/** "not looking at a block" error message. */
 	private final String ERR_NO_BLOCK_SEEN;
 
+	/** "Shop already exists" error message. */
+	private final String ERR_ENTITY_EXISTS;
+
 	/** "can't sell air" error message. */
 	private final String ERR_CANT_SELL_AIR;
 
@@ -61,6 +64,7 @@ public class WellAuctionCommandHandler {
 		this.ERR_MUST_BE_PLAYER = ChatColor.DARK_RED
 				+ plugin.wellConfig().getString("lang.command.error.mustBePlayer", "You must be a player to run this command");
 		this.ERR_NO_BLOCK_SEEN = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.notBlockSeen", "You must be looking at a block");
+		this.ERR_ENTITY_EXISTS = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.shopEntityExists", "A shop already exists here");
 		this.ERR_CANT_SELL_AIR = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.cantSellAir", "You can't put air on sale!");
 
 		this.SUCC_CREATION = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.creation.success", "Successfully created an AuctionShop for %item%");
@@ -153,6 +157,11 @@ public class WellAuctionCommandHandler {
 			}
 
 			shopEntity = new BlockShopEntity(solidBlock);
+		}
+
+		if (plugin.db().similarShopEntityExists(shopEntity)) {
+			player.sendMessage(ERR_ENTITY_EXISTS);
+			return;
 		}
 
 		// Take the item in hand as default sale
