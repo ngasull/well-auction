@@ -1,13 +1,10 @@
 package net.gasull.well.auction.db.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -23,10 +20,6 @@ public class AuctionPlayer {
 	/** The player id. */
 	@Id
 	private UUID playerId;
-
-	/** The seller data. */
-	@Transient
-	private List<AuctionSellerData> sellerData = new ArrayList<>();
 
 	/**
 	 * Instantiates a new auction player.
@@ -69,7 +62,7 @@ public class AuctionPlayer {
 	 * @return the player
 	 */
 	public OfflinePlayer getPlayer() {
-		return Bukkit.getOfflinePlayer(this.playerId);
+		return Bukkit.getOfflinePlayer(getPlayerId());
 	}
 
 	/**
@@ -84,15 +77,6 @@ public class AuctionPlayer {
 			return null;
 		}
 		return player.getName();
-	}
-
-	/**
-	 * Gets the seller data.
-	 * 
-	 * @return the seller data
-	 */
-	public List<AuctionSellerData> getSellerData() {
-		return sellerData;
 	}
 
 	/**

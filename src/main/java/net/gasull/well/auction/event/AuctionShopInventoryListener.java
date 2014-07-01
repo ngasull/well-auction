@@ -234,7 +234,7 @@ public class AuctionShopInventoryListener implements Listener {
 		// If current view is the sell view
 		else if (inventoryManager.isSellInventory(evt.getInventory())) {
 			ItemStack theItem = theItem(evt, action);
-			AuctionSale sale = plugin.db().getSale(theItem);
+			AuctionSale sale = plugin.db().saleFromSaleStack(theItem);
 
 			if (evt.isShiftClick()) {
 				if (sale != null) {

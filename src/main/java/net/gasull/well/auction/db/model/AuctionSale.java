@@ -2,6 +2,7 @@ package net.gasull.well.auction.db.model;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -52,6 +53,10 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	/** The item displayed in shop. */
 	@Transient
 	private ItemStack tradeStack;
+
+	/** The lock for operations on the sale (buy/sell/price set). */
+	@Transient
+	private AtomicBoolean lock = new AtomicBoolean(false);
 
 	/** Prefixes item id's. */
 	public static final String N = "#";
@@ -117,15 +122,6 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	 */
 	public void setId(Integer id) {
 		this.id = id;
-	}
-
-	/**
-	 * Gets the seller.
-	 * 
-	 * @return the seller
-	 */
-	public AuctionPlayer getSeller() {
-		return sellerData.getAuctionPlayer();
 	}
 
 	/**
@@ -286,11 +282,31 @@ public class AuctionSale implements Comparable<AuctionSale> {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
+	/**
+	 * Gets the lock.
 	 * 
-	 * @see java.lang.Object#hashCode()
+	 * @return the lock
 	 */
+	public AtomicBoolean getLock() {
+		return lock;
+	}
+
+	/**
+	 * Lock.
+	 * 
+	 * @return true, if successful
+	 */
+	public boolean lock() {
+		return getLock().compareAndSet(false, true);
+	}
+
+	/**
+	 * Unlock.
+	 */
+	public void unlock() {
+		getLock().set(false);
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -299,11 +315,6 @@ public class AuctionSale implements Comparable<AuctionSale> {
 		return result;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {

@@ -3,6 +3,7 @@ package net.gasull.well.db;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
+import com.avaje.ebean.Transaction;
 
 /**
  * Common DAO for Well apps.
@@ -53,4 +54,13 @@ public abstract class WellDao {
 		db.refresh(model);
 	}
 
+	/**
+	 * Begin a new transaction.
+	 * 
+	 * @return the transaction
+	 */
+	public Transaction transaction() {
+		return db.beginTransaction();
+
+	}
 }

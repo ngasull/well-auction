@@ -18,6 +18,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import com.avaje.ebean.Transaction;
+
 /**
  * The AuctionShop manager.
  */
@@ -105,15 +107,19 @@ public class AuctionShopManager {
 			throw new AuctionShopException(String.format("To %s : %s", player.getName(), msg));
 		}
 
-		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
-		AuctionSale sale = new AuctionSale(++maxSaleId, plugin, sellerData, theItem);
-		plugin.db().save(sale);
+		Transaction t = plugin.db().transaction();
 
-		// FIXME Convert this
-		shop.getSales().add(sale);
-		refreshPrice(shop, sale);
+		try {
+			AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
+			AuctionSale sale = new AuctionSale(++maxSaleId, plugin, sellerData, theItem);
+			plugin.db().save(sale);
+			refreshPrice(shop, sale);
 
-		return sale;
+			t.commit();
+			return sale;
+		} finally {
+			t.end();
+		}
 	}
 
 	/**
@@ -141,9 +147,18 @@ public class AuctionShopManager {
 		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
 		AuctionSale sale = getSale(sellerData, theItem);
 
-		// TODO Find another way to lock on sale
-		if (sale != null) {
-			return removeSale(shop, sale);
+		// Lock the sale for the removal
+		if (sale != null && sale.lock()) {
+			Transaction t = plugin.db().transaction();
+
+			try {
+				ItemStack item = removeSale(shop, sale);
+				sale.unlock();
+				t.commit();
+				return item;
+			} finally {
+				t.end();
+			}
 		}
 
 		// Handle failure here
@@ -170,29 +185,21 @@ public class AuctionShopManager {
 
 		plugin.permission().can(player, "buy items", "well.auction.buy");
 		checkEnabled(player);
-		AuctionShop shop = plugin.db().getShop(saleStack);
+		AuctionSale sale = plugin.db().saleFromSaleStack(saleStack);
 
-		if (shop == null) {
-			throw new AuctionShopException("No registered shop for type " + saleStack.getType());
-		}
+		if (sale != null && sale.lock()) {
 
-		AuctionSale sale = saleForStack(shop, saleStack);
-		double money = plugin.economy().getBalance(player);
+			double money = plugin.economy().getBalance(player);
+			Double price = sale.getTradePrice();
 
-		// Double check to avoid systematic synchronized
-		if (sale != null && money >= sale.getTradePrice()) {
+			if (money >= sale.getTradePrice()) {
+				Transaction t = plugin.db().transaction();
 
-			synchronized (sale) {
-
-				sale = saleForStack(shop, saleStack);
-				Double price = sale.getTradePrice();
-				money = plugin.economy().getBalance(player);
-				if (sale != null && money >= price) {
-
-					ItemStack item = removeSale(shop, sale);
+				try {
+					ItemStack item = removeSale(sale.getShop(), sale);
 
 					// Notify both players
-					OfflinePlayer seller = sale.getSeller().getPlayer();
+					OfflinePlayer seller = sale.getSellerData().getAuctionPlayer().getPlayer();
 					String priceStr = plugin.economy().format(price);
 					player.sendMessage(ChatColor.DARK_GREEN
 							+ MSG_BUY_NOTIFY.replace("%item%", item.toString()).replace("%player%", seller.getName()).replace("%price%", priceStr));
@@ -205,9 +212,14 @@ public class AuctionShopManager {
 					plugin.economy().withdrawPlayer(player, price);
 					plugin.economy().depositPlayer(seller, price);
 
+					t.commit();
 					return sale;
+				} finally {
+					t.end();
 				}
 			}
+
+			sale.unlock();
 		}
 
 		// Handle failure here
@@ -235,13 +247,28 @@ public class AuctionShopManager {
 	 *             the auction shop exception
 	 */
 	public void changeSalePrice(Player player, AuctionSale sale, Double price) throws AuctionShopException {
-		checkEnabled(player);
 		if (price < 0) {
 			unsetSalePrice(player, sale);
 		} else {
-			changePrice(sale, price);
-			sale.getSeller().sendMessage(
-					ChatColor.BLUE + msgSetPriceSuccess.replace("%item%", sale.getItem().toString()).replace("%price%", plugin.economy().format(price)));
+			checkEnabled(player);
+
+			if (sale.lock()) {
+				Transaction t = plugin.db().transaction();
+
+				try {
+					changePrice(sale, price);
+					sale.unlock();
+					sale.getSellerData()
+							.getAuctionPlayer()
+							.sendMessage(
+									ChatColor.BLUE
+											+ msgSetPriceSuccess.replace("%item%", sale.getItem().toString())
+													.replace("%price%", plugin.economy().format(price)));
+					t.commit();
+				} finally {
+					t.end();
+				}
+			}
 		}
 	}
 
@@ -257,8 +284,19 @@ public class AuctionShopManager {
 	 */
 	public void unsetSalePrice(Player player, AuctionSale sale) throws AuctionShopException {
 		checkEnabled(player);
-		changePrice(sale, null);
-		sale.getSeller().sendMessage(ChatColor.BLUE + msgSetPriceUnset.replace("%item%", sale.getItem().toString()));
+
+		if (sale.lock()) {
+			Transaction t = plugin.db().transaction();
+
+			try {
+				changePrice(sale, null);
+				sale.unlock();
+				sale.getSellerData().getAuctionPlayer().sendMessage(ChatColor.BLUE + msgSetPriceUnset.replace("%item%", sale.getItem().toString()));
+				t.commit();
+			} finally {
+				t.end();
+			}
+		}
 	}
 
 	/**
@@ -411,28 +449,6 @@ public class AuctionShopManager {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Fetches a sale for stack.
-	 * 
-	 * @param shop
-	 *            the shop
-	 * @param saleStack
-	 *            the sale stack
-	 * @return the auction sale
-	 */
-	public AuctionSale saleForStack(AuctionShop shop, ItemStack saleStack) {
-		AuctionSale sale = null;
-
-		for (AuctionSale s : shop.getSales()) {
-			if (s.isSellingStack(saleStack)) {
-				sale = s;
-				break;
-			}
-		}
-
-		return sale;
 	}
 
 	/**

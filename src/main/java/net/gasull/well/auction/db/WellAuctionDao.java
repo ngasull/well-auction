@@ -86,7 +86,7 @@ public class WellAuctionDao extends WellDao {
 	 */
 	public AuctionSellerData findSellerData(OfflinePlayer p, AuctionShop shop) {
 		AuctionSellerData sellerData = db.find(AuctionSellerData.class).where("auctionPlayer=:uuid and shop=:shopId").setParameter("uuid", p.getUniqueId())
-				.setParameter("shopId", shop.getId()).findUnique();
+				.setParameter("shopId", shop.getId()).fetch("auctionPlayer").findUnique();
 
 		if (sellerData == null) {
 			sellerData = new AuctionSellerData(shop, findAuctionPlayer(p));
@@ -157,13 +157,13 @@ public class WellAuctionDao extends WellDao {
 	}
 
 	/**
-	 * Gets the sale.
+	 * Gets a sale from a sale stack {@link ItemStack}.
 	 * 
 	 * @param theItem
 	 *            the the item
 	 * @return the sale
 	 */
-	public AuctionSale getSale(ItemStack theItem) {
+	public AuctionSale saleFromSaleStack(ItemStack theItem) {
 		if (theItem.hasItemMeta() && theItem.getItemMeta().getLore().size() > 0) {
 			String idString = theItem.getItemMeta().getLore().get(0);
 

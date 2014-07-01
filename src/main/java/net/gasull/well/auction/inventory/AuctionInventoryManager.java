@@ -590,7 +590,7 @@ public class AuctionInventoryManager {
 		private AuctionSetPriceCancelTask(Player player, AuctionSale sale) {
 			this.player = player;
 			this.sale = sale;
-			this.auctionPlayer = sale.getSeller();
+			this.auctionPlayer = sale.getSellerData().getAuctionPlayer();
 			this.shop = sale.getShop();
 		}
 

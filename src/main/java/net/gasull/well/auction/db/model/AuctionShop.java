@@ -2,10 +2,8 @@ package net.gasull.well.auction.db.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -18,7 +16,6 @@ import net.gasull.well.auction.shop.AuctionSalesCollection;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.yaml.snakeyaml.Yaml;
 
@@ -55,7 +52,7 @@ public class AuctionShop {
 
 	/** The sales. */
 	@Transient
-	private Collection<AuctionSale> sales;
+	private AuctionSalesCollection sales;
 
 	/**
 	 * Instantiates a new auction shop.
@@ -206,7 +203,7 @@ public class AuctionShop {
 	 * 
 	 * @return the sales
 	 */
-	public Collection<AuctionSale> getSales() {
+	public AuctionSalesCollection getSales() {
 		return sales;
 	}
 
@@ -216,7 +213,7 @@ public class AuctionShop {
 	 * @param sales
 	 *            the new sales
 	 */
-	public void setSales(Collection<AuctionSale> sales) {
+	public void setSales(AuctionSalesCollection sales) {
 		this.sales = sales;
 	}
 
