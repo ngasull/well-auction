@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -55,10 +56,6 @@ public class AuctionShop {
 	/** The sales. */
 	@Transient
 	private Collection<AuctionSale> sales;
-
-	/** The inventory view. */
-	@Transient
-	private InventoryView inventoryView;
 
 	/**
 	 * Instantiates a new auction shop.
@@ -221,25 +218,6 @@ public class AuctionShop {
 	 */
 	public void setSales(Collection<AuctionSale> sales) {
 		this.sales = sales;
-	}
-
-	/**
-	 * Gets the inventory view.
-	 * 
-	 * @return the inventory view
-	 */
-	public InventoryView getInventoryView() {
-		return inventoryView;
-	}
-
-	/**
-	 * Sets the inventory view.
-	 * 
-	 * @param inventoryView
-	 *            the new inventory view
-	 */
-	public void setInventoryView(InventoryView inventoryView) {
-		this.inventoryView = inventoryView;
 	}
 
 	@Override
