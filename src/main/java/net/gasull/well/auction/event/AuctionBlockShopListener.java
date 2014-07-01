@@ -4,7 +4,6 @@ import java.util.List;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
-import net.gasull.well.auction.shop.AuctionShopManager;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
 
 import org.bukkit.block.Block;
@@ -31,9 +30,6 @@ public class AuctionBlockShopListener implements Listener {
 	/** The plugin. */
 	private WellAuction plugin;
 
-	/** The shop manager. */
-	private AuctionShopManager shopManager;
-
 	/** The inventory manager. */
 	private AuctionInventoryManager inventoryManager;
 
@@ -42,14 +38,11 @@ public class AuctionBlockShopListener implements Listener {
 	 * 
 	 * @param plugin
 	 *            the plugin
-	 * @param shopManager
-	 *            the shop manager
 	 * @param inventoryManager
 	 *            the inventory manager
 	 */
-	public AuctionBlockShopListener(WellAuction plugin, AuctionShopManager shopManager, AuctionInventoryManager inventoryManager) {
+	public AuctionBlockShopListener(WellAuction plugin, AuctionInventoryManager inventoryManager) {
 		this.plugin = plugin;
-		this.shopManager = shopManager;
 		this.inventoryManager = inventoryManager;
 	}
 
