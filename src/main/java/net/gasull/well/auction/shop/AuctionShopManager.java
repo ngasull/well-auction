@@ -1,6 +1,5 @@
 package net.gasull.well.auction.shop;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import net.gasull.well.auction.WellAuction;
@@ -9,8 +8,7 @@ import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
-import net.gasull.well.auction.shop.entity.BlockShopEntity;
-import net.gasull.well.auction.shop.entity.ShopEntity;
+import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
@@ -27,6 +25,9 @@ public class AuctionShopManager {
 
 	/** The plugin. */
 	private WellAuction plugin;
+
+	/** The shop entity manager. */
+	private AucShopEntityManager shopEntityManager;
 
 	/** The enabled, to avoid using this between reloads. */
 	private boolean enabled = false;
@@ -63,9 +64,12 @@ public class AuctionShopManager {
 	 * 
 	 * @param plugin
 	 *            the plugin
+	 * @param shopEntityManager
+	 *            the shop entity manager
 	 */
-	public AuctionShopManager(WellAuction plugin) {
+	public AuctionShopManager(WellAuction plugin, AucShopEntityManager shopEntityManager) {
 		this.plugin = plugin;
+		this.shopEntityManager = shopEntityManager;
 
 		this.MSG_SELL_NOTIFY = plugin.wellConfig().getString("lang.sell.notification", "You've just sold %item% to %player% for %price%");
 		this.MSG_BUY_NOTIFY = plugin.wellConfig().getString("lang.buy.notification", "You've just bought %item% to %player% for %price%");
@@ -493,18 +497,6 @@ public class AuctionShopManager {
 	}
 
 	/**
-	 * Clean.
-	 */
-	public void clean() {
-		for (AuctionShop shop : plugin.db().getShops()) {
-			// Copy shop entity list to avoid concurrent list modification
-			for (ShopEntity shopEntity : new ArrayList<>(shop.getRegistered())) {
-				shopEntity.unregister(plugin);
-			}
-		}
-	}
-
-	/**
 	 * Load the shop manager from DB.
 	 */
 	public void load() {
@@ -522,18 +514,7 @@ public class AuctionShopManager {
 			List<ShopEntityModel> registered = plugin.db().findShopEntities(shop);
 
 			for (ShopEntityModel shopEntityModel : registered) {
-				shopEntityModel.setShop(shop);
-				ShopEntity shopEntity;
-
-				switch (shopEntityModel.getType()) {
-				case "block":
-					shopEntity = new BlockShopEntity(shopEntityModel);
-					break;
-				default:
-					continue;
-				}
-
-				shopEntity.register(plugin, shop);
+				shopEntityManager.get(shopEntityModel).register(plugin);
 			}
 		}
 

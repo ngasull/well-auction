@@ -59,7 +59,7 @@ public class AuctionBlockShopListener implements Listener {
 			BlockShopEntity shopBlock = getShopForBlock(evt.getClickedBlock());
 
 			if (shopBlock != null) {
-				inventoryManager.openMenu(evt.getPlayer(), shopBlock.getShop());
+				inventoryManager.openMenu(evt.getPlayer(), shopBlock.getShops());
 				evt.setCancelled(true);
 			}
 		}

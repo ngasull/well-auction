@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 
 import org.bukkit.Bukkit;
@@ -53,7 +52,7 @@ public class BlockShopEntity extends ShopEntity {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void register(WellAuction plugin, AuctionShop auctionShop) {
+	public void register(WellAuction plugin) {
 		if (block == null) {
 			Map<String, Object> dataMap = (Map<String, Object>) new Yaml().load(model.getData());
 			World world = Bukkit.getWorld((String) dataMap.get("w"));
@@ -68,7 +67,7 @@ public class BlockShopEntity extends ShopEntity {
 		MetadataValue meta = new FixedMetadataValue(plugin, this);
 		block.setMetadata(META_KEY, meta);
 
-		super.register(plugin, auctionShop);
+		super.register(plugin);
 	}
 
 	@Override
@@ -84,15 +83,6 @@ public class BlockShopEntity extends ShopEntity {
 	 */
 	public Block getBlock() {
 		return block;
-	}
-
-	/**
-	 * Gets the shop.
-	 * 
-	 * @return the shop
-	 */
-	public AuctionShop getShop() {
-		return model.getShop();
 	}
 
 	@Override

@@ -105,10 +105,11 @@ public class AuctionInventoryManager {
 	 * 
 	 * @param player
 	 *            the player
-	 * @param shop
+	 * @param shops
 	 *            the auction shop
 	 */
-	public void openMenu(Player player, AuctionShop shop) {
+	public void openMenu(Player player, Collection<AuctionShop> shops) {
+		AuctionShop shop = shops.iterator().next();
 		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, titleBase);
 		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
 		inv.setContents(auctionMenu.getMenuForShop(sellerData, shopManager.getBestPrice(shop)));

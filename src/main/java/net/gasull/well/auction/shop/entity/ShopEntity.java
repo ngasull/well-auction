@@ -1,6 +1,10 @@
 package net.gasull.well.auction.shop.entity;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.auction.db.model.AucEntityToShop;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 
@@ -14,12 +18,11 @@ public abstract class ShopEntity {
 	 * 
 	 * @param plugin
 	 *            the plugin
-	 * @param auctionShop
-	 *            the auction shop
 	 */
-	public void register(WellAuction plugin, AuctionShop auctionShop) {
-		getModel().setShop(auctionShop);
-		auctionShop.getRegistered().add(this);
+	public void register(WellAuction plugin) {
+		for (AucEntityToShop entityToShop : getModel().getEntityToShops()) {
+			entityToShop.getShop().getRegistered().add(this);
+		}
 	}
 
 	/**
@@ -29,7 +32,24 @@ public abstract class ShopEntity {
 	 *            the plugin
 	 */
 	public void unregister(WellAuction plugin) {
-		getModel().getShop().getRegistered().remove(this);
+		for (AucEntityToShop entityToShop : getModel().getEntityToShops()) {
+			entityToShop.getShop().getRegistered().remove(this);
+		}
+	}
+
+	/**
+	 * Gets the shops.
+	 * 
+	 * @return the shops
+	 */
+	public Collection<AuctionShop> getShops() {
+		Collection<AuctionShop> shops = new ArrayList<>();
+
+		for (AucEntityToShop entityToShop : getModel().getEntityToShops()) {
+			shops.add(entityToShop.getShop());
+		}
+
+		return shops;
 	}
 
 	/**

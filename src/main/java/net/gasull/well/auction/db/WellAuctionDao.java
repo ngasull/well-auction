@@ -43,7 +43,8 @@ public class WellAuctionDao extends WellDao {
 	private Map<Integer, AuctionShop> shopById = new HashMap<>();
 
 	/** The Constant SALE_ID_PATTERN. */
-	private static final Pattern SALE_ID_PATTERN = Pattern.compile(String.format("%s([0-9]+)", AuctionSale.N));
+	private static final Pattern SALE_ID_PATTERN = Pattern.compile(String
+			.format("%s([0-9]+)", AuctionSale.N));
 
 	/**
 	 * Instantiates a new well auction dao.
@@ -65,7 +66,8 @@ public class WellAuctionDao extends WellDao {
 	 * @return the auction player
 	 */
 	public AuctionPlayer findAuctionPlayer(OfflinePlayer p) {
-		AuctionPlayer ap = db.find(AuctionPlayer.class).where("playerId=:uuid").setParameter("uuid", p.getUniqueId()).findUnique();
+		AuctionPlayer ap = db.find(AuctionPlayer.class).where("playerId=:uuid")
+				.setParameter("uuid", p.getUniqueId()).findUnique();
 
 		if (ap == null) {
 			ap = new AuctionPlayer(p);
@@ -85,8 +87,11 @@ public class WellAuctionDao extends WellDao {
 	 * @return the auction seller data
 	 */
 	public AuctionSellerData findSellerData(OfflinePlayer p, AuctionShop shop) {
-		AuctionSellerData sellerData = db.find(AuctionSellerData.class).where("auctionPlayer=:uuid and shop=:shopId").setParameter("uuid", p.getUniqueId())
-				.setParameter("shopId", shop.getId()).fetch("auctionPlayer").findUnique();
+		AuctionSellerData sellerData = db.find(AuctionSellerData.class)
+				.where("auctionPlayer=:uuid and shop=:shopId")
+				.setParameter("uuid", p.getUniqueId())
+				.setParameter("shopId", shop.getId()).fetch("auctionPlayer")
+				.findUnique();
 
 		if (sellerData == null) {
 			sellerData = new AuctionSellerData(shop, findAuctionPlayer(p));
@@ -106,7 +111,8 @@ public class WellAuctionDao extends WellDao {
 	 * @return the list
 	 */
 	public List<AuctionSale> findSales(AuctionShop shop) {
-		List<AuctionSale> sales = db.find(AuctionSale.class).where().eq("sellerData.shop", shop).findList();
+		List<AuctionSale> sales = db.find(AuctionSale.class).where()
+				.eq("sellerData.shop", shop).findList();
 
 		for (AuctionSale sale : sales) {
 			sale.getSellerData().setShop(shop);
@@ -124,7 +130,8 @@ public class WellAuctionDao extends WellDao {
 	 * @return the list
 	 */
 	public List<AuctionSale> findSales(AuctionSellerData sellerData) {
-		List<AuctionSale> sales = db.find(AuctionSale.class).where().eq("sellerData", sellerData).findList();
+		List<AuctionSale> sales = db.find(AuctionSale.class).where()
+				.eq("sellerData", sellerData).findList();
 
 		for (AuctionSale sale : sales) {
 			AuctionShop shop = shopById.get(sale.getShop().getId());
@@ -145,8 +152,11 @@ public class WellAuctionDao extends WellDao {
 	 * @return the sales of
 	 */
 	public List<AuctionSale> getSalesOf(AuctionShop shop, OfflinePlayer p) {
-		List<AuctionSale> sales = db.find(AuctionSale.class).where("sellerData.auctionPlayer=:playerId and sellerData.shop=:shop")
-				.setParameter("playerId", p.getUniqueId()).setParameter("shop", shop.getId()).findList();
+		List<AuctionSale> sales = db
+				.find(AuctionSale.class)
+				.where("sellerData.auctionPlayer=:playerId and sellerData.shop=:shop")
+				.setParameter("playerId", p.getUniqueId())
+				.setParameter("shop", shop.getId()).findList();
 
 		for (AuctionSale sale : sales) {
 			sale.getSellerData().setShop(shop);
@@ -170,16 +180,19 @@ public class WellAuctionDao extends WellDao {
 			Matcher m = SALE_ID_PATTERN.matcher(idString);
 			if (m.find()) {
 				Integer saleId = Integer.valueOf(m.group(1));
-				AuctionSale sale = db.find(AuctionSale.class).where("id=:id").setParameter("id", saleId).fetch("sellerData").fetch("sellerData.shop")
-						.findUnique();
+				AuctionSale sale = db.find(AuctionSale.class).where("id=:id")
+						.setParameter("id", saleId).fetch("sellerData")
+						.fetch("sellerData.shop").findUnique();
 
-				sale.getSellerData().setShop(shopById.get(sale.getSellerData().getShop().getId()));
+				sale.getSellerData().setShop(
+						shopById.get(sale.getSellerData().getShop().getId()));
 				refreshSale(sale);
 				return sale;
 			}
 		}
 
-		throw new IllegalArgumentException("Provided item isn't recognozed as an Auction Sale");
+		throw new IllegalArgumentException(
+				"Provided item isn't recognozed as an Auction Sale");
 	}
 
 	/**
@@ -202,7 +215,8 @@ public class WellAuctionDao extends WellDao {
 		}
 
 		List<String> desc;
-		if (tradeStack.hasItemMeta() && realMeta.getLore() != null && !realMeta.getLore().isEmpty()) {
+		if (tradeStack.hasItemMeta() && realMeta.getLore() != null
+				&& !realMeta.getLore().isEmpty()) {
 			desc = realMeta.getLore();
 			desc.add(AuctionSale.LORE_SEPARATOR);
 		} else {
@@ -212,18 +226,29 @@ public class WellAuctionDao extends WellDao {
 		desc.add(ChatColor.DARK_GRAY + AuctionSale.N + sale.getId());
 
 		if (sale.getTradePrice() == null) {
-			desc.add(plugin.wellConfig().getString("lang.shop.item.noPrice", "No price set up yet!"));
+			desc.add(plugin.wellConfig().getString("lang.shop.item.noPrice",
+					"No price set up yet!"));
 		} else {
-			desc.add(ChatColor.GREEN + plugin.economy().format(sale.getTradePrice()));
+			desc.add(ChatColor.GREEN
+					+ plugin.economy().format(sale.getTradePrice()));
 
-			String pricePerUnit = plugin.wellConfig().getString("lang.shop.item.pricePerUnit", "%price% p.u.");
+			String pricePerUnit = plugin.wellConfig().getString(
+					"lang.shop.item.pricePerUnit", "%price% p.u.");
 			desc.add(ChatColor.DARK_GREEN
-					+ pricePerUnit.replace("%price%", plugin.economy().format(sale.getTradePrice() / (double) sale.getItem().getAmount())));
+					+ pricePerUnit.replace(
+							"%price%",
+							plugin.economy().format(
+									sale.getTradePrice()
+											/ (double) sale.getItem()
+													.getAmount())));
 		}
 
 		String playerName = sale.getSellerData().getAuctionPlayer().getName();
 		desc.add(ChatColor.BLUE
-				+ plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%").replace("%player%", playerName == null ? "???" : playerName));
+				+ plugin.wellConfig()
+						.getString("lang.shop.item.soldBy", "Sold by %player%")
+						.replace("%player%",
+								playerName == null ? "???" : playerName));
 
 		meta.setLore(desc);
 		tradeStack.setItemMeta(meta);
@@ -282,7 +307,8 @@ public class WellAuctionDao extends WellDao {
 	 * @return the list
 	 */
 	public List<ShopEntityModel> findShopEntities(AuctionShop shop) {
-		return db.find(ShopEntityModel.class).fetch("shop").where().eq("shop", shop).findList();
+		return db.find(ShopEntityModel.class).fetch("shop").where()
+				.eq("shop", shop).findList();
 	}
 
 	/**
@@ -304,13 +330,14 @@ public class WellAuctionDao extends WellDao {
 	}
 
 	/**
-	 * Similar shop entity exists.
+	 * Find similar shop entity.
 	 * 
 	 * @param shopEntity
 	 *            the shop entity
-	 * @return true, if successful
+	 * @return the shop entity model
 	 */
-	public boolean similarShopEntityExists(ShopEntity shopEntity) {
-		return db.find(shopEntity.getModel().getClass()).where().eq("data", shopEntity.getModel().getData()).findRowCount() > 0;
+	public ShopEntityModel findSimilarShopEntity(ShopEntity shopEntity) {
+		return db.find(shopEntity.getModel().getClass()).where()
+				.eq("data", shopEntity.getModel().getData()).findUnique();
 	}
 }

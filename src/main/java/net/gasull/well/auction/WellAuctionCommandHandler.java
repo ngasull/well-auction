@@ -4,7 +4,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import net.gasull.well.auction.db.model.AucEntityToShop;
 import net.gasull.well.auction.db.model.AuctionShop;
+import net.gasull.well.auction.db.model.ShopEntityModel;
+import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 
@@ -24,6 +27,9 @@ public class WellAuctionCommandHandler {
 
 	/** The plugin. */
 	private WellAuction plugin;
+
+	/** The shop entity manager. */
+	private AucShopEntityManager shopEntityManager;
 
 	/** "unknown command" error message. */
 	private final String ERR_UNKNOWN_CMD;
@@ -54,20 +60,44 @@ public class WellAuctionCommandHandler {
 	 * 
 	 * @param plugin
 	 *            the well auction plugin
+	 * @param shopEntityManager
+	 *            the shop entity manager
 	 */
-	public WellAuctionCommandHandler(WellAuction plugin) {
+	public WellAuctionCommandHandler(WellAuction plugin, AucShopEntityManager shopEntityManager) {
 		this.plugin = plugin;
+		this.shopEntityManager = shopEntityManager;
 
-		this.ERR_UNKNOWN_CMD = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.unknownCommand", "You specified an unknown command");
+		this.ERR_UNKNOWN_CMD = ChatColor.DARK_RED
+				+ plugin.wellConfig().getString(
+						"lang.command.error.unknownCommand",
+						"You specified an unknown command");
 		this.ERR_MUST_BE_PLAYER = ChatColor.DARK_RED
-				+ plugin.wellConfig().getString("lang.command.error.mustBePlayer", "You must be a player to run this command");
-		this.ERR_NO_BLOCK_SEEN = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.notBlockSeen", "You must be looking at a block");
-		this.ERR_ENTITY_EXISTS = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.shopEntityExists", "A shop already exists here");
-		this.ERR_CANT_SELL_AIR = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.cantSellAir", "You can't put air on sale!");
+				+ plugin.wellConfig().getString(
+						"lang.command.error.mustBePlayer",
+						"You must be a player to run this command");
+		this.ERR_NO_BLOCK_SEEN = ChatColor.DARK_RED
+				+ plugin.wellConfig().getString(
+						"lang.command.error.notBlockSeen",
+						"You must be looking at a block");
+		this.ERR_ENTITY_EXISTS = ChatColor.DARK_RED
+				+ plugin.wellConfig().getString(
+						"lang.command.error.shopEntityExists",
+						"A shop already exists here");
+		this.ERR_CANT_SELL_AIR = ChatColor.DARK_RED
+				+ plugin.wellConfig().getString(
+						"lang.command.error.cantSellAir",
+						"You can't put air on sale!");
 
-		this.SUCC_CREATION = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.creation.success", "Successfully created an AuctionShop for %item%");
-		this.SUCC_DETACH = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.detach.success", "Successfully detached an AuctionShop for %item%");
-		this.LIST_NO_SHOP = ChatColor.YELLOW + plugin.wellConfig().getString("lang.command.list.noShop", "No AuctionShop registered yet");
+		this.SUCC_CREATION = ChatColor.GREEN
+				+ plugin.wellConfig().getString(
+						"lang.command.creation.success",
+						"Successfully created an AuctionShop for %item%");
+		this.SUCC_DETACH = ChatColor.GREEN
+				+ plugin.wellConfig().getString("lang.command.detach.success",
+						"Successfully detached a shop");
+		this.LIST_NO_SHOP = ChatColor.YELLOW
+				+ plugin.wellConfig().getString("lang.command.list.noShop",
+						"No AuctionShop registered yet");
 	}
 
 	/**
@@ -83,7 +113,8 @@ public class WellAuctionCommandHandler {
 	 *            the args
 	 * @return true, if successful
 	 */
-	public boolean handle(CommandSender sender, Command cmd, String label, String[] args) {
+	public boolean handle(CommandSender sender, Command cmd, String label,
+			String[] args) {
 
 		if (cmd.getName().equalsIgnoreCase("wellauction")) {
 
@@ -134,7 +165,7 @@ public class WellAuctionCommandHandler {
 			return;
 		}
 
-		if (plugin.db().similarShopEntityExists(shopEntity)) {
+		if (plugin.db().findSimilarShopEntity(shopEntity) != null) {
 			player.sendMessage(ERR_ENTITY_EXISTS);
 			return;
 		}
@@ -149,11 +180,13 @@ public class WellAuctionCommandHandler {
 			return;
 		}
 
+		// FIXME NOTHING OK HERE!
 		AuctionShop shop = plugin.db().getShop(refItem);
-		shopEntity.register(plugin, shop);
+		shopEntity.register(plugin);
 		plugin.db().save(shopEntity.getModel());
 
-		player.sendMessage(SUCC_CREATION.replace("%item%", shop.getRefItemCopy().toString()));
+		player.sendMessage(SUCC_CREATION.replace("%item%", shop
+				.getRefItemCopy().toString()));
 	}
 
 	/**
@@ -172,11 +205,15 @@ public class WellAuctionCommandHandler {
 			return;
 		}
 
-		AuctionShop shop = shopEntity.getModel().getShop();
 		shopEntity.unregister(plugin);
+
+		for (AucEntityToShop entityToShop : shopEntity.getModel()
+				.getEntityToShops()) {
+			plugin.db().delete(entityToShop);
+		}
 		plugin.db().delete(shopEntity.getModel());
 
-		player.sendMessage(SUCC_DETACH.replace("%item%", shop.getRefItemCopy().toString()));
+		player.sendMessage(SUCC_DETACH);
 	}
 
 	/**
@@ -193,10 +230,12 @@ public class WellAuctionCommandHandler {
 			sender.sendMessage(LIST_NO_SHOP);
 		} else {
 			for (AuctionShop shop : shops) {
-				msg = new StringBuilder().append(ChatColor.YELLOW).append(shop).append(": ").append("\n");
+				msg = new StringBuilder().append(ChatColor.YELLOW).append(shop)
+						.append(": ").append("\n");
 
 				int i = 0;
-				String[] alterColor = new String[] { ChatColor.AQUA.toString(), ChatColor.BLUE.toString() };
+				String[] alterColor = new String[] { ChatColor.AQUA.toString(),
+						ChatColor.BLUE.toString() };
 				List<ShopEntity> registeredEntities = shop.getRegistered();
 
 				for (ShopEntity shopEntity : registeredEntities) {
@@ -263,6 +302,15 @@ public class WellAuctionCommandHandler {
 			}
 
 			shopEntity = new BlockShopEntity(solidBlock);
+
+		}
+		
+		if (shopEntity != null) {
+			ShopEntityModel similarEntity = plugin.db().findSimilarShopEntity(shopEntity);
+			
+			if (similarEntity != null) {
+				shopEntity = shopEntityManager.get(similarEntity);
+			}
 		}
 
 		return shopEntity;

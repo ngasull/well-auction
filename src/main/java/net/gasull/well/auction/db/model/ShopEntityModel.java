@@ -1,9 +1,11 @@
 package net.gasull.well.auction.db.model;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import net.gasull.well.auction.shop.entity.ShopEntity;
@@ -21,9 +23,9 @@ public class ShopEntityModel {
 	@Id
 	private int id;
 
-	/** The shop. */
-	@ManyToOne
-	private AuctionShop shop;
+	/** The shops relationship. */
+	@OneToMany(mappedBy = "entity")
+	private List<AucEntityToShop> entityToShops;
 
 	/** The type. */
 	@NotNull
@@ -53,25 +55,6 @@ public class ShopEntityModel {
 	}
 
 	/**
-	 * Gets the shop.
-	 * 
-	 * @return the shop
-	 */
-	public AuctionShop getShop() {
-		return shop;
-	}
-
-	/**
-	 * Sets the shop.
-	 * 
-	 * @param shop
-	 *            the new shop
-	 */
-	public void setShop(AuctionShop shop) {
-		this.shop = shop;
-	}
-
-	/**
 	 * Gets the type.
 	 * 
 	 * @return the type
@@ -91,6 +74,25 @@ public class ShopEntityModel {
 	}
 
 	/**
+	 * Gets the entity to shops.
+	 * 
+	 * @return the entity to shops
+	 */
+	public List<AucEntityToShop> getEntityToShops() {
+		return entityToShops;
+	}
+
+	/**
+	 * Sets the entity to shops.
+	 * 
+	 * @param entityToShops
+	 *            the new entity to shops
+	 */
+	public void setEntityToShops(List<AucEntityToShop> entityToShops) {
+		this.entityToShops = entityToShops;
+	}
+
+	/**
 	 * Gets the data.
 	 * 
 	 * @return the data
@@ -107,5 +109,18 @@ public class ShopEntityModel {
 	 */
 	public void setData(String data) {
 		this.data = data;
+	}
+
+	/**
+	 * Adds a related shop.
+	 * 
+	 * @param shop
+	 *            the shop
+	 */
+	public void addShop(AuctionShop shop) {
+		AucEntityToShop entityToShop = new AucEntityToShop();
+		entityToShop.setEntity(this);
+		entityToShop.setShop(shop);
+		getEntityToShops().add(entityToShop);
 	}
 }

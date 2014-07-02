@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import javax.persistence.PersistenceException;
 
 import net.gasull.well.auction.db.WellAuctionDao;
+import net.gasull.well.auction.db.model.AucEntityToShop;
 import net.gasull.well.auction.db.model.AuctionPlayer;
 import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionSellerData;
@@ -16,6 +17,7 @@ import net.gasull.well.auction.event.AuctionBlockShopListener;
 import net.gasull.well.auction.event.AuctionShopInventoryListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.shop.AuctionShopManager;
+import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.command.Command;
@@ -43,6 +45,9 @@ public class WellAuction extends JavaPlugin {
 	/** The shop manager. */
 	private AuctionShopManager shopManager;
 
+	/** The shop entity manager. */
+	private AucShopEntityManager shopEntityManager;
+
 	/** The inventory manager. */
 	private AuctionInventoryManager inventoryManager;
 
@@ -57,7 +62,8 @@ public class WellAuction extends JavaPlugin {
 		permission = new WellPermissionManager(this, wellConfig);
 
 		if (shopManager == null) {
-			shopManager = new AuctionShopManager(this);
+			shopEntityManager = new AucShopEntityManager(this);
+			shopManager = new AuctionShopManager(this, shopEntityManager);
 			inventoryManager = new AuctionInventoryManager(this, shopManager);
 			setupDb();
 		}
@@ -66,14 +72,14 @@ public class WellAuction extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new AuctionShopInventoryListener(this, shopManager, inventoryManager), this);
 		getServer().getPluginManager().registerEvents(new AuctionBlockShopListener(this, inventoryManager), this);
 
-		commandHandler = new WellAuctionCommandHandler(this);
+		commandHandler = new WellAuctionCommandHandler(this, shopEntityManager);
 		wellConfig.save();
 	}
 
 	@Override
 	public void onDisable() {
 		shopManager.disable();
-		shopManager.clean();
+		shopEntityManager.clean();
 	}
 
 	@Override
@@ -81,6 +87,7 @@ public class WellAuction extends JavaPlugin {
 		List<Class<?>> list = new ArrayList<Class<?>>();
 		list.add(AuctionShop.class);
 		list.add(ShopEntityModel.class);
+		list.add(AucEntityToShop.class);
 		list.add(AuctionPlayer.class);
 		list.add(AuctionSellerData.class);
 		list.add(AuctionSale.class);
