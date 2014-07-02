@@ -67,37 +67,16 @@ public class WellAuctionCommandHandler {
 		this.plugin = plugin;
 		this.shopEntityManager = shopEntityManager;
 
-		this.ERR_UNKNOWN_CMD = ChatColor.DARK_RED
-				+ plugin.wellConfig().getString(
-						"lang.command.error.unknownCommand",
-						"You specified an unknown command");
+		this.ERR_UNKNOWN_CMD = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.unknownCommand", "You specified an unknown command");
 		this.ERR_MUST_BE_PLAYER = ChatColor.DARK_RED
-				+ plugin.wellConfig().getString(
-						"lang.command.error.mustBePlayer",
-						"You must be a player to run this command");
-		this.ERR_NO_BLOCK_SEEN = ChatColor.DARK_RED
-				+ plugin.wellConfig().getString(
-						"lang.command.error.notBlockSeen",
-						"You must be looking at a block");
-		this.ERR_ENTITY_EXISTS = ChatColor.DARK_RED
-				+ plugin.wellConfig().getString(
-						"lang.command.error.shopEntityExists",
-						"A shop already exists here");
-		this.ERR_CANT_SELL_AIR = ChatColor.DARK_RED
-				+ plugin.wellConfig().getString(
-						"lang.command.error.cantSellAir",
-						"You can't put air on sale!");
+				+ plugin.wellConfig().getString("lang.command.error.mustBePlayer", "You must be a player to run this command");
+		this.ERR_NO_BLOCK_SEEN = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.notBlockSeen", "You must be looking at a block");
+		this.ERR_ENTITY_EXISTS = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.shopEntityExists", "A shop already exists here");
+		this.ERR_CANT_SELL_AIR = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.cantSellAir", "You can't put air on sale!");
 
-		this.SUCC_CREATION = ChatColor.GREEN
-				+ plugin.wellConfig().getString(
-						"lang.command.creation.success",
-						"Successfully created an AuctionShop for %item%");
-		this.SUCC_DETACH = ChatColor.GREEN
-				+ plugin.wellConfig().getString("lang.command.detach.success",
-						"Successfully detached a shop");
-		this.LIST_NO_SHOP = ChatColor.YELLOW
-				+ plugin.wellConfig().getString("lang.command.list.noShop",
-						"No AuctionShop registered yet");
+		this.SUCC_CREATION = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.creation.success", "Successfully created an AuctionShop for %item%");
+		this.SUCC_DETACH = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.detach.success", "Successfully detached a shop");
+		this.LIST_NO_SHOP = ChatColor.YELLOW + plugin.wellConfig().getString("lang.command.list.noShop", "No AuctionShop registered yet");
 	}
 
 	/**
@@ -113,8 +92,7 @@ public class WellAuctionCommandHandler {
 	 *            the args
 	 * @return true, if successful
 	 */
-	public boolean handle(CommandSender sender, Command cmd, String label,
-			String[] args) {
+	public boolean handle(CommandSender sender, Command cmd, String label, String[] args) {
 
 		if (cmd.getName().equalsIgnoreCase("wellauction")) {
 
@@ -126,12 +104,12 @@ public class WellAuctionCommandHandler {
 				switch (args[0]) {
 				case "attach":
 					if (isPlayerCheck(sender)) {
-						handleCreate(sender, subArgs);
+						handleAttach(sender, subArgs);
 					}
 					break;
 				case "detach":
 					if (isPlayerCheck(sender)) {
-						handleDelete(sender, subArgs);
+						handleDetach(sender, subArgs);
 					}
 					break;
 				case "list":
@@ -149,14 +127,14 @@ public class WellAuctionCommandHandler {
 	}
 
 	/**
-	 * Handle create command, that creates an Auction Shop.
+	 * Handle attach command, that adds an item to sale in a shop entity.
 	 * 
 	 * @param sender
 	 *            the sender
 	 * @param args
 	 *            the args for the sub-command
 	 */
-	private void handleCreate(CommandSender sender, String[] args) {
+	private void handleAttach(CommandSender sender, String[] args) {
 		Player player = (Player) sender;
 		ItemStack refItem = null;
 		ShopEntity shopEntity = getTargetShop(args, player);
@@ -180,24 +158,25 @@ public class WellAuctionCommandHandler {
 			return;
 		}
 
-		// FIXME NOTHING OK HERE!
 		AuctionShop shop = plugin.db().getShop(refItem);
+		shopEntity.getModel().addShop(shop);
+
 		shopEntity.register(plugin);
 		plugin.db().save(shopEntity.getModel());
+		plugin.db().save(shopEntity.getModel().getEntityToShops());
 
-		player.sendMessage(SUCC_CREATION.replace("%item%", shop
-				.getRefItemCopy().toString()));
+		player.sendMessage(SUCC_CREATION.replace("%item%", shop.getRefItemCopy().toString()));
 	}
 
 	/**
-	 * Handle delete.
+	 * Detaches an item from a shop entity.
 	 * 
 	 * @param sender
 	 *            the sender
 	 * @param args
 	 *            the args
 	 */
-	private void handleDelete(CommandSender sender, String[] args) {
+	private void handleDetach(CommandSender sender, String[] args) {
 		Player player = (Player) sender;
 		ShopEntity shopEntity = getTargetShop(args, player);
 
@@ -207,8 +186,7 @@ public class WellAuctionCommandHandler {
 
 		shopEntity.unregister(plugin);
 
-		for (AucEntityToShop entityToShop : shopEntity.getModel()
-				.getEntityToShops()) {
+		for (AucEntityToShop entityToShop : shopEntity.getModel().getEntityToShops()) {
 			plugin.db().delete(entityToShop);
 		}
 		plugin.db().delete(shopEntity.getModel());
@@ -230,12 +208,10 @@ public class WellAuctionCommandHandler {
 			sender.sendMessage(LIST_NO_SHOP);
 		} else {
 			for (AuctionShop shop : shops) {
-				msg = new StringBuilder().append(ChatColor.YELLOW).append(shop)
-						.append(": ").append("\n");
+				msg = new StringBuilder().append(ChatColor.YELLOW).append(shop).append(": ").append("\n");
 
 				int i = 0;
-				String[] alterColor = new String[] { ChatColor.AQUA.toString(),
-						ChatColor.BLUE.toString() };
+				String[] alterColor = new String[] { ChatColor.AQUA.toString(), ChatColor.BLUE.toString() };
 				List<ShopEntity> registeredEntities = shop.getRegistered();
 
 				for (ShopEntity shopEntity : registeredEntities) {
@@ -304,10 +280,10 @@ public class WellAuctionCommandHandler {
 			shopEntity = new BlockShopEntity(solidBlock);
 
 		}
-		
+
 		if (shopEntity != null) {
 			ShopEntityModel similarEntity = plugin.db().findSimilarShopEntity(shopEntity);
-			
+
 			if (similarEntity != null) {
 				shopEntity = shopEntityManager.get(similarEntity);
 			}

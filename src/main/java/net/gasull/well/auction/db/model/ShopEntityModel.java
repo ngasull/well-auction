@@ -1,5 +1,6 @@
 package net.gasull.well.auction.db.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -25,7 +26,7 @@ public class ShopEntityModel {
 
 	/** The shops relationship. */
 	@OneToMany(mappedBy = "entity")
-	private List<AucEntityToShop> entityToShops;
+	private List<AucEntityToShop> entityToShops = new ArrayList<>();
 
 	/** The type. */
 	@NotNull

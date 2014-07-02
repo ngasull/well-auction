@@ -511,11 +511,12 @@ public class AuctionShopManager {
 				shop.getSales().add(sale);
 			}
 
-			List<ShopEntityModel> registered = plugin.db().findShopEntities(shop);
+		}
 
-			for (ShopEntityModel shopEntityModel : registered) {
-				shopEntityManager.get(shopEntityModel).register(plugin);
-			}
+		List<ShopEntityModel> registered = plugin.db().lindShopEntities();
+
+		for (ShopEntityModel shopEntityModel : registered) {
+			shopEntityManager.get(shopEntityModel).register(plugin);
 		}
 
 		AuctionSale lastSale = plugin.getDatabase().find(AuctionSale.class).order("id desc").setMaxRows(1).findUnique();

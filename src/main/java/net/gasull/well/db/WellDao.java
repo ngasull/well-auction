@@ -1,5 +1,7 @@
 package net.gasull.well.db;
 
+import java.util.Collection;
+
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
@@ -24,13 +26,23 @@ public abstract class WellDao {
 	}
 
 	/**
-	 * Save.
+	 * Saves a model.
 	 * 
 	 * @param model
 	 *            the model
 	 */
 	public void save(Object model) {
 		this.db.save(model);
+	}
+
+	/**
+	 * Saves a collection of models.
+	 * 
+	 * @param models
+	 *            the models
+	 */
+	public void save(Collection<?> models) {
+		this.db.save(models);
 	}
 
 	/**
