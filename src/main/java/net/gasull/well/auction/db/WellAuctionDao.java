@@ -99,6 +99,44 @@ public class WellAuctionDao extends WellDao {
 	}
 
 	/**
+	 * Find seller data.
+	 * 
+	 * @param aucPlayer
+	 *            the auction player
+	 * @param shops
+	 *            the shops
+	 * @return the map
+	 */
+	public Map<Integer, AuctionSellerData> mapShopsToSellerData(AuctionPlayer aucPlayer, Collection<AuctionShop> shops) {
+
+		OfflinePlayer player = aucPlayer.getPlayer();
+		Map<Integer, AuctionShop> missingShopIds = new HashMap<>();
+		Map<Integer, AuctionSellerData> mapping = new HashMap<>();
+
+		for (AuctionShop shop : shops) {
+			missingShopIds.put(shop.getId(), shop);
+		}
+
+		List<AuctionSellerData> sellerDatas = db.find(AuctionSellerData.class).fetch("auctionPlayer").where().eq("auctionPlayer", aucPlayer).in("shop", shops)
+				.findList();
+
+		for (AuctionSellerData sellerData : sellerDatas) {
+			int shopId = sellerData.getShop().getId();
+			missingShopIds.remove(shopId);
+			mapping.put(shopId, sellerData);
+		}
+
+		// Add, optionally create, missing data
+		for (AuctionShop shop : missingShopIds.values()) {
+			AuctionSellerData sellerData = findSellerData(player, shop);
+			sellerDatas.add(sellerData);
+			mapping.put(shop.getId(), sellerData);
+		}
+
+		return mapping;
+	}
+
+	/**
 	 * Find sales.
 	 * 
 	 * @param shop
@@ -293,12 +331,12 @@ public class WellAuctionDao extends WellDao {
 	}
 
 	/**
-	 * Lind shop entities.
+	 * List shop entities.
 	 * 
 	 * @return the list
 	 */
-	public List<ShopEntityModel> lindShopEntities() {
-		return db.find(ShopEntityModel.class).fetch("entityToShops").findList();
+	public List<ShopEntityModel> listShopEntities() {
+		return db.find(ShopEntityModel.class).fetch("entityToShops").fetch("entityToShops.shop").order("id").findList();
 	}
 
 	/**

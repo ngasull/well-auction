@@ -421,22 +421,6 @@ public class AuctionShopManager {
 	}
 
 	/**
-	 * Gets the best price.
-	 * 
-	 * @param shop
-	 *            the shop
-	 * @return the best price
-	 */
-	public Double getBestPrice(AuctionShop shop) {
-		if (shop.getSales().isEmpty()) {
-			return null;
-		}
-
-		AuctionSale bestSale = shop.getSales().iterator().next();
-		return bestSale.getTradePrice() / (double) bestSale.getItem().getAmount();
-	}
-
-	/**
 	 * Gets the sale.
 	 * 
 	 * @param sellerData
@@ -508,15 +492,15 @@ public class AuctionShopManager {
 
 			List<AuctionSale> sales = plugin.db().findSales(shop);
 			for (AuctionSale sale : sales) {
-				shop.getSales().add(sale);
+				refreshPrice(shop, sale);
 			}
 
 		}
 
-		List<ShopEntityModel> registered = plugin.db().lindShopEntities();
+		List<ShopEntityModel> registered = plugin.db().listShopEntities();
 
 		for (ShopEntityModel shopEntityModel : registered) {
-			shopEntityManager.get(shopEntityModel).register(plugin);
+			shopEntityManager.get(shopEntityModel).register();
 		}
 
 		AuctionSale lastSale = plugin.getDatabase().find(AuctionSale.class).order("id desc").setMaxRows(1).findUnique();

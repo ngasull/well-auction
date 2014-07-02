@@ -117,11 +117,38 @@ public class ShopEntityModel {
 	 * 
 	 * @param shop
 	 *            the shop
+	 * @return true, if successful
 	 */
-	public void addShop(AuctionShop shop) {
+	public boolean addShop(AuctionShop shop) {
+		for (AucEntityToShop entityToShop : getEntityToShops()) {
+			if (entityToShop.getShop() == shop) {
+				return false;
+			}
+		}
+
 		AucEntityToShop entityToShop = new AucEntityToShop();
 		entityToShop.setEntity(this);
 		entityToShop.setShop(shop);
 		getEntityToShops().add(entityToShop);
+		return true;
+	}
+
+	/**
+	 * Removes the shop.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @return the auc entity to shop
+	 */
+	public AucEntityToShop removeShop(AuctionShop shop) {
+		List<AucEntityToShop> entityToShops = new ArrayList<>(getEntityToShops());
+		for (AucEntityToShop entityToShop : entityToShops) {
+			if (entityToShop.getShop() == shop) {
+				getEntityToShops().remove(entityToShop);
+				return entityToShop;
+			}
+		}
+
+		return null;
 	}
 }

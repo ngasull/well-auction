@@ -1,15 +1,21 @@
 package net.gasull.well.auction.inventory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.auction.db.model.AuctionPlayer;
 import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
+import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -20,6 +26,9 @@ public class AuctionMenu {
 
 	/** The plugin. */
 	private final WellAuction plugin;
+
+	/** The shop entity. */
+	private final ShopEntity shopEntity;
 
 	/** The sell button. */
 	private final ItemStack sellButton;
@@ -38,6 +47,9 @@ public class AuctionMenu {
 
 	/** The msg best sale price. */
 	private final String msgBestSalePrice;
+
+	/** Binds inventory slots to shops for multiple type. */
+	private AuctionShop[] shopSlots;
 
 	/** The Constant INFO_SLOT. */
 	public static final int INFO_SLOT = 13;
@@ -59,9 +71,12 @@ public class AuctionMenu {
 	 * 
 	 * @param plugin
 	 *            the plugin
+	 * @param shopEntity
+	 *            the shop entity
 	 */
-	public AuctionMenu(WellAuction plugin) {
+	public AuctionMenu(WellAuction plugin, ShopEntity shopEntity) {
 		this.plugin = plugin;
+		this.shopEntity = shopEntity;
 
 		sellButton = new ItemStack(Material.matchMaterial(plugin.wellConfig().getString("inventory.menu.button.sell.item", Material.GOLD_INGOT.name())));
 		buyButton = new ItemStack(Material.matchMaterial(plugin.wellConfig().getString("inventory.menu.button.buy.item", Material.EMERALD.name())));
@@ -102,13 +117,35 @@ public class AuctionMenu {
 	/**
 	 * Gets the menu for type.
 	 * 
-	 * @param sellerData
-	 *            the seller data
-	 * @return the menu for shop
+	 * @param player
+	 *            the player
 	 */
-	public ItemStack[] getMenuForShop(AuctionSellerData sellerData, Double bestPrice) {
+	public void open(Player player) {
 
-		AuctionShop shop = sellerData.getShop();
+		Collection<AuctionShop> shops = shopEntity.getShops();
+		Inventory inv;
+
+		if (isSingle()) {
+			inv = createInventorySingle(shops.iterator().next(), player);
+		} else {
+			inv = createInventoryMulti(shops, player);
+		}
+
+		player.openInventory(inv);
+	}
+
+	/**
+	 * Creates the inventory single-item shop.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @param player
+	 *            the player
+	 * @return the inventory
+	 */
+	private Inventory createInventorySingle(AuctionShop shop, Player player) {
+		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
+		Double bestPrice = shop.getBestPrice();
 		ItemStack[] contents = new ItemStack[MENU_SIZE];
 
 		for (int i = 0; i < MENU_SIZE; i++) {
@@ -126,7 +163,7 @@ public class AuctionMenu {
 
 				itemMeta.setLore(desc);
 				contents[i].setItemMeta(itemMeta);
-			} else if (isBuySlot(i)) {
+			} else if (shopSlot(i) != null) {
 				contents[i] = new ItemStack(buyButton);
 				ItemMeta itemMeta = contents[i].getItemMeta();
 				List<String> desc = new ArrayList<>();
@@ -154,7 +191,65 @@ public class AuctionMenu {
 			}
 		}
 
-		return contents;
+		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, plugin.wellConfig().getString("inventory.menu.title"));
+		inv.setContents(contents);
+		return inv;
+	}
+
+	/**
+	 * Creates the inventory multi.
+	 * 
+	 * @param shops
+	 *            the shops
+	 * @param player
+	 *            the player
+	 * @return the inventory
+	 */
+	private Inventory createInventoryMulti(Collection<AuctionShop> shops, Player player) {
+
+		final int menuSize = (((int) (shops.size() / 9)) + 1) * 9;
+		AuctionShop[] lastShopSlots = new AuctionShop[6 * 9];
+		AuctionPlayer aucPlayer = plugin.db().findAuctionPlayer(player);
+		Map<Integer, AuctionSellerData> sellerDataMap = plugin.db().mapShopsToSellerData(aucPlayer, shops);
+
+		ItemStack[] contents = new ItemStack[menuSize];
+		int i = 0;
+		for (AuctionShop shop : shops) {
+			AuctionSellerData sellerData = sellerDataMap.get(shop.getId());
+			Double bestPrice = shop.getBestPrice();
+
+			lastShopSlots[i] = shop;
+			contents[i] = new ItemStack(shop.getRefItem());
+			ItemMeta itemMeta = contents[i].getItemMeta();
+			List<String> desc = new ArrayList<>();
+
+			if (bestPrice != null) {
+				desc.add(ChatColor.YELLOW + msgBestSalePrice.replace("%price%", plugin.economy().format(bestPrice)));
+				itemMeta.setLore(desc);
+			}
+			if (sellerData.getDefaultPrice() != null) {
+				desc.add(ChatColor.GREEN + msgSalePrice.replace("%price%", plugin.economy().format(sellerData.getDefaultPrice())));
+			}
+
+			itemMeta.setLore(desc);
+			contents[i].setItemMeta(itemMeta);
+
+			i++;
+		}
+
+		shopSlots = lastShopSlots;
+		Inventory inv = Bukkit.createInventory(player, menuSize, plugin.wellConfig().getString("inventory.menu.title"));
+		inv.setContents(contents);
+		return inv;
+	}
+
+	/**
+	 * Checks if is single-item shop menu.
+	 * 
+	 * @return true, if is single
+	 */
+	public boolean isSingle() {
+		return shopEntity.getShops().size() == 1;
 	}
 
 	/**
@@ -169,14 +264,18 @@ public class AuctionMenu {
 	}
 
 	/**
-	 * Checks if is buy slot.
+	 * Checks if is slot for shop.
 	 * 
 	 * @param slot
 	 *            the slot
-	 * @return true, if is buy slot
+	 * @return the auction shop
 	 */
-	public boolean isBuySlot(int slot) {
-		return slot == BUY_SLOT;
+	public AuctionShop shopSlot(int slot) {
+		if (isSingle()) {
+			return slot == BUY_SLOT ? shopEntity.getShops().iterator().next() : null;
+		} else {
+			return shopSlots[slot];
+		}
 	}
 
 	/**
@@ -187,6 +286,6 @@ public class AuctionMenu {
 	 * @return true, if is info slot
 	 */
 	public boolean isInfoSlot(int slot) {
-		return slot == INFO_SLOT;
+		return isSingle() && slot == INFO_SLOT;
 	}
 }

@@ -3,7 +3,7 @@ package net.gasull.well.auction.event;
 import java.util.List;
 
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.inventory.AuctionInventoryManager;
+import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
 
 import org.bukkit.block.Block;
@@ -30,20 +30,20 @@ public class AuctionBlockShopListener implements Listener {
 	/** The plugin. */
 	private WellAuction plugin;
 
-	/** The inventory manager. */
-	private AuctionInventoryManager inventoryManager;
+	/** The shop entity manager. */
+	private AucShopEntityManager shopEntityManager;
 
 	/**
 	 * Instantiates a new auction player interact listener.
 	 * 
 	 * @param plugin
 	 *            the plugin
-	 * @param inventoryManager
-	 *            the inventory manager
+	 * @param shopEntityManager
+	 *            the shop entity manager
 	 */
-	public AuctionBlockShopListener(WellAuction plugin, AuctionInventoryManager inventoryManager) {
+	public AuctionBlockShopListener(WellAuction plugin, AucShopEntityManager shopEntityManager) {
 		this.plugin = plugin;
-		this.inventoryManager = inventoryManager;
+		this.shopEntityManager = shopEntityManager;
 	}
 
 	/**
@@ -59,7 +59,7 @@ public class AuctionBlockShopListener implements Listener {
 			BlockShopEntity shopBlock = getShopForBlock(evt.getClickedBlock());
 
 			if (shopBlock != null) {
-				inventoryManager.openMenu(evt.getPlayer(), shopBlock.getShops());
+				shopEntityManager.open(shopBlock, evt.getPlayer());
 				evt.setCancelled(true);
 			}
 		}
@@ -77,7 +77,7 @@ public class AuctionBlockShopListener implements Listener {
 		BlockShopEntity shopBlock = getShopForBlock(evt.getBlock());
 
 		if (shopBlock != null) {
-			shopBlock.unregister(plugin);
+			shopBlock.unregister();
 			plugin.db().delete(shopBlock.getModel());
 		}
 	}

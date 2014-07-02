@@ -217,6 +217,21 @@ public class AuctionShop {
 		this.sales = sales;
 	}
 
+	/**
+	 * Gets the best price.
+	 * 
+	 * @return the best price
+	 */
+	public Double getBestPrice() {
+
+		AuctionSale bestSale = getSales().iterator().next();
+		if (bestSale == null) {
+			return null;
+		}
+
+		return bestSale.getTradePrice() / (double) bestSale.getItem().getAmount();
+	}
+
 	@Override
 	public String toString() {
 		return "AuctionShop [id=" + getId() + ", refItem=" + getRefItemCopy() + "]";

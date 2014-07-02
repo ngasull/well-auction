@@ -10,6 +10,8 @@ import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.inventory.AuctionMenu;
 import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
+import net.gasull.well.auction.shop.entity.AucShopEntityManager;
+import net.gasull.well.auction.shop.entity.ShopEntity;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -44,6 +46,9 @@ public class AuctionShopInventoryListener implements Listener {
 	/** The inventory manager. */
 	private AuctionInventoryManager inventoryManager;
 
+	/** The shop entity manager. */
+	private AucShopEntityManager shopEntityManager;
+
 	/**
 	 * Instantiates a new auction player interact listener.
 	 * 
@@ -53,11 +58,15 @@ public class AuctionShopInventoryListener implements Listener {
 	 *            the shop manager
 	 * @param inventoryManager
 	 *            the inventory manager
+	 * @param shopEntityManager
+	 *            the shop entity manager
 	 */
-	public AuctionShopInventoryListener(WellAuction plugin, AuctionShopManager shopManager, AuctionInventoryManager inventoryManager) {
+	public AuctionShopInventoryListener(WellAuction plugin, AuctionShopManager shopManager, AuctionInventoryManager inventoryManager,
+			AucShopEntityManager shopEntityManager) {
 		this.plugin = plugin;
 		this.shopManager = shopManager;
 		this.inventoryManager = inventoryManager;
+		this.shopEntityManager = shopEntityManager;
 	}
 
 	/**
@@ -255,22 +264,26 @@ public class AuctionShopInventoryListener implements Listener {
 		}
 		// Otherwise, it's the menu
 		else {
-			ItemStack refItem = evt.getInventory().getItem(AuctionMenu.REFITEM_SLOT);
-			AuctionShop shop = plugin.db().getShop(refItem);
+			int slot = evt.getRawSlot();
+			ShopEntity shopEntity = shopEntityManager.getOpenedShop(player);
+			AuctionMenu menu = shopEntity.getMenu();
+			AuctionShop shop = menu.shopSlot(slot);
 
-			switch (evt.getRawSlot()) {
-			case AuctionMenu.BUY_SLOT:
-				inventoryManager.openBuy(player, shop);
-				break;
-			case AuctionMenu.SALE_SLOT:
+			if (shop != null) {
+				if (action == AuctionInventoryAction.RIGHT_CLICK) {
+					inventoryManager.openSell(player, shop);
+				} else {
+					inventoryManager.openBuy(player, shop);
+				}
+			} else if (menu.isSaleSlot(slot)) {
+				ItemStack refItem = evt.getInventory().getItem(AuctionMenu.REFITEM_SLOT);
+				shop = plugin.db().getShop(refItem);
+
 				if (evt.isShiftClick()) {
 					inventoryManager.openDefaultPriceSet(player, plugin.db().findSellerData(player, shop));
 				} else {
 					inventoryManager.openSell(player, shop);
 				}
-				break;
-			default:
-				// Do nothing
 			}
 		}
 	}

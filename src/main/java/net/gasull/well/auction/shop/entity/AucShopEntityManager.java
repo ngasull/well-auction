@@ -8,6 +8,8 @@ import net.gasull.well.auction.db.model.AucEntityToShop;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 
+import org.bukkit.entity.Player;
+
 /**
  * WellAuction's {@link ShopEntity} Manager.
  */
@@ -21,6 +23,9 @@ public class AucShopEntityManager {
 	 * ID).
 	 */
 	private final Map<Integer, ShopEntity> modelToEntity = new HashMap<>();
+
+	/** The player to shop entity. */
+	private final Map<Player, ShopEntity> playerToShopEntity = new HashMap<>();
 
 	/**
 	 * Instantiates a new auc shop entity manager.
@@ -45,20 +50,19 @@ public class AucShopEntityManager {
 		if (entity == null) {
 			// Evaluate shop to the enriched ones in memory
 			for (AucEntityToShop entityToShop : model.getEntityToShops()) {
-				AuctionShop shop = plugin.db().getShop(
-						entityToShop.getShop().getId());
+				AuctionShop shop = plugin.db().getShop(entityToShop.getShop().getId());
 				entityToShop.setShop(shop);
 			}
 
 			switch (model.getType()) {
 			case "block":
-				entity = new BlockShopEntity(model);
+				entity = new BlockShopEntity(plugin, model);
 				break;
 			default:
 				return null;
 			}
 
-			entity.register(plugin);
+			entity.register();
 			modelToEntity.put(model.getId(), entity);
 		}
 
@@ -70,7 +74,31 @@ public class AucShopEntityManager {
 	 */
 	public void clean() {
 		for (ShopEntity entity : modelToEntity.values()) {
-			entity.unregister(plugin);
+			entity.unregister();
 		}
+	}
+
+	/**
+	 * Open.
+	 * 
+	 * @param shopEntity
+	 *            the shop entity
+	 * @param player
+	 *            the player
+	 */
+	public void open(ShopEntity shopEntity, Player player) {
+		shopEntity.getMenu().open(player);
+		playerToShopEntity.put(player, shopEntity);
+	}
+
+	/**
+	 * Gets the opened shop.
+	 * 
+	 * @param player
+	 *            the player
+	 * @return the opened shop
+	 */
+	public ShopEntity getOpenedShop(Player player) {
+		return playerToShopEntity.get(player);
 	}
 }

@@ -19,6 +19,9 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class BlockShopEntity extends ShopEntity {
 
+	/** The plugin. */
+	private WellAuction plugin;
+
 	/** The model. */
 	private ShopEntityModel model;
 
@@ -31,10 +34,14 @@ public class BlockShopEntity extends ShopEntity {
 	/**
 	 * Instantiates a new block shop entity.
 	 * 
+	 * @param plugin
+	 *            the plugin
 	 * @param block
 	 *            the block
 	 */
-	public BlockShopEntity(Block block) {
+	public BlockShopEntity(WellAuction plugin, Block block) {
+		super(plugin);
+		this.plugin = plugin;
 		this.block = block;
 		this.model = new ShopEntityModel();
 		this.model.setType("block");
@@ -43,16 +50,20 @@ public class BlockShopEntity extends ShopEntity {
 	/**
 	 * Instantiates a new block shop entity.
 	 * 
+	 * @param plugin
+	 *            the plugin
 	 * @param model
 	 *            the model
 	 */
-	public BlockShopEntity(ShopEntityModel model) {
+	public BlockShopEntity(WellAuction plugin, ShopEntityModel model) {
+		super(plugin);
+		this.plugin = plugin;
 		this.model = model;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void register(WellAuction plugin) {
+	public void register() {
 		if (block == null) {
 			Map<String, Object> dataMap = (Map<String, Object>) new Yaml().load(model.getData());
 			World world = Bukkit.getWorld((String) dataMap.get("w"));
@@ -67,12 +78,12 @@ public class BlockShopEntity extends ShopEntity {
 		MetadataValue meta = new FixedMetadataValue(plugin, this);
 		block.setMetadata(META_KEY, meta);
 
-		super.register(plugin);
+		super.register();
 	}
 
 	@Override
-	public void unregister(WellAuction plugin) {
-		super.unregister(plugin);
+	public void unregister() {
+		super.unregister();
 		block.removeMetadata(META_KEY, plugin);
 	}
 

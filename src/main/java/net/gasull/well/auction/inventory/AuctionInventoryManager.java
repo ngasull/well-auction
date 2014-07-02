@@ -36,9 +36,6 @@ public class AuctionInventoryManager {
 	/** The shop manager. */
 	private AuctionShopManager shopManager;
 
-	/** The auction menu. */
-	private AuctionMenu auctionMenu;
-
 	/** The sell inventories. */
 	private Map<AuctionShop, Map<Player, InventoryView>> sellInventories = new HashMap<>();
 
@@ -89,7 +86,6 @@ public class AuctionInventoryManager {
 	public AuctionInventoryManager(WellAuction plugin, AuctionShopManager shopManager) {
 		this.plugin = plugin;
 		this.shopManager = shopManager;
-		this.auctionMenu = new AuctionMenu(plugin);
 		this.titleBase = plugin.wellConfig().getString("inventory.menu.title", "Auction House");
 		this.titleSell = titleBase + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.sell.title", "Sell");
 		this.titleBuy = titleBase + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.buy.title", "Buy");
@@ -98,22 +94,6 @@ public class AuctionInventoryManager {
 		this.msgSetPricePlease = plugin.wellConfig().getString("lang.player.setPrice.please", "Please type in the chat the price you want to sell %item% at");
 		this.msgSetPriceInvalid = plugin.wellConfig().getString("lang.player.setPrice.invalid", "Invalid price, operation canceled");
 		this.msgSetPriceCanceled = plugin.wellConfig().getString("lang.player.setPrice.canceled", "Price set canceled");
-	}
-
-	/**
-	 * Open an Auction House for a {@link Player}.
-	 * 
-	 * @param player
-	 *            the player
-	 * @param shops
-	 *            the auction shop
-	 */
-	public void openMenu(Player player, Collection<AuctionShop> shops) {
-		AuctionShop shop = shops.iterator().next();
-		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, titleBase);
-		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
-		inv.setContents(auctionMenu.getMenuForShop(sellerData, shopManager.getBestPrice(shop)));
-		player.openInventory(inv);
 	}
 
 	/**
@@ -530,15 +510,6 @@ public class AuctionInventoryManager {
 	 */
 	private void reOpenSell(AuctionSetPriceCancelTask task) {
 		openSell(task.player, task.shop);
-	}
-
-	/**
-	 * Gets the auction menu template.
-	 * 
-	 * @return the menu
-	 */
-	public AuctionMenu getMenu() {
-		return auctionMenu;
 	}
 
 	/**
