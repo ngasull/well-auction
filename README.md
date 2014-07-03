@@ -44,8 +44,8 @@ Using this pattern on an entire room on autions for different items will be the 
 
 ### Commands
 
-* `\wellauction attach` to create or updates an auction house by adding the type of item you're holding in your hand on sale. Creates the shop inside the block you're looking at (right-click to open).
-* `\wellauction detach` to updates an auction house by detaching the type of item you're holding in your hand from sales. A shop without sales is removed.
+* `\wellauction attach` to create or update an auction house by adding the type of item you're holding in your hand on sale. Creates the shop inside the block you're looking at (right-click to open).
+* `\wellauction detach` to update an auction house by detaching the type of item you're holding in your hand from sales. A shop without sales is removed.
 * `\wellauction remove` to remove an auction house from the block you're looking at.
 * `\wellauction list` lists the auction houses that exist.
 
