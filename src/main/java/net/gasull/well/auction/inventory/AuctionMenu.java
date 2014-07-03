@@ -39,6 +39,9 @@ public class AuctionMenu {
 	/** The info. */
 	private final ItemStack info;
 
+	/** The info to display in chat (for multi shops). */
+	private final String[] chatInfo;
+
 	/** The msg sale no price. */
 	private final String msgSaleNoPrice;
 
@@ -95,15 +98,16 @@ public class AuctionMenu {
 		msgBestSalePrice = plugin.wellConfig().getString("lang.inventory.menu.button.buy.bestSale", "Best price: %price% p.u");
 
 		List<String> defaultInfo = new ArrayList<>();
-		defaultInfo.add(ChatColor.AQUA + "Either click Sell button on the left");
-		defaultInfo.add(ChatColor.AQUA + "or click Buy button on the right.");
+		defaultInfo.add(ChatColor.AQUA + "Welcome to the Auction House!");
 		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
-		defaultInfo.add(ChatColor.AQUA + "You can setup defaut sell price by");
-		defaultInfo.add(ChatColor.AQUA + "shift-clicking Sell button.");
+		defaultInfo.add(ChatColor.AQUA + "Either left-click to buy items");
+		defaultInfo.add(ChatColor.AQUA + "or right-click to sell items.");
 		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
-		defaultInfo.add(ChatColor.AQUA + "You can setup the price of your");
-		defaultInfo.add(ChatColor.AQUA + "individual sales by shift-clicking");
-		defaultInfo.add(ChatColor.AQUA + "your sale.");
+		defaultInfo.add(ChatColor.AQUA + "You can setup default sell price");
+		defaultInfo.add(ChatColor.AQUA + "per unit by shift-clicking a category.");
+		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
+		defaultInfo.add(ChatColor.AQUA + "Shift-clicking also works for");
+		defaultInfo.add(ChatColor.AQUA + "individual sales.");
 		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
 		defaultInfo.add(ChatColor.AQUA + "You can remove your sales by");
 		defaultInfo.add(ChatColor.AQUA + "right-clicking them.");
@@ -112,6 +116,15 @@ public class AuctionMenu {
 		itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.info.title", "Welcome to the Auction House!"));
 		itemMeta.setLore(plugin.wellConfig().getStringList("lang.inventory.menu.button.info.desc", defaultInfo));
 		info.setItemMeta(itemMeta);
+
+		defaultInfo = new ArrayList<>();
+		defaultInfo.add(ChatColor.AQUA + "Welcome to the Auction House!");
+		defaultInfo.add(ChatColor.AQUA + "Either left-click to buy items or right-click to sell items.");
+		defaultInfo.add(ChatColor.AQUA + "Setup default sell price per unit by shift-clicking a category.");
+		defaultInfo.add(ChatColor.AQUA + "Shift-clicking also works for individual sales.");
+		defaultInfo.add(ChatColor.AQUA + "You can remove your sales by right-clicking them.");
+		List<String> stringList = plugin.wellConfig().getStringList("lang.inventory.menu.button.info.chatCesc", defaultInfo);
+		chatInfo = stringList.toArray(new String[stringList.size()]);
 	}
 
 	/**
@@ -237,6 +250,7 @@ public class AuctionMenu {
 			i++;
 		}
 
+		player.sendMessage(chatInfo);
 		shopSlots = lastShopSlots;
 		Inventory inv = Bukkit.createInventory(player, menuSize, plugin.wellConfig().getString("inventory.menu.title"));
 		inv.setContents(contents);
