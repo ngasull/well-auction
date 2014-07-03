@@ -31,12 +31,12 @@ Using this pattern on an entire room on autions for different items will be the 
 
 ### To do
 
-* [ ] Multiple items to be sold in a single Well-Auction shop.
+* [x] Multiple items to be sold in a single Well-Auction shop.
 * [ ] **Create Well-Auction shop from NPCs**.
 * [ ] Competitive system with seller notification on new best offer from another player.
 * [ ] Configurable (and optional) tax for seller on each sale.
 * [x] Players can unset price of sale, taking default dynamic price, if set.
-* [ ] ~~Sorted~~ and paginated sales for better visualization.
+* [x] Clean sales sorting for optimal visualization.
 * [ ] Better and more native inventory manipulation.
 
 
@@ -44,12 +44,15 @@ Using this pattern on an entire room on autions for different items will be the 
 
 ### Commands
 
-* `\wellauction create` to create an auction house that sell the type of item you're holding in your hand. Creates the shop "in" the block you're looking at.
+* `\wellauction attach` to create or updates an auction house by adding the type of item you're holding in your hand on sale. Creates the shop inside the block you're looking at (right-click to open).
+* `\wellauction detach` to updates an auction house by detaching the type of item you're holding in your hand from sales. A shop without sales is removed.
+* `\wellauction remove` to remove an auction house from the block you're looking at.
 * `\wellauction list` lists the auction houses that exist.
 
 ### Permissions
 
 * `well.auction` execute `/wellauction` commands
+* `well.auction.open` open auction houses
 * `well.auction.buy` buy items
 * `well.auction.sell` sell items
 

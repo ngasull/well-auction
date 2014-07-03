@@ -49,7 +49,7 @@ public class WellPermissionManager {
 	public void can(Player player, String thing, String key) throws WellPermissionException {
 		if (!player.hasPermission(key)) {
 			player.sendMessage(ChatColor.DARK_RED + notAllowedMsg.replace("%thing%", thing));
-			throw new WellPermissionException();
+			throw new WellPermissionException(key);
 		}
 	}
 
@@ -58,8 +58,30 @@ public class WellPermissionManager {
 	 */
 	public class WellPermissionException extends Exception {
 
+		/** The key. */
+		private final String key;
+
 		/** The Constant serialVersionUID. */
 		private static final long serialVersionUID = 1L;
+
+		/**
+		 * Instantiates a new well permission exception.
+		 * 
+		 * @param key
+		 *            the key
+		 */
+		public WellPermissionException(String key) {
+			this.key = key;
+		}
+
+		/**
+		 * Gets the key.
+		 * 
+		 * @return the key
+		 */
+		public String getKey() {
+			return key;
+		}
 
 	}
 }

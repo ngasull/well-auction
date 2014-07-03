@@ -1,12 +1,15 @@
 package net.gasull.well.auction.event;
 
 import java.util.List;
+import java.util.logging.Level;
 
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
 
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -59,8 +62,14 @@ public class AuctionBlockShopListener implements Listener {
 			BlockShopEntity shopBlock = getShopForBlock(evt.getClickedBlock());
 
 			if (shopBlock != null) {
-				shopEntityManager.open(shopBlock, evt.getPlayer());
 				evt.setCancelled(true);
+				Player player = evt.getPlayer();
+
+				try {
+					shopEntityManager.open(shopBlock, player);
+				} catch (WellPermissionException e) {
+					plugin.getLogger().log(Level.INFO, "{} couldn't open auction house ({})", new Object[] { player, e.getKey() });
+				}
 			}
 		}
 	}

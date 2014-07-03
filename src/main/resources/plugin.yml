@@ -1,11 +1,13 @@
 name: well-auction
 main: net.gasull.well.auction.WellAuction
-version: 0.2.0
+version: 0.3.0
 depend: [Vault]
 database: true
 commands:
   wellauction:
+    aliases:
+      - wauc
     description: This allow you to manage Auction Houses.
-    usage: /<command> attach|detach|list
+    usage: /<command> attach|detach|remove|list
     permission: well.auction
     permission-message: You don't have <permission>
