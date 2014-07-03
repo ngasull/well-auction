@@ -178,7 +178,7 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	 * @return the item serial
 	 */
 	public String getItemSerial() {
-		if (item == null) {
+		if (getItem() == null) {
 			return null;
 		}
 		this.itemSerial = new Yaml().dump(getItem().serialize());
@@ -272,12 +272,12 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	 * @return the trade stack
 	 */
 	public Double getTradePrice() {
-		if (price == null) {
-			if (sellerData.getDefaultPrice() != null) {
-				return sellerData.getDefaultPrice() * item.getAmount();
+		if (getPrice() == null) {
+			if (getSellerData().getDefaultPrice() != null) {
+				return getSellerData().getDefaultPrice() * getItem().getAmount();
 			}
 		} else {
-			return price;
+			return getPrice();
 		}
 		return null;
 	}
@@ -311,7 +311,7 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (id ^ (id >>> 32));
+		result = prime * result + (int) (getId() ^ (getId() >>> 32));
 		return result;
 	}
 
@@ -327,7 +327,7 @@ public class AuctionSale implements Comparable<AuctionSale> {
 			return false;
 		}
 		AuctionSale other = (AuctionSale) obj;
-		if (id != other.id) {
+		if (getId() != other.getId()) {
 			return false;
 		}
 		return true;
@@ -346,8 +346,8 @@ public class AuctionSale implements Comparable<AuctionSale> {
 			return -1;
 		} else {
 			// Ascending price per unit
-			int comp = (int) (thisPrice / (double) this.item.getAmount() - theirPrice / (double) sale.item.getAmount());
-			return comp == 0 ? this.id - sale.id : comp;
+			int comp = (int) (thisPrice / (double) this.getItem().getAmount() - theirPrice / (double) sale.getItem().getAmount());
+			return comp == 0 ? this.getId() - sale.getId() : comp;
 		}
 
 		return 0;

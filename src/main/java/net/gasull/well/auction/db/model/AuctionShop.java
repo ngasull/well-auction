@@ -223,12 +223,11 @@ public class AuctionShop {
 	 * @return the best price
 	 */
 	public Double getBestPrice() {
-
-		AuctionSale bestSale = getSales().iterator().next();
-		if (bestSale == null) {
+		if (getSales().isEmpty()) {
 			return null;
 		}
 
+		AuctionSale bestSale = getSales().iterator().next();
 		return bestSale.getTradePrice() / (double) bestSale.getItem().getAmount();
 	}
 
