@@ -32,11 +32,12 @@ Using this pattern on an entire room on autions for different items will be the 
 ### To do
 
 * [x] Multiple items to be sold in a single Well-Auction shop.
+* [x] Players can unset price of sale, taking default dynamic price, if set.
+* [x] Clean sales sorting for optimal visualization.
+* [ ] Item presets for quick shops setup.
 * [ ] **Create Well-Auction shop from NPCs**.
 * [ ] Competitive system with seller notification on new best offer from another player.
 * [ ] Configurable (and optional) tax for seller on each sale.
-* [x] Players can unset price of sale, taking default dynamic price, if set.
-* [x] Clean sales sorting for optimal visualization.
 * [ ] Better and more native inventory manipulation.
 
 
