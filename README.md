@@ -38,7 +38,6 @@ Using this pattern on an entire room on autions for different items will be the 
 * [ ] **Create Well-Auction shop from NPCs**.
 * [ ] Competitive system with seller notification on new best offer from another player.
 * [ ] Configurable (and optional) tax for seller on each sale.
-* [ ] Better and more native inventory manipulation.
 
 
 ## Usage
