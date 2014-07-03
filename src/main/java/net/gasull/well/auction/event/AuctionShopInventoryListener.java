@@ -269,13 +269,18 @@ public class AuctionShopInventoryListener implements Listener {
 			AuctionMenu menu = shopEntity.getMenu();
 			AuctionShop shop = menu.shopSlot(slot);
 
+			// Multi-shop / single shop buy
 			if (shop != null) {
-				if (action == AuctionInventoryAction.RIGHT_CLICK) {
+				if (evt.isShiftClick()) {
+					inventoryManager.openDefaultPriceSet(player, plugin.db().findSellerData(player, shop));
+				} else if (action == AuctionInventoryAction.RIGHT_CLICK) {
 					inventoryManager.openSell(player, shop);
 				} else {
 					inventoryManager.openBuy(player, shop);
 				}
-			} else if (menu.isSaleSlot(slot)) {
+			}
+			// Single shop sale special case
+			else if (menu.isSaleSlot(slot)) {
 				ItemStack refItem = evt.getInventory().getItem(AuctionMenu.REFITEM_SLOT);
 				shop = plugin.db().getShop(refItem);
 
