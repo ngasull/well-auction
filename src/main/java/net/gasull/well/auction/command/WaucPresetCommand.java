@@ -44,6 +44,9 @@ public class WaucPresetCommand extends WellCommand<Player> {
 	/** The warning message for invalid material. */
 	private final String WARN_INVALID_MATERIAL;
 
+	/** The success preset loading message. */
+	private final String SUCC_PRESET;
+
 	public WaucPresetCommand(WellAuction plugin, WaucCommandHelper helper) {
 		this.plugin = plugin;
 		this.helper = helper;
@@ -54,8 +57,10 @@ public class WaucPresetCommand extends WellCommand<Player> {
 		this.ERR_PRESETS_KEY = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.presets.key", "Couldn't find presets for key %key%");
 		this.WARN_INVALID_MATERIAL = ChatColor.DARK_AQUA
 				+ plugin.wellConfig().getString("lang.command.error.presets.invalidMaterial", "Warning: %material% is an unknown material");
+		this.SUCC_PRESET = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.presets.success", "Successfully loaded preset");
 	}
 
+	@SuppressWarnings({ "deprecation", "unused" })
 	@Override
 	public String handleCommand(Player player, String[] args) throws WellCommandException, WellPermissionException {
 
@@ -73,19 +78,39 @@ public class WaucPresetCommand extends WellCommand<Player> {
 			// Adding presets in the shop entity
 			List<String> presets = presetsConf.getStringList(presetKey);
 			for (String preset : presets) {
-				Material mat = Material.matchMaterial(preset);
+				String[] split = preset.split(":");
+				String itemName = split[0];
+				Byte itemData = null;
+				Material mat = Material.matchMaterial(itemName);
+
+				// Try to get data value
+				if (mat.getData() != null && split.length > 1) {
+					try {
+						itemData = Byte.valueOf(split[1]);
+					} catch (NumberFormatException e) {
+						// Ignore
+					}
+				}
 
 				if (mat == null) {
-					player.sendMessage(ChatColor.DARK_AQUA + WARN_INVALID_MATERIAL.replace("%material%", preset));
+					player.sendMessage(ChatColor.DARK_AQUA + WARN_INVALID_MATERIAL.replace("%material%", itemName));
 				} else {
-					ItemStack refIem = new ItemStack(mat);
-					model.addShop(plugin.db().getShop(refIem));
+					ItemStack refItem;
+					if (itemData == null) {
+						refItem = new ItemStack(mat);
+					} else {
+						refItem = new ItemStack(mat, 0, (short) 0, itemData);
+					}
+
+					model.addShop(plugin.db().getShop(refItem));
 				}
 			}
 
 			shopEntity.register();
 			plugin.db().save(shopEntity.getModel());
 			plugin.db().save(shopEntity.getModel().getEntityToShops());
+
+			return SUCC_PRESET;
 		} catch (FileNotFoundException e) {
 			plugin.getLogger().log(Level.SEVERE, "Couldn't load presets: file not found", e);
 		} catch (IOException e) {
