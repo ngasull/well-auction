@@ -3,8 +3,9 @@ package net.gasull.well.auction.shop.entity;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.gasull.well.WellCore;
+import net.gasull.well.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.db.model.AucEntityToShop;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
@@ -90,7 +91,7 @@ public class AucShopEntityManager {
 	 *             if the player is not allowed to open auction houses
 	 */
 	public void open(ShopEntity shopEntity, Player player) throws WellPermissionException {
-		plugin.permission().can(player, "open auction houses", "well.auction.open");
+		WellCore.permission().can(player, "open auction houses", "well.auction.open");
 		shopEntity.getMenu().open(player);
 		playerToShopEntity.put(player, shopEntity);
 	}

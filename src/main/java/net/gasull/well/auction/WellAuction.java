@@ -6,6 +6,13 @@ import java.util.logging.Level;
 
 import javax.persistence.PersistenceException;
 
+import net.gasull.well.WellConfig;
+import net.gasull.well.auction.command.WaucAttachCommand;
+import net.gasull.well.auction.command.WaucCommandHelper;
+import net.gasull.well.auction.command.WaucDetachCommand;
+import net.gasull.well.auction.command.WaucListCommand;
+import net.gasull.well.auction.command.WaucPresetCommand;
+import net.gasull.well.auction.command.WaucRemoveCommand;
 import net.gasull.well.auction.db.WellAuctionDao;
 import net.gasull.well.auction.db.model.AucEntityToShop;
 import net.gasull.well.auction.db.model.AuctionPlayer;
@@ -18,10 +25,9 @@ import net.gasull.well.auction.event.AuctionShopInventoryListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.shop.AuctionShopManager;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
+import net.gasull.well.command.WellCommandHandler;
 import net.milkbowl.vault.economy.Economy;
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -35,12 +41,6 @@ public class WellAuction extends JavaPlugin {
 
 	/** The database access object for Well Auction . */
 	private WellAuctionDao db;
-
-	/** The permission. */
-	private WellPermissionManager permission;
-
-	/** The command handler. */
-	private WellAuctionCommandHandler commandHandler;
 
 	/** The shop manager. */
 	private AuctionShopManager shopManager;
@@ -56,10 +56,10 @@ public class WellAuction extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
+		setupConf();
 		setupVault();
 
 		wellConfig = new WellConfig(this, "well-auction.yml");
-		permission = new WellPermissionManager(this, wellConfig);
 
 		if (shopManager == null) {
 			shopEntityManager = new AucShopEntityManager(this);
@@ -72,8 +72,8 @@ public class WellAuction extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new AuctionShopInventoryListener(this, shopManager, inventoryManager, shopEntityManager), this);
 		getServer().getPluginManager().registerEvents(new AuctionBlockShopListener(this, shopEntityManager), this);
 
-		commandHandler = new WellAuctionCommandHandler(this, shopEntityManager);
 		wellConfig.save();
+		setupCommands();
 	}
 
 	@Override
@@ -94,11 +94,6 @@ public class WellAuction extends JavaPlugin {
 		return list;
 	}
 
-	@Override
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		return commandHandler.handle(sender, cmd, label, args);
-	}
-
 	/**
 	 * Gets the Well suite's config.
 	 * 
@@ -115,15 +110,6 @@ public class WellAuction extends JavaPlugin {
 	 */
 	public WellAuctionDao db() {
 		return db;
-	}
-
-	/**
-	 * Permission.
-	 * 
-	 * @return the well permission manager
-	 */
-	public WellPermissionManager permission() {
-		return permission;
 	}
 
 	/**
@@ -146,6 +132,22 @@ public class WellAuction extends JavaPlugin {
 		}
 
 		economy = economyProvider.getProvider();
+	}
+
+	/**
+	 * Setup conf.
+	 */
+	private void setupConf() {
+		saveResource("presets.yml", false);
+	}
+
+	/**
+	 * Setup commands.
+	 */
+	private void setupCommands() {
+		WaucCommandHelper helper = new WaucCommandHelper(this, shopEntityManager);
+		WellCommandHandler.bind(this, "wellauction").attach(new WaucAttachCommand(this, helper)).attach(new WaucDetachCommand(this, helper))
+				.attach(new WaucRemoveCommand(this, helper)).attach(new WaucListCommand(this)).attach(new WaucPresetCommand(this, helper));
 	}
 
 	/**

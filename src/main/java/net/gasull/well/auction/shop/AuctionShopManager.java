@@ -2,8 +2,9 @@ package net.gasull.well.auction.shop;
 
 import java.util.List;
 
+import net.gasull.well.WellCore;
+import net.gasull.well.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
@@ -97,7 +98,7 @@ public class AuctionShopManager {
 	 */
 	public AuctionSale sell(Player player, ItemStack theItem) throws AuctionShopException, WellPermissionException {
 
-		plugin.permission().can(player, "sell items", "well.auction.sell");
+		WellCore.permission().can(player, "sell items", "well.auction.sell");
 		checkEnabled(player);
 		AuctionShop shop = plugin.db().getShop(theItem);
 
@@ -140,7 +141,7 @@ public class AuctionShopManager {
 	 *             the well permission exception
 	 */
 	public ItemStack unsell(Player player, ItemStack theItem) throws AuctionShopException, WellPermissionException {
-		plugin.permission().can(player, "sell items", "well.auction.sell");
+		WellCore.permission().can(player, "sell items", "well.auction.sell");
 		checkEnabled(player);
 		AuctionShop shop = plugin.db().getShop(theItem);
 
@@ -187,7 +188,7 @@ public class AuctionShopManager {
 	 */
 	public AuctionSale buy(Player player, ItemStack saleStack) throws AuctionShopException, WellPermissionException {
 
-		plugin.permission().can(player, "buy items", "well.auction.buy");
+		WellCore.permission().can(player, "buy items", "well.auction.buy");
 		checkEnabled(player);
 		AuctionSale sale = plugin.db().saleFromSaleStack(saleStack);
 

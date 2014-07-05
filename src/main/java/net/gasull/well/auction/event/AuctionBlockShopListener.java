@@ -3,8 +3,8 @@ package net.gasull.well.auction.event;
 import java.util.List;
 import java.util.logging.Level;
 
+import net.gasull.well.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
 

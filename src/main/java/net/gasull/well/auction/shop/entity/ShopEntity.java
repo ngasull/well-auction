@@ -32,6 +32,7 @@ public abstract class ShopEntity {
 	 */
 	public void register() {
 		for (AucEntityToShop entityToShop : getModel().getEntityToShops()) {
+			entityToShop.getShop().getRegistered().remove(this);
 			entityToShop.getShop().getRegistered().add(this);
 		}
 	}

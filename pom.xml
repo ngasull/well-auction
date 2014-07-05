@@ -38,5 +38,11 @@
 			<version>${vault.version}</version>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>net.gasull.well</groupId>
+			<artifactId>well-core</artifactId>
+			<version>${project.version}</version>
+			<optional>true</optional>
+		</dependency>
 	</dependencies>
 </project>

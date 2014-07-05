@@ -2,8 +2,8 @@ package net.gasull.well.auction.event;
 
 import java.util.logging.Level;
 
+import net.gasull.well.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
