@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AuctionPlayer;
@@ -18,6 +22,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 
 /**
  * Represents the menu to access Sell & Buy inventories.
@@ -42,6 +50,17 @@ public class AuctionMenu {
 	/** The info to display in chat (for multi shops). */
 	private final String[] chatInfo;
 
+	/**
+	 * The last help display cache to avoid player chat spam. Mapped to UUID,
+	 * but could have been any non null value.
+	 */
+	private final Cache<UUID, UUID> lastHelpCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.SECONDS).build(new CacheLoader<UUID, UUID>() {
+		@Override
+		public UUID load(UUID arg0) throws Exception {
+			return arg0;
+		}
+	});
+
 	/** The msg sale no price. */
 	private final String msgSaleNoPrice;
 
@@ -55,10 +74,10 @@ public class AuctionMenu {
 	private AuctionShop[] shopSlots;
 
 	/** The Constant INFO_SLOT. */
-	public static final int INFO_SLOT = 13;
+	private static final int INFO_SLOT = 13;
 
 	/** The Constant BUY_SLOT. */
-	public static final int BUY_SLOT = 14;
+	private static final int BUY_SLOT = 14;
 
 	/** The Constant SALE_SLOT. */
 	public static final int SALE_SLOT = 12;
@@ -67,7 +86,7 @@ public class AuctionMenu {
 	public static final int REFITEM_SLOT = 1;
 
 	/** The size of the menu inventory. */
-	static final int MENU_SIZE = 27;
+	private static final int MENU_SIZE = 27;
 
 	/**
 	 * Instantiates a new auction menu.
@@ -250,7 +269,16 @@ public class AuctionMenu {
 			i++;
 		}
 
-		player.sendMessage(chatInfo);
+		// Display help each HELP_DISPLAY_DELAY milliseconds
+		try {
+			if (!lastHelpCache.asMap().containsKey(aucPlayer.getPlayerId())) {
+				player.sendMessage(chatInfo);
+				lastHelpCache.get(aucPlayer.getPlayerId());
+			}
+		} catch (ExecutionException e) {
+			plugin.getLogger().log(Level.WARNING, "Couldn't determine if we had to display help to the player", e);
+		}
+
 		shopSlots = lastShopSlots;
 		Inventory inv = Bukkit.createInventory(player, menuSize, plugin.wellConfig().getString("inventory.menu.title"));
 		inv.setContents(contents);
