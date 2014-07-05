@@ -1,6 +1,7 @@
 package net.gasull.well.auction.shop;
 
 import java.util.List;
+import java.util.logging.Level;
 
 import net.gasull.well.WellCore;
 import net.gasull.well.WellPermissionManager.WellPermissionException;
@@ -119,6 +120,7 @@ public class AuctionShopManager {
 			AuctionSale sale = new AuctionSale(++maxSaleId, plugin, sellerData, theItem);
 			plugin.db().save(sale);
 			refreshPrice(shop, sale);
+			plugin.getLogger().log(Level.INFO, "{} ({}) put on sale {}", new Object[] { player.getName(), player.getUniqueId(), theItem.toString() });
 
 			t.commit();
 			return sale;
@@ -216,6 +218,8 @@ public class AuctionShopManager {
 
 					plugin.economy().withdrawPlayer(player, price);
 					plugin.economy().depositPlayer(seller, price);
+					plugin.getLogger().log(Level.INFO, "{} ({}) bought {} to {} ({}) for {}",
+							new Object[] { player.getName(), player.getUniqueId(), item.toString(), seller.getName(), seller.getUniqueId(), priceStr });
 
 					t.commit();
 					return sale;
@@ -472,11 +476,7 @@ public class AuctionShopManager {
 	 *             the auction shop exception
 	 */
 	private ItemStack removeSale(AuctionShop shop, AuctionSale sale) throws AuctionShopException {
-
-		if (!shop.getSales().remove(sale)) {
-			throw new AuctionShopException("Sale not found but should have been");
-		}
-
+		shop.getSales().remove(sale);
 		plugin.db().delete(sale);
 		return sale.getItem();
 	}
