@@ -60,7 +60,7 @@ public class WaucPresetCommand extends WellCommand<Player> {
 		this.SUCC_PRESET = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.presets.success", "Successfully loaded preset");
 	}
 
-	@SuppressWarnings({ "deprecation", "unused" })
+	@SuppressWarnings({ "deprecation" })
 	@Override
 	public String handleCommand(Player player, String[] args) throws WellCommandException, WellPermissionException {
 
@@ -83,18 +83,18 @@ public class WaucPresetCommand extends WellCommand<Player> {
 				Byte itemData = null;
 				Material mat = Material.matchMaterial(itemName);
 
-				// Try to get data value
-				if (mat.getData() != null && split.length > 1) {
-					try {
-						itemData = Byte.valueOf(split[1]);
-					} catch (NumberFormatException e) {
-						// Ignore
-					}
-				}
-
 				if (mat == null) {
 					player.sendMessage(ChatColor.DARK_AQUA + WARN_INVALID_MATERIAL.replace("%material%", itemName));
 				} else {
+					// Try to get data value
+					if (mat.getData() != null && split.length > 1) {
+						try {
+							itemData = Byte.valueOf(split[1]);
+						} catch (NumberFormatException e) {
+							// Ignore
+						}
+					}
+
 					ItemStack refItem;
 					if (itemData == null) {
 						refItem = new ItemStack(mat);
