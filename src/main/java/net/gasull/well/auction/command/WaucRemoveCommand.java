@@ -34,6 +34,10 @@ public class WaucRemoveCommand extends WellCommand<Player> {
 	public String handleCommand(Player player, String[] args) throws WellCommandException, WellPermissionException {
 
 		ShopEntity shopEntity = helper.getTargetShop(args, player);
+		if (shopEntity.getModel().getId() == 0) {
+			return null;
+		}
+
 		shopEntity.unregister();
 
 		for (AucEntityToShop entityToShop : shopEntity.getModel().getEntityToShops()) {
