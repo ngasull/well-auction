@@ -231,10 +231,17 @@ public class AuctionShopInventoryListener implements Listener {
 				try {
 					AuctionSale sale = shopManager.buy(player, theItem);
 					ItemStack bought = inventoryManager.handleBuy(sale);
-					player.setItemOnCursor(bought);
 					plugin.getLogger().info(player.getName() + " successfully bought " + bought);
+
+					// Add item to player's inventory
+					ItemStack remaining = player.getInventory().addItem(bought).get(Integer.valueOf(0));
+
+					// Put on cursor what couldn't fit in player's inventory
+					if (remaining != null) {
+						player.setItemOnCursor(remaining);
+					}
 				} catch (AuctionShopException e) {
-					plugin.getLogger().log(Level.WARNING, String.format("%s couldn't buy %s (%s)", player.getName(), theItem, e.getMessage()));
+					plugin.getLogger().log(Level.INFO, String.format("%s couldn't buy %s (%s)", player.getName(), theItem, e.getMessage()));
 				} catch (WellPermissionException e) {
 					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed to buy %s", player.getName(), theItem));
 				}

@@ -472,10 +472,8 @@ public class AuctionShopManager {
 	 * @param sale
 	 *            the sale
 	 * @return the item stack
-	 * @throws AuctionShopException
-	 *             the auction shop exception
 	 */
-	private ItemStack removeSale(AuctionShop shop, AuctionSale sale) throws AuctionShopException {
+	private ItemStack removeSale(AuctionShop shop, AuctionSale sale) {
 		shop.getSales().remove(sale);
 		plugin.db().delete(sale);
 		return sale.getItem();
@@ -504,7 +502,7 @@ public class AuctionShopManager {
 			shopEntityManager.get(shopEntityModel).register();
 		}
 
-		AuctionSale lastSale = plugin.getDatabase().find(AuctionSale.class).order("id desc").setMaxRows(1).findUnique();
+		AuctionSale lastSale = plugin.db().getDb().find(AuctionSale.class).order("id desc").setMaxRows(1).findUnique();
 
 		if (lastSale != null) {
 			maxSaleId = lastSale.getId();

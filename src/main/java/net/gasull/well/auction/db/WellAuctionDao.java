@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.auction.db.model.AucEntityToShop;
 import net.gasull.well.auction.db.model.AuctionPlayer;
 import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionSellerData;
@@ -16,6 +17,7 @@ import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.db.WellDao;
+import net.gasull.well.db.WellDatabase;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -33,8 +35,11 @@ public class WellAuctionDao extends WellDao {
 	/** The plugin. */
 	private final WellAuction plugin;
 
-	/** The actual db object. */
-	private final EbeanServer db;
+	/** The well database object. */
+	private WellDatabase wellDatabase;
+
+	/** The actual database object. */
+	private EbeanServer db;
 
 	/** The registered shops by type. */
 	private Map<ItemStack, AuctionShop> shops = new HashMap<ItemStack, AuctionShop>();
@@ -52,9 +57,32 @@ public class WellAuctionDao extends WellDao {
 	 *            the plugin
 	 */
 	public WellAuctionDao(WellAuction plugin) {
-		super(plugin);
 		this.plugin = plugin;
-		this.db = plugin.getDatabase();
+		this.wellDatabase = new WellDatabase(plugin) {
+			protected java.util.List<Class<?>> getDatabaseClasses() {
+				List<Class<?>> list = new ArrayList<Class<?>>();
+				list.add(AuctionShop.class);
+				list.add(ShopEntityModel.class);
+				list.add(AucEntityToShop.class);
+				list.add(AuctionPlayer.class);
+				list.add(AuctionSellerData.class);
+				list.add(AuctionSale.class);
+				return list;
+			};
+		};
+
+		checkVersion(plugin);
+		this.db = wellDatabase.getDatabase();
+	}
+
+	@Override
+	protected void handleVersionChanges(String oldVersion, String newVersion) {
+		if (oldVersion == null) {
+			wellDatabase.initializeDatabase(true);
+			return;
+		}
+
+		wellDatabase.initializeDatabase(false);
 	}
 
 	/**
@@ -292,8 +320,8 @@ public class WellAuctionDao extends WellDao {
 
 		if (singletonShop == null) {
 			AuctionShop shop = new AuctionShop(plugin, refType);
-			plugin.db().save(shop);
-			plugin.db().registerShop(shop);
+			save(shop);
+			registerShop(shop);
 			shops.put(refType, shop);
 			return shop;
 		} else {
@@ -348,5 +376,10 @@ public class WellAuctionDao extends WellDao {
 	 */
 	public ShopEntityModel findSimilarShopEntity(ShopEntity shopEntity) {
 		return db.find(shopEntity.getModel().getClass()).where().eq("data", shopEntity.getModel().getData()).findUnique();
+	}
+
+	@Override
+	public EbeanServer getDb() {
+		return db;
 	}
 }

@@ -1,11 +1,5 @@
 package net.gasull.well.auction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-
-import javax.persistence.PersistenceException;
-
 import net.gasull.well.WellConfig;
 import net.gasull.well.auction.command.WaucAttachCommand;
 import net.gasull.well.auction.command.WaucCommandHelper;
@@ -14,12 +8,6 @@ import net.gasull.well.auction.command.WaucListCommand;
 import net.gasull.well.auction.command.WaucPresetCommand;
 import net.gasull.well.auction.command.WaucRemoveCommand;
 import net.gasull.well.auction.db.WellAuctionDao;
-import net.gasull.well.auction.db.model.AucEntityToShop;
-import net.gasull.well.auction.db.model.AuctionPlayer;
-import net.gasull.well.auction.db.model.AuctionSale;
-import net.gasull.well.auction.db.model.AuctionSellerData;
-import net.gasull.well.auction.db.model.AuctionShop;
-import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.event.AuctionBlockShopListener;
 import net.gasull.well.auction.event.AuctionShopInventoryListener;
 import net.gasull.well.auction.inventory.AuctionInventoryManager;
@@ -55,6 +43,11 @@ public class WellAuction extends JavaPlugin {
 	private Economy economy;
 
 	@Override
+	public void onLoad() {
+
+	}
+
+	@Override
 	public void onEnable() {
 		setupConf();
 		setupVault();
@@ -62,10 +55,13 @@ public class WellAuction extends JavaPlugin {
 		wellConfig = new WellConfig(this, "well-auction.yml");
 
 		if (shopManager == null) {
+			this.db = new WellAuctionDao(this);
+
 			shopEntityManager = new AucShopEntityManager(this);
 			shopManager = new AuctionShopManager(this, shopEntityManager);
 			inventoryManager = new AuctionInventoryManager(this, shopManager);
-			setupDb();
+			shopManager.load();
+			shopManager.enable();
 		}
 
 		// Listeners
@@ -78,20 +74,10 @@ public class WellAuction extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		shopManager.disable();
-		shopEntityManager.clean();
-	}
-
-	@Override
-	public List<Class<?>> getDatabaseClasses() {
-		List<Class<?>> list = new ArrayList<Class<?>>();
-		list.add(AuctionShop.class);
-		list.add(ShopEntityModel.class);
-		list.add(AucEntityToShop.class);
-		list.add(AuctionPlayer.class);
-		list.add(AuctionSellerData.class);
-		list.add(AuctionSale.class);
-		return list;
+		if (shopManager != null) {
+			shopManager.disable();
+			shopEntityManager.clean();
+		}
 	}
 
 	/**
@@ -148,22 +134,5 @@ public class WellAuction extends JavaPlugin {
 		WaucCommandHelper helper = new WaucCommandHelper(this, shopEntityManager);
 		WellCommandHandler.bind(this, "wellauction").attach(new WaucAttachCommand(this, helper)).attach(new WaucDetachCommand(this, helper))
 				.attach(new WaucRemoveCommand(this, helper)).attach(new WaucListCommand(this)).attach(new WaucPresetCommand(this, helper));
-	}
-
-	/**
-	 * Setup DB.
-	 */
-	private void setupDb() {
-		this.db = new WellAuctionDao(this);
-
-		try {
-			getDatabase().find(AuctionShop.class).findRowCount();
-			shopManager.load();
-		} catch (PersistenceException e) {
-			getLogger().log(Level.WARNING, "Installing database for " + getDescription().getName() + " due to first time usage", e);
-			installDDL();
-		}
-
-		shopManager.enable();
 	}
 }
