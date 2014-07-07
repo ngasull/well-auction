@@ -8,7 +8,6 @@ import net.gasull.well.auction.shop.entity.BlockShopEntity;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.command.WellCommandException;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -26,12 +25,6 @@ public class WaucCommandHelper {
 	/** The shop entity manager. */
 	private AucShopEntityManager shopEntityManager;
 
-	/** "not looking at a block" error message. */
-	private final String ERR_NO_BLOCK_SEEN;
-
-	/** "can't sell air" error message. */
-	private final String ERR_CANT_SELL_AIR;
-
 	/**
 	 * Instantiates a new wauc command helper.
 	 * 
@@ -43,8 +36,6 @@ public class WaucCommandHelper {
 	public WaucCommandHelper(WellAuction plugin, AucShopEntityManager shopEntityManager) {
 		this.plugin = plugin;
 		this.shopEntityManager = shopEntityManager;
-		this.ERR_NO_BLOCK_SEEN = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.notBlockSeen", "You must be looking at a block");
-		this.ERR_CANT_SELL_AIR = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.cantSellAir", "You can't put air on sale!");
 	}
 
 	/**
@@ -74,7 +65,7 @@ public class WaucCommandHelper {
 				}
 			}
 			if (solidBlock == null) {
-				throw new WellCommandException(ERR_NO_BLOCK_SEEN);
+				throw new WellCommandException(plugin.lang().error("command.error.notBlockSeen"));
 			}
 
 			shopEntity = new BlockShopEntity(plugin, solidBlock);
@@ -101,7 +92,7 @@ public class WaucCommandHelper {
 		ItemStack refItem = player.getItemInHand();
 
 		if (refItem == null || refItem.getType() == Material.AIR) {
-			throw new WellCommandException(ERR_CANT_SELL_AIR);
+			throw new WellCommandException(plugin.lang().error("lang.command.error.cantSellAir"));
 		}
 
 		return plugin.db().getShop(refItem);

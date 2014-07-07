@@ -1,6 +1,8 @@
 package net.gasull.well.auction;
 
 import net.gasull.well.WellConfig;
+import net.gasull.well.WellLanguageConfig;
+import net.gasull.well.WellPermissionManager;
 import net.gasull.well.auction.command.WaucAttachCommand;
 import net.gasull.well.auction.command.WaucCommandHelper;
 import net.gasull.well.auction.command.WaucDetachCommand;
@@ -25,7 +27,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class WellAuction extends JavaPlugin {
 
 	/** The well config. */
-	private WellConfig wellConfig;
+	private WellConfig config;
+
+	/** The lang. */
+	private WellLanguageConfig lang;
+
+	/** The permission manager. */
+	private WellPermissionManager permission;
 
 	/** The database access object for Well Auction . */
 	private WellAuctionDao db;
@@ -43,16 +51,13 @@ public class WellAuction extends JavaPlugin {
 	private Economy economy;
 
 	@Override
-	public void onLoad() {
-
-	}
-
-	@Override
 	public void onEnable() {
 		setupConf();
 		setupVault();
 
-		wellConfig = new WellConfig(this, "well-auction.yml");
+		config = new WellConfig(this, "well-auction.yml", true);
+		lang = new WellLanguageConfig(this, config.getString("language"));
+		permission = new WellPermissionManager(this, lang);
 
 		if (shopManager == null) {
 			this.db = new WellAuctionDao(this);
@@ -68,7 +73,7 @@ public class WellAuction extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new AuctionShopInventoryListener(this, shopManager, inventoryManager, shopEntityManager), this);
 		getServer().getPluginManager().registerEvents(new AuctionBlockShopListener(this, shopEntityManager), this);
 
-		wellConfig.save();
+		config.save();
 		setupCommands();
 	}
 
@@ -85,8 +90,26 @@ public class WellAuction extends JavaPlugin {
 	 * 
 	 * @return the well config
 	 */
-	public WellConfig wellConfig() {
-		return wellConfig;
+	public WellConfig config() {
+		return config;
+	}
+
+	/**
+	 * Gets the localization.
+	 * 
+	 * @return the well language config
+	 */
+	public WellLanguageConfig lang() {
+		return lang;
+	}
+
+	/**
+	 * Permission.
+	 * 
+	 * @return the well permission manager
+	 */
+	public WellPermissionManager permission() {
+		return permission;
 	}
 
 	/**

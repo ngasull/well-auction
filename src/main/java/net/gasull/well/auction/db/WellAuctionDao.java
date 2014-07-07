@@ -278,18 +278,17 @@ public class WellAuctionDao extends WellDao {
 		desc.add(ChatColor.DARK_GRAY + AuctionSale.N + sale.getId());
 
 		if (sale.getTradePrice() == null) {
-			desc.add(plugin.wellConfig().getString("lang.shop.item.noPrice", "No price set up yet!"));
+			desc.add(plugin.lang().get("shop.item.noPrice"));
 		} else {
 			desc.add(ChatColor.GREEN + plugin.economy().format(sale.getTradePrice()));
 
-			String pricePerUnit = plugin.wellConfig().getString("lang.shop.item.pricePerUnit", "%price% p.u.");
+			String pricePerUnit = plugin.lang().get("shop.item.pricePerUnit");
 			desc.add(ChatColor.DARK_GREEN
 					+ pricePerUnit.replace("%price%", plugin.economy().format(sale.getTradePrice() / (double) sale.getItem().getAmount())));
 		}
 
 		String playerName = sale.getSellerData().getAuctionPlayer().getName();
-		desc.add(ChatColor.BLUE
-				+ plugin.wellConfig().getString("lang.shop.item.soldBy", "Sold by %player%").replace("%player%", playerName == null ? "???" : playerName));
+		desc.add(ChatColor.BLUE + plugin.lang().get("shop.item.soldBy").replace("%player%", playerName == null ? "???" : playerName));
 
 		meta.setLore(desc);
 		tradeStack.setItemMeta(meta);

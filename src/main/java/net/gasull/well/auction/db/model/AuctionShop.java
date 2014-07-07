@@ -1,7 +1,6 @@
 package net.gasull.well.auction.db.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -110,7 +109,7 @@ public class AuctionShop {
 	 *            the plugin
 	 */
 	public void setup(WellAuction plugin) {
-		setStackSizes(plugin.wellConfig().getIntegerList("shop.buy.possibleStackSizes", Arrays.asList(1, 4, 8, 16, 32, 64)));
+		setStackSizes(plugin.config().getIntegerList("shop.buy.possibleStackSizes"));
 		setSales(new AuctionSalesCollection(this.stackSizes));
 	}
 

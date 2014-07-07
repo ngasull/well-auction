@@ -1,0 +1,23 @@
+language: english
+inventory:
+  menu:
+    title: Auction House
+    button:
+      sell:
+        item: GOLD_INGOT
+      buy:
+        item: EMERALD
+      info:
+        item: PAPER
+player:
+  setPrice:
+    timeout: 7
+shop:
+  buy:
+    possibleStackSizes:
+    - 1
+    - 4
+    - 8
+    - 16
+    - 32
+    - 64

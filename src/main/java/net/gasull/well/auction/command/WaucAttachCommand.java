@@ -7,7 +7,6 @@ import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.command.WellCommand;
 import net.gasull.well.command.WellCommandException;
 
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 /**
@@ -21,12 +20,6 @@ public class WaucAttachCommand extends WellCommand<Player> {
 	/** The helper. */
 	private WaucCommandHelper helper;
 
-	/** "sale already at this place" message */
-	private final String ERR_SALE_ALREADY_HERE;
-
-	/** Shop creation success message. */
-	private final String SUCC_ATTACH;
-
 	/**
 	 * Instantiates a new wauc attach command.
 	 * 
@@ -36,10 +29,6 @@ public class WaucAttachCommand extends WellCommand<Player> {
 	public WaucAttachCommand(WellAuction plugin, WaucCommandHelper helper) {
 		this.plugin = plugin;
 		this.helper = helper;
-
-		this.ERR_SALE_ALREADY_HERE = ChatColor.DARK_RED
-				+ plugin.wellConfig().getString("lang.command.error.saleAlreadyHere", "This is already being on sale here");
-		this.SUCC_ATTACH = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.creation.success", "Successfully attached for sale %item%");
 	}
 
 	@Override
@@ -53,9 +42,9 @@ public class WaucAttachCommand extends WellCommand<Player> {
 			plugin.db().save(shopEntity.getModel());
 			plugin.db().save(shopEntity.getModel().getEntityToShops());
 
-			return SUCC_ATTACH.replace("%item%", shop.getRefItemCopy().toString());
+			return plugin.lang().success("command.creation.success").replace("%item%", shop.getRefItemCopy().toString());
 		} else {
-			throw new WellCommandException(ERR_SALE_ALREADY_HERE.replace("%item%", shop.getRefItemCopy().toString()));
+			throw new WellCommandException(plugin.lang().error("command.error.saleAlreadyHere").replace("%item%", shop.getRefItemCopy().toString()));
 		}
 	}
 

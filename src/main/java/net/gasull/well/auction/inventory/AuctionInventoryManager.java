@@ -19,7 +19,6 @@ import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
@@ -63,15 +62,6 @@ public class AuctionInventoryManager {
 	/** The separator between title base and sub view title. */
 	private static final String TITLE_SEPARATOR = " - ";
 
-	/** The message for set price please. */
-	private final String msgSetPricePlease;
-
-	/** The message set invalid price. */
-	private final String msgSetPriceInvalid;
-
-	/** The message set price canceled. */
-	private final String msgSetPriceCanceled;
-
 	/** The set price delay. */
 	private final long setPriceTimeout;
 
@@ -86,14 +76,10 @@ public class AuctionInventoryManager {
 	public AuctionInventoryManager(WellAuction plugin, AuctionShopManager shopManager) {
 		this.plugin = plugin;
 		this.shopManager = shopManager;
-		this.titleBase = plugin.wellConfig().getString("inventory.menu.title", "Auction House");
-		this.titleSell = titleBase + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.sell.title", "Sell");
-		this.titleBuy = titleBase + TITLE_SEPARATOR + plugin.wellConfig().getString("lang.inventory.buy.title", "Buy");
-		this.setPriceTimeout = plugin.wellConfig().getLong("player.setPrice.timeout", 140);
-
-		this.msgSetPricePlease = plugin.wellConfig().getString("lang.player.setPrice.please", "Please type in the chat the price you want to sell %item% at");
-		this.msgSetPriceInvalid = plugin.wellConfig().getString("lang.player.setPrice.invalid", "Invalid price, operation canceled");
-		this.msgSetPriceCanceled = plugin.wellConfig().getString("lang.player.setPrice.canceled", "Price set canceled");
+		this.titleBase = plugin.config().getString("inventory.menu.title");
+		this.titleSell = titleBase + TITLE_SEPARATOR + plugin.lang().get("inventory.sell.title");
+		this.titleBuy = titleBase + TITLE_SEPARATOR + plugin.lang().get("inventory.buy.title");
+		this.setPriceTimeout = plugin.config().getLong("player.setPrice.timeout") * 20;
 	}
 
 	/**
@@ -119,7 +105,7 @@ public class AuctionInventoryManager {
 
 		setPriceTasks.put(player, task);
 		player.closeInventory();
-		player.sendMessage(msgSetPricePlease.replace("%item%", auctionSellerData.getShop().getRefItemCopy().toString()));
+		player.sendMessage(plugin.lang().get("player.setPrice.please").replace("%item%", auctionSellerData.getShop().getRefItemCopy().toString()));
 	}
 
 	/**
@@ -145,7 +131,7 @@ public class AuctionInventoryManager {
 
 		setPriceTasks.put(player, task);
 		player.closeInventory();
-		player.sendMessage(msgSetPricePlease.replace("%item%", sale.getItem().toString()));
+		player.sendMessage(plugin.lang().get("player.setPrice.please").replace("%item%", sale.getItem().toString()));
 	}
 
 	/**
@@ -294,7 +280,7 @@ public class AuctionInventoryManager {
 				reOpenSell(task);
 			}
 
-			player.sendMessage(ChatColor.YELLOW + msgSetPriceCanceled);
+			player.sendMessage(plugin.lang().warn("player.setPrice.canceled"));
 			return true;
 		}
 		return false;
@@ -496,7 +482,7 @@ public class AuctionInventoryManager {
 				// Arbitrary negative value will unset price
 				return -1d;
 			default:
-				player.sendMessage(ChatColor.DARK_RED + msgSetPriceInvalid);
+				player.sendMessage(plugin.lang().error("player.setPrice.invalid"));
 			}
 			return null;
 		}
@@ -569,7 +555,7 @@ public class AuctionInventoryManager {
 		@Override
 		public void run() {
 			if (setPriceTasks.remove(player) != null) {
-				auctionPlayer.sendMessage(ChatColor.YELLOW + msgSetPriceCanceled);
+				auctionPlayer.sendMessage(plugin.lang().warn("player.setPrice.canceled"));
 			}
 		}
 	}

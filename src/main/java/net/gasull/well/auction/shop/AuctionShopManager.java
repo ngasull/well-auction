@@ -37,30 +37,6 @@ public class AuctionShopManager {
 	/** The max sale id. */
 	private int maxSaleId = 0;
 
-	/** The sell notification message. */
-	private final String MSG_SELL_NOTIFY;
-
-	/** The buy notification message. */
-	private final String MSG_BUY_NOTIFY;
-
-	/** The buy apologizing message. */
-	private final String MSG_BUY_SORRY;
-
-	/** The buy not enough money message. */
-	private final String MSG_BUY_NO_MONEY;
-
-	/** The message for set price success. */
-	private final String msgSetPriceSuccess;
-
-	/** The message for price unset. */
-	private final String msgSetPriceUnset;
-
-	/** The message for set default price success. */
-	private final String msgSetDefaultPriceSuccess;
-
-	/** The message for default price unset. */
-	private final String msgSetDefaultPriceUnset;
-
 	/**
 	 * Instantiates a new auction shop manager.
 	 * 
@@ -72,16 +48,6 @@ public class AuctionShopManager {
 	public AuctionShopManager(WellAuction plugin, AucShopEntityManager shopEntityManager) {
 		this.plugin = plugin;
 		this.shopEntityManager = shopEntityManager;
-
-		this.MSG_SELL_NOTIFY = plugin.wellConfig().getString("lang.sell.notification", "You've just sold %item% to %player% for %price%");
-		this.MSG_BUY_NOTIFY = plugin.wellConfig().getString("lang.buy.notification", "You've just bought %item% to %player% for %price%");
-		this.MSG_BUY_SORRY = plugin.wellConfig().getString("lang.buy.sorry", "Sorry, %item% is not available in the shop any more..!");
-		this.MSG_BUY_NO_MONEY = plugin.wellConfig().getString("lang.buy.noMoney", "You don't have enough money to buy %item%");
-
-		this.msgSetPriceSuccess = plugin.wellConfig().getString("lang.player.setPrice.success", "You're now selling %item% at %price%");
-		this.msgSetPriceUnset = plugin.wellConfig().getString("lang.player.setPrice.unset", "You've unset the price of %item%");
-		this.msgSetDefaultPriceSuccess = plugin.wellConfig().getString("lang.player.setPrice.success", "You're now selling %item% at %price% by default");
-		this.msgSetDefaultPriceUnset = plugin.wellConfig().getString("lang.player.setPrice.unset", "You've unset the default price of %item%");
 	}
 
 	/**
@@ -107,9 +73,9 @@ public class AuctionShopManager {
 			throw new AuctionShopException("No registered shop for item " + theItem);
 		}
 		if (!shop.getStackSizes().contains(theItem.getAmount())) {
-			String msg = plugin.wellConfig().getString("lang.sell.invalidStackSize", "You can't sell %amount% of this item. Valid amounts: %amounts%");
+			String msg = plugin.lang().error("sell.invalidStackSize");
 			msg = msg.replace("%amount%", String.valueOf(theItem.getAmount())).replace("%amounts%", StringUtils.join(shop.getStackSizes(), ", "));
-			player.sendMessage(ChatColor.RED + msg);
+			player.sendMessage(msg);
 			throw new AuctionShopException(String.format("To %s : %s", player.getName(), msg));
 		}
 
@@ -169,9 +135,9 @@ public class AuctionShopManager {
 		}
 
 		// Handle failure here
-		String msg = MSG_BUY_SORRY.replace("%item%", theItem.toString());
+		String msg = plugin.lang().error("buy.sorry").replace("%item%", theItem.toString());
 
-		player.sendMessage(ChatColor.RED + msg);
+		player.sendMessage(msg);
 		throw new AuctionShopException("To " + player.getName() + " : " + msg);
 	}
 
@@ -209,11 +175,13 @@ public class AuctionShopManager {
 					OfflinePlayer seller = sale.getSellerData().getAuctionPlayer().getPlayer();
 					String priceStr = plugin.economy().format(price);
 					player.sendMessage(ChatColor.DARK_GREEN
-							+ MSG_BUY_NOTIFY.replace("%item%", item.toString()).replace("%player%", seller.getName()).replace("%price%", priceStr));
+							+ plugin.lang().get("buy.notification").replace("%item%", item.toString()).replace("%player%", seller.getName())
+									.replace("%price%", priceStr));
 
 					if (seller.isOnline() && seller instanceof Player) {
 						((Player) seller).sendMessage(ChatColor.BLUE
-								+ MSG_SELL_NOTIFY.replace("%item%", item.toString()).replace("%player%", player.getName()).replace("%price%", priceStr));
+								+ plugin.lang().get("sell.notification").replace("%item%", item.toString()).replace("%player%", player.getName())
+										.replace("%price%", priceStr));
 					}
 
 					plugin.economy().withdrawPlayer(player, price);
@@ -234,12 +202,12 @@ public class AuctionShopManager {
 		// Handle failure here
 		String msg;
 		if (sale == null) {
-			msg = MSG_BUY_SORRY.replace("%item%", saleStack.toString());
+			msg = plugin.lang().error("buy.sorry").replace("%item%", saleStack.toString());
 		} else {
-			msg = MSG_BUY_NO_MONEY.replace("%item%", saleStack.toString());
+			msg = plugin.lang().get("buy.noMoney").replace("%item%", saleStack.toString());
 		}
 
-		player.sendMessage(ChatColor.RED + msg);
+		player.sendMessage(msg);
 		throw new AuctionShopException("To " + player.getName() + " : " + msg);
 	}
 
@@ -271,7 +239,7 @@ public class AuctionShopManager {
 							.getAuctionPlayer()
 							.sendMessage(
 									ChatColor.BLUE
-											+ msgSetPriceSuccess.replace("%item%", sale.getItem().toString())
+											+ plugin.lang().get("player.setPrice.success").replace("%item%", sale.getItem().toString())
 													.replace("%price%", plugin.economy().format(price)));
 					t.commit();
 				} finally {
@@ -300,7 +268,8 @@ public class AuctionShopManager {
 			try {
 				changePrice(sale, null);
 				sale.unlock();
-				sale.getSellerData().getAuctionPlayer().sendMessage(ChatColor.BLUE + msgSetPriceUnset.replace("%item%", sale.getItem().toString()));
+				sale.getSellerData().getAuctionPlayer()
+						.sendMessage(ChatColor.BLUE + plugin.lang().get("player.setPrice.unset").replace("%item%", sale.getItem().toString()));
 				t.commit();
 			} finally {
 				t.end();
@@ -344,8 +313,8 @@ public class AuctionShopManager {
 			setDefaultPrice(sellerData, price);
 			sellerData.getAuctionPlayer().sendMessage(
 					ChatColor.BLUE
-							+ msgSetDefaultPriceSuccess.replace("%item%", sellerData.getShop().getRefItemCopy().toString()).replace("%price%",
-									plugin.economy().format(price)));
+							+ plugin.lang().get("player.setPrice.successDefault").replace("%item%", sellerData.getShop().getRefItemCopy().toString())
+									.replace("%price%", plugin.economy().format(price)));
 		}
 	}
 
@@ -384,7 +353,8 @@ public class AuctionShopManager {
 	public void unsetDefaultPrice(Player player, AuctionSellerData sellerData) throws AuctionShopException {
 		checkEnabled(player);
 		setDefaultPrice(sellerData, null);
-		sellerData.getAuctionPlayer().sendMessage(ChatColor.BLUE + msgSetDefaultPriceUnset.replace("%item%", sellerData.getShop().getRefItemCopy().toString()));
+		sellerData.getAuctionPlayer().sendMessage(
+				ChatColor.BLUE + plugin.lang().get("player.setPrice.unsetDefault").replace("%item%", sellerData.getShop().getRefItemCopy().toString()));
 	}
 
 	/**
@@ -420,7 +390,7 @@ public class AuctionShopManager {
 	 */
 	public void checkEnabled(Player player) throws AuctionShopException {
 		if (!isEnabled()) {
-			player.sendMessage(ChatColor.RED + plugin.wellConfig().getString("lang.db.error.sync", "Sorry, Auction Houses are syncing. Please try again!"));
+			player.sendMessage(plugin.lang().error("lang.db.error.sync"));
 			throw new AuctionShopException("");
 		}
 	}

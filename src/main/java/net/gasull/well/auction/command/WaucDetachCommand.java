@@ -1,8 +1,5 @@
 package net.gasull.well.auction.command;
 
-import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
-
 import net.gasull.well.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AucEntityToShop;
@@ -10,6 +7,8 @@ import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.command.WellCommand;
 import net.gasull.well.command.WellCommandException;
+
+import org.bukkit.entity.Player;
 
 /**
  * /wauc detach
@@ -22,13 +21,9 @@ public class WaucDetachCommand extends WellCommand<Player> {
 	/** The helper. */
 	private WaucCommandHelper helper;
 
-	/** Shop detach success message. */
-	private final String SUCC_DETACH;
-
 	public WaucDetachCommand(WellAuction plugin, WaucCommandHelper helper) {
 		this.plugin = plugin;
 		this.helper = helper;
-		this.SUCC_DETACH = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.detach.success", "Successfully detached an item");
 	}
 
 	@Override
@@ -49,7 +44,7 @@ public class WaucDetachCommand extends WellCommand<Player> {
 				shopEntity.register();
 			}
 
-			return SUCC_DETACH;
+			return plugin.lang().success("command.detach.success");
 		}
 
 		return null;

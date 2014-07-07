@@ -1,0 +1,81 @@
+sell:
+  notification: You've just sold %item% to %player% for %price%
+  invalidStackSize: "You can't sell %amount% of this item. Valid amounts: %amounts%"
+buy:
+  notification: You've just bought %item% to %player% for %price%
+  sorry: Sorry, %item% is not available in the shop any more..!
+  noMoney: You don't have enough money to buy %item%
+player:
+  setPrice:
+    success: You're now selling %item% at %price%
+    successDefault: You're now selling %item% at %price% by default
+    unset: You've unset the price of %item%
+    unsetDefault: You've unset the default price of %item%
+    please: Please type in the chat the price you want to sell %item% at
+    invalid: Invalid price, operation canceled
+    canceled: Price set canceled
+inventory:
+  sell:
+    title: Sell
+  buy:
+    title: Buy
+  menu:
+    button:
+      sell:
+        title: Sell
+        noPrice: No price set up yet!
+        price: 'Your price: %price% p.u.'
+      buy:
+        title: Buy
+        bestSale: 'Best price: %price% p.u'
+      info:
+        title: Welcome to the Auction House!
+        desc:
+        - "\xa7bWelcome to the Auction House!"
+        - "\xa78============================="
+        - "\xa7bEither left-click to buy items"
+        - "\xa7bor right-click to sell items."
+        - "\xa78============================="
+        - "\xa7bYou can setup default sell price"
+        - "\xa7bper unit by shift-clicking a category."
+        - "\xa78============================="
+        - "\xa7bShift-clicking also works for"
+        - "\xa7bindividual sales."
+        - "\xa78============================="
+        - "\xa7bYou can remove your sales by"
+        - "\xa7bright-clicking them."
+        chatDesc:
+        - "\xa7bWelcome to the Auction House!"
+        - "\xa7bEither left-click to buy items or right-click to sell items."
+        - "\xa7bSetup default sell price per unit by shift-clicking a category."
+        - "\xa7bShift-clicking also works for individual sales."
+        - "\xa7bYou can remove your sales by right-clicking them."
+shop:
+  item:
+    pricePerUnit: '%price% p.u.'
+    soldBy: Sold by %player%
+    noPrice: No price set up yet!
+command:
+  creation:
+    success: "Successfully attached for sale %item%"
+  detach:
+    success: "Successfully detached an item"
+  list:
+    noShop: "No AuctionShop registered yet"
+  preset:
+    error:
+      file: "Couldn't load presets file. Please try to restart the server or reload plugins."
+      key: "Couldn't find presets for key %key%"
+      invalidMaterial: "Warning: %material% is an unknown material"
+    success: "Successfully loaded preset"
+  remove:
+    success: "Successfully removed a shop"
+  error:
+    saleAlreadyHere: "This is already being on sale here"
+    notBlockSeen: "You must be looking at a block"
+    cantSellAir: "You can't put air on sale!"
+permission:
+  notAllowed: "You're not allowed to %thing%"
+db:
+  error:
+    sync: "Sorry, Auction Houses are syncing. Please try again!"

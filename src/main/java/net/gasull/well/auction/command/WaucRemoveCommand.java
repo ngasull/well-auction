@@ -7,7 +7,6 @@ import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.command.WellCommand;
 import net.gasull.well.command.WellCommandException;
 
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 /**
@@ -21,13 +20,17 @@ public class WaucRemoveCommand extends WellCommand<Player> {
 	/** The helper. */
 	private WaucCommandHelper helper;
 
-	/** Shop remove success message. */
-	private final String SUCC_REMOVE;
-
+	/**
+	 * Instantiates a new wauc remove command.
+	 * 
+	 * @param plugin
+	 *            the plugin
+	 * @param helper
+	 *            the helper
+	 */
 	public WaucRemoveCommand(WellAuction plugin, WaucCommandHelper helper) {
 		this.plugin = plugin;
 		this.helper = helper;
-		this.SUCC_REMOVE = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.remove.success", "Successfully removed a shop");
 	}
 
 	@Override
@@ -45,7 +48,7 @@ public class WaucRemoveCommand extends WellCommand<Player> {
 		}
 		plugin.db().delete(shopEntity.getModel());
 
-		return SUCC_REMOVE;
+		return plugin.lang().success("command.remove.success");
 	}
 
 	@Override

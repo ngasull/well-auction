@@ -100,49 +100,28 @@ public class AuctionMenu {
 		this.plugin = plugin;
 		this.shopEntity = shopEntity;
 
-		sellButton = new ItemStack(Material.matchMaterial(plugin.wellConfig().getString("inventory.menu.button.sell.item", Material.GOLD_INGOT.name())));
-		buyButton = new ItemStack(Material.matchMaterial(plugin.wellConfig().getString("inventory.menu.button.buy.item", Material.EMERALD.name())));
-		info = new ItemStack(Material.matchMaterial(plugin.wellConfig().getString("inventory.menu.button.info.item", Material.PAPER.name())));
+		sellButton = new ItemStack(Material.matchMaterial(plugin.config().getString("inventory.menu.button.sell.item")));
+		buyButton = new ItemStack(Material.matchMaterial(plugin.config().getString("inventory.menu.button.buy.item")));
+		info = new ItemStack(Material.matchMaterial(plugin.config().getString("inventory.menu.button.info.item")));
 
 		ItemMeta itemMeta = Bukkit.getItemFactory().getItemMeta(sellButton.getType());
-		itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.sell.title", "Sell"));
+		itemMeta.setDisplayName(plugin.lang().get("inventory.menu.button.sell.title"));
 		sellButton.setItemMeta(itemMeta);
 
 		itemMeta = Bukkit.getItemFactory().getItemMeta(buyButton.getType());
-		itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.buy.title", "Buy"));
+		itemMeta.setDisplayName(plugin.lang().get("inventory.menu.button.buy.title"));
 		buyButton.setItemMeta(itemMeta);
 
-		msgSaleNoPrice = plugin.wellConfig().getString("lang.inventory.menu.button.sell.noPrice", "No price set up yet!");
-		msgSalePrice = plugin.wellConfig().getString("lang.inventory.menu.button.sell.price", "Your price: %price% p.u.");
-		msgBestSalePrice = plugin.wellConfig().getString("lang.inventory.menu.button.buy.bestSale", "Best price: %price% p.u");
-
-		List<String> defaultInfo = new ArrayList<>();
-		defaultInfo.add(ChatColor.AQUA + "Welcome to the Auction House!");
-		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
-		defaultInfo.add(ChatColor.AQUA + "Either left-click to buy items");
-		defaultInfo.add(ChatColor.AQUA + "or right-click to sell items.");
-		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
-		defaultInfo.add(ChatColor.AQUA + "You can setup default sell price");
-		defaultInfo.add(ChatColor.AQUA + "per unit by shift-clicking a category.");
-		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
-		defaultInfo.add(ChatColor.AQUA + "Shift-clicking also works for");
-		defaultInfo.add(ChatColor.AQUA + "individual sales.");
-		defaultInfo.add(ChatColor.DARK_GRAY + "=============================");
-		defaultInfo.add(ChatColor.AQUA + "You can remove your sales by");
-		defaultInfo.add(ChatColor.AQUA + "right-clicking them.");
+		msgSaleNoPrice = plugin.lang().get("inventory.menu.button.sell.noPrice");
+		msgSalePrice = plugin.lang().get("inventory.menu.button.sell.price");
+		msgBestSalePrice = plugin.lang().get("inventory.menu.button.buy.bestSale");
 
 		itemMeta = Bukkit.getItemFactory().getItemMeta(info.getType());
-		itemMeta.setDisplayName(plugin.wellConfig().getString("lang.inventory.menu.button.info.title", "Welcome to the Auction House!"));
-		itemMeta.setLore(plugin.wellConfig().getStringList("lang.inventory.menu.button.info.desc", defaultInfo));
+		itemMeta.setDisplayName(plugin.lang().get("inventory.menu.button.info.title"));
+		itemMeta.setLore(plugin.lang().getList("inventory.menu.button.info.desc"));
 		info.setItemMeta(itemMeta);
 
-		defaultInfo = new ArrayList<>();
-		defaultInfo.add(ChatColor.AQUA + "Welcome to the Auction House!");
-		defaultInfo.add(ChatColor.AQUA + "Either left-click to buy items or right-click to sell items.");
-		defaultInfo.add(ChatColor.AQUA + "Setup default sell price per unit by shift-clicking a category.");
-		defaultInfo.add(ChatColor.AQUA + "Shift-clicking also works for individual sales.");
-		defaultInfo.add(ChatColor.AQUA + "You can remove your sales by right-clicking them.");
-		List<String> stringList = plugin.wellConfig().getStringList("lang.inventory.menu.button.info.chatCesc", defaultInfo);
+		List<String> stringList = plugin.lang().getList("inventory.menu.button.info.chatDesc");
 		chatInfo = stringList.toArray(new String[stringList.size()]);
 	}
 
@@ -223,7 +202,7 @@ public class AuctionMenu {
 			}
 		}
 
-		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, plugin.wellConfig().getString("inventory.menu.title"));
+		Inventory inv = Bukkit.createInventory(player, AuctionMenu.MENU_SIZE, plugin.config().getString("inventory.menu.title"));
 		inv.setContents(contents);
 		return inv;
 	}
@@ -280,7 +259,7 @@ public class AuctionMenu {
 		}
 
 		shopSlots = lastShopSlots;
-		Inventory inv = Bukkit.createInventory(player, menuSize, plugin.wellConfig().getString("inventory.menu.title"));
+		Inventory inv = Bukkit.createInventory(player, menuSize, plugin.config().getString("inventory.menu.title"));
 		inv.setContents(contents);
 		return inv;
 	}

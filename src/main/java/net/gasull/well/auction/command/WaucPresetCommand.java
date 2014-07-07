@@ -13,7 +13,6 @@ import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.command.WellCommand;
 import net.gasull.well.command.WellCommandException;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -35,29 +34,18 @@ public class WaucPresetCommand extends WellCommand<Player> {
 	/** The user's presets file. */
 	private final File userPresetsFile;
 
-	/** The error message when a problem in presets file loading happens. */
-	private final String ERR_PRESETS_FILE;
-
-	/** The error message for presets key in conf. */
-	private final String ERR_PRESETS_KEY;
-
-	/** The warning message for invalid material. */
-	private final String WARN_INVALID_MATERIAL;
-
-	/** The success preset loading message. */
-	private final String SUCC_PRESET;
-
+	/**
+	 * Instantiates a new wauc preset command.
+	 * 
+	 * @param plugin
+	 *            the plugin
+	 * @param helper
+	 *            the helper
+	 */
 	public WaucPresetCommand(WellAuction plugin, WaucCommandHelper helper) {
 		this.plugin = plugin;
 		this.helper = helper;
 		this.userPresetsFile = new File(plugin.getDataFolder(), "presets.yml");
-		this.ERR_PRESETS_FILE = ChatColor.DARK_RED
-				+ plugin.wellConfig().getString("lang.command.error.presets.file",
-						"Couldn't load presets file. Please try to restart the server or reload plugins.");
-		this.ERR_PRESETS_KEY = ChatColor.DARK_RED + plugin.wellConfig().getString("lang.command.error.presets.key", "Couldn't find presets for key %key%");
-		this.WARN_INVALID_MATERIAL = ChatColor.DARK_AQUA
-				+ plugin.wellConfig().getString("lang.command.error.presets.invalidMaterial", "Warning: %material% is an unknown material");
-		this.SUCC_PRESET = ChatColor.GREEN + plugin.wellConfig().getString("lang.command.presets.success", "Successfully loaded preset");
 	}
 
 	@SuppressWarnings({ "deprecation" })
@@ -72,7 +60,7 @@ public class WaucPresetCommand extends WellCommand<Player> {
 			presetsConf.load(userPresetsFile);
 
 			if (!presetsConf.contains(presetKey)) {
-				throw new WellCommandException(ERR_PRESETS_KEY.replace("%key%", presetKey));
+				throw new WellCommandException(plugin.lang().error("command.preset.error.key").replace("%key%", presetKey));
 			}
 
 			// Adding presets in the shop entity
@@ -84,7 +72,7 @@ public class WaucPresetCommand extends WellCommand<Player> {
 				Material mat = Material.matchMaterial(itemName);
 
 				if (mat == null) {
-					player.sendMessage(ChatColor.DARK_AQUA + WARN_INVALID_MATERIAL.replace("%material%", itemName));
+					player.sendMessage(plugin.lang().warn("command.preset.error.invalidMaterial").replace("%material%", itemName));
 				} else {
 					// Try to get data value
 					if (mat.getData() != null && split.length > 1) {
@@ -110,7 +98,7 @@ public class WaucPresetCommand extends WellCommand<Player> {
 			plugin.db().save(shopEntity.getModel());
 			plugin.db().save(shopEntity.getModel().getEntityToShops());
 
-			return SUCC_PRESET;
+			return plugin.lang().success("command.presets.success");
 		} catch (FileNotFoundException e) {
 			plugin.getLogger().log(Level.SEVERE, "Couldn't load presets: file not found", e);
 		} catch (IOException e) {
@@ -119,7 +107,7 @@ public class WaucPresetCommand extends WellCommand<Player> {
 			plugin.getLogger().log(Level.SEVERE, "Couldn't load presets: invalid configuration", e);
 		}
 
-		return ERR_PRESETS_FILE;
+		return plugin.lang().error("command.preset.error.file");
 	}
 
 	@Override

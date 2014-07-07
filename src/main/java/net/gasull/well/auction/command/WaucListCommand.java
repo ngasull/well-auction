@@ -21,12 +21,8 @@ public class WaucListCommand extends WellCommand<CommandSender> {
 	/** The plugin. */
 	private WellAuction plugin;
 
-	/** Shop listing message for no shops registered. */
-	private final String LIST_NO_SHOP;
-
 	public WaucListCommand(WellAuction plugin) {
 		this.plugin = plugin;
-		this.LIST_NO_SHOP = ChatColor.YELLOW + plugin.wellConfig().getString("lang.command.list.noShop", "No AuctionShop registered yet");
 	}
 
 	@Override
@@ -35,7 +31,7 @@ public class WaucListCommand extends WellCommand<CommandSender> {
 		Collection<AuctionShop> shops = plugin.db().listShops();
 
 		if (shops.isEmpty()) {
-			sender.sendMessage(LIST_NO_SHOP);
+			sender.sendMessage(plugin.lang().warn("command.list.noShop"));
 		} else {
 			for (AuctionShop shop : shops) {
 				msg = new StringBuilder().append(ChatColor.YELLOW).append(shop).append(": ").append("\n");
