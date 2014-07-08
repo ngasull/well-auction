@@ -218,7 +218,7 @@ public class AuctionMenu {
 	 */
 	private Inventory createInventoryMulti(Collection<AuctionShop> shops, Player player) {
 
-		final int menuSize = (((int) (shops.size() / 9)) + 1) * 9;
+		final int menuSize = (((int) ((shops.size() - 1) / 9)) + 1) * 9;
 		AuctionShop[] lastShopSlots = new AuctionShop[6 * 9];
 		AuctionPlayer aucPlayer = plugin.db().findAuctionPlayer(player);
 		Map<Integer, AuctionSellerData> sellerDataMap = plugin.db().mapShopsToSellerData(aucPlayer, shops);

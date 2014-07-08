@@ -1,11 +1,11 @@
 package net.gasull.well.auction.command;
 
-import net.gasull.well.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AucEntityToShop;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.command.WellCommand;
 import net.gasull.well.command.WellCommandException;
+import net.gasull.well.conf.WellPermissionManager.WellPermissionException;
 
 import org.bukkit.entity.Player;
 

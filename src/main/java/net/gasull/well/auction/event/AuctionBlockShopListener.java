@@ -3,10 +3,10 @@ package net.gasull.well.auction.event;
 import java.util.List;
 import java.util.logging.Level;
 
-import net.gasull.well.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
+import net.gasull.well.conf.WellPermissionManager.WellPermissionException;
 
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;

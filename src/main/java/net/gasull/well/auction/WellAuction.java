@@ -1,8 +1,5 @@
 package net.gasull.well.auction;
 
-import net.gasull.well.WellConfig;
-import net.gasull.well.WellLanguageConfig;
-import net.gasull.well.WellPermissionManager;
 import net.gasull.well.auction.command.WaucAttachCommand;
 import net.gasull.well.auction.command.WaucCommandHelper;
 import net.gasull.well.auction.command.WaucDetachCommand;
@@ -16,6 +13,9 @@ import net.gasull.well.auction.inventory.AuctionInventoryManager;
 import net.gasull.well.auction.shop.AuctionShopManager;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 import net.gasull.well.command.WellCommandHandler;
+import net.gasull.well.conf.WellConfig;
+import net.gasull.well.conf.WellLanguageConfig;
+import net.gasull.well.conf.WellPermissionManager;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.plugin.RegisteredServiceProvider;

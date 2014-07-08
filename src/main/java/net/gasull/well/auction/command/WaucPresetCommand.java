@@ -6,12 +6,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 
-import net.gasull.well.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.command.WellCommand;
 import net.gasull.well.command.WellCommandException;
+import net.gasull.well.conf.WellPermissionManager.WellPermissionException;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -98,7 +98,7 @@ public class WaucPresetCommand extends WellCommand<Player> {
 			plugin.db().save(shopEntity.getModel());
 			plugin.db().save(shopEntity.getModel().getEntityToShops());
 
-			return plugin.lang().success("command.presets.success");
+			return plugin.lang().success("command.preset.success");
 		} catch (FileNotFoundException e) {
 			plugin.getLogger().log(Level.SEVERE, "Couldn't load presets: file not found", e);
 		} catch (IOException e) {

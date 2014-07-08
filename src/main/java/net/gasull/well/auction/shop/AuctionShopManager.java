@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.logging.Level;
 
 import net.gasull.well.WellCore;
-import net.gasull.well.WellPermissionManager.WellPermissionException;
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
+import net.gasull.well.conf.WellPermissionManager.WellPermissionException;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
