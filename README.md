@@ -20,6 +20,7 @@ well-auction
 3. Players will be able to sell this item in this Well-Auction shop.
 4. Sellers can define a price for each sale by shift-clicking it, or a default price for the item by shift-clicking the "Sell" button.
 5. Once the price is defined, items on sale will be seen and buyable by other players in this Well-Auction shop.
+6. Easy setup with ready-to-use shop presets.
 
 Using this pattern on an entire room on autions for different items will be the dynamic hypermarket of your server!
 
@@ -38,6 +39,11 @@ Using this pattern on an entire room on autions for different items will be the 
 * [ ] **Create Well-Auction shop from NPCs**.
 * [ ] Competitive system with seller notification on new best offer from another player.
 * [ ] Configurable (and optional) tax for seller on each sale.
+
+
+## Installation note
+
+This plugin depends on [well-core (click here)](http://dev.bukkit.org/bukkit-plugins/well-core/), **please get its last version or well-auction won't work**.
 
 
 ## Usage
