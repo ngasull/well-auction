@@ -1,4 +1,4 @@
-sell:
+﻿sell:
   notification: "Tu viens de vendre %item% à %player% pour %price%"
   invalidStackSize: "Tu ne peux pas vendre cet objet par %amount%. Quantités valides: %amounts%"
 buy:
