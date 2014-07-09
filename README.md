@@ -10,7 +10,7 @@ well-auction
 * Check items visually, with inventory-like window.
 * Buy items, visually.
 * Seller notification on each of his sales.
-* **Translatable**. Don't hesitate to send here your translated configuration file in your language!
+* **Localizable**. Don't hesitate to send here your translated configuration file in your language!
 * DB storage from your bukkit server's configuration.
 
 ### Basic use case
@@ -34,7 +34,7 @@ Using this pattern on an entire room on autions for different items will be the 
 * [x] Multiple items to be sold in a single Well-Auction shop.
 * [x] Players can unset price of sale, taking default dynamic price, if set.
 * [x] Clean sales sorting for optimal visualization.
-* [ ] Item presets for quick shops setup.
+* [x] Item presets for quick shops setup.
 * [ ] **Create Well-Auction shop from NPCs**.
 * [ ] Competitive system with seller notification on new best offer from another player.
 * [ ] Configurable (and optional) tax for seller on each sale.
@@ -46,6 +46,7 @@ Using this pattern on an entire room on autions for different items will be the 
 
 * `\wellauction attach` to create or update an auction house by adding the type of item you're holding in your hand on sale. Creates the shop inside the block you're looking at (right-click to open).
 * `\wellauction detach` to update an auction house by detaching the type of item you're holding in your hand from sales. A shop without sales is removed.
+* `\wellauction preset` to attach a preset of items to an Auction House. Presets are configured in presets.yml. Creates the shop inside the block you're looking at (right-click to open).
 * `\wellauction remove` to remove an auction house from the block you're looking at.
 * `\wellauction list` lists the auction houses that exist.
 
