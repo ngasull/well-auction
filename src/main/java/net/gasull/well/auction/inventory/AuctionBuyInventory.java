@@ -28,6 +28,10 @@ public class AuctionBuyInventory {
 			int i = 0;
 			for (AuctionSale sale : sales) {
 				contents[i++] = sale.getTradeStack();
+
+				if (i >= SIZE) {
+					break;
+				}
 			}
 		}
 
