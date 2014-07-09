@@ -334,6 +334,8 @@ public class AuctionShopManager {
 		AuctionShop shop = sellerData.getShop();
 		if (shop != null) {
 			List<AuctionSale> sales = plugin.db().findSales(sellerData);
+			shop.getSales().removeAll(sales);
+
 			for (AuctionSale sale : sales) {
 				refreshPrice(shop, sale);
 			}
@@ -422,16 +424,7 @@ public class AuctionShopManager {
 	 */
 	public void refreshPrice(AuctionShop shop, AuctionSale sale) {
 		plugin.db().refreshSale(sale);
-
-		Double price = sale.getTradePrice();
-
-		if (price != null && price >= 0) {
-			if (!shop.getSales().contains(sale)) {
-				shop.getSales().add(sale);
-			}
-		} else if (shop.getSales().contains(sale)) {
-			shop.getSales().remove(sale);
-		}
+		shop.getSales().refresh(sale);
 	}
 
 	/**

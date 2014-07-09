@@ -27,7 +27,9 @@ public class AuctionBuyInventory {
 		if (sales != null) {
 			int i = 0;
 			for (AuctionSale sale : sales) {
-				contents[i++] = sale.getTradeStack();
+				if (sale != null) {
+					contents[i++] = sale.getTradeStack();
+				}
 
 				if (i >= SIZE) {
 					break;

@@ -2,10 +2,10 @@ package net.gasull.well.auction.shop;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 
 import net.gasull.well.auction.db.model.AuctionSale;
@@ -23,7 +23,7 @@ public class AuctionSalesCollection implements Collection<AuctionSale> {
 	private final Map<Integer, Collection<AuctionSale>> salesByStack = new HashMap<>();
 
 	/** The best offers. */
-	private final Set<AuctionSale> bestOffers = new TreeSet<>();
+	private final Map<Integer, AuctionSale> bestOffers = new HashMap<>();
 
 	/**
 	 * Instantiates a new auction sales collection.
@@ -74,19 +74,20 @@ public class AuctionSalesCollection implements Collection<AuctionSale> {
 
 	@Override
 	public Object[] toArray() {
-		return bestOffers.toArray();
+		return bestOffers.values().toArray();
 	}
 
 	@Override
 	public <T> T[] toArray(T[] a) {
-		return bestOffers.toArray(a);
+		return bestOffers.values().toArray(a);
 	}
 
 	@Override
 	public boolean add(AuctionSale sale) {
-		Collection<AuctionSale> sales = getSales(sale.getItem().getAmount());
+		int amount = sale.getItem().getAmount();
+		Collection<AuctionSale> sales = getSales(amount);
 
-		if (sales.contains(sale) || sale == null) {
+		if (sales.contains(sale)) {
 			return false;
 		}
 
@@ -95,10 +96,10 @@ public class AuctionSalesCollection implements Collection<AuctionSale> {
 
 			if (sale.compareTo(bestOffer) < 0) {
 				bestOffers.remove(bestOffer);
-				bestOffers.add(sale);
+				bestOffers.put(amount, sale);
 			}
 		} else {
-			bestOffers.add(sale);
+			bestOffers.put(amount, sale);
 		}
 
 		sales.add(sale);
@@ -119,12 +120,7 @@ public class AuctionSalesCollection implements Collection<AuctionSale> {
 		}
 
 		salesByStack.get(amount).remove(sale);
-
-		if (bestOffers.remove(sale)) {
-			if (salesByStack.get(amount).size() > 0) {
-				bestOffers.add(salesByStack.get(amount).iterator().next());
-			}
-		}
+		refreshBest(amount);
 
 		return true;
 	}
@@ -152,12 +148,21 @@ public class AuctionSalesCollection implements Collection<AuctionSale> {
 
 	@Override
 	public boolean removeAll(Collection<?> c) {
-		boolean ret = true;
+		boolean ret = false;
+		Collection<Integer> amounts = new HashSet<>();
 
 		for (Object o : c) {
-			ret = ret && remove(o);
+			if (o instanceof AuctionSale) {
+				ret = true;
+				AuctionSale sale = (AuctionSale) o;
+				amounts.add(sale.getItem().getAmount());
+			}
 		}
 
+		for (Integer a : amounts) {
+			getSales(a).removeAll(c);
+			refreshBest(a);
+		}
 		return ret;
 	}
 
@@ -181,6 +186,21 @@ public class AuctionSalesCollection implements Collection<AuctionSale> {
 		salesByStack.clear();
 	}
 
+	public void refresh(AuctionSale sale) {
+		Double price = sale.getTradePrice();
+		int amount = sale.getItem().getAmount();
+		Collection<AuctionSale> salesForStack = getSales(amount);
+
+		if (price != null && price >= 0) {
+			salesForStack.remove(sale);
+			salesForStack.add(sale);
+
+			bestOffers.put(amount, salesForStack.iterator().next());
+		} else {
+			remove(sale);
+		}
+	}
+
 	/**
 	 * Gets the sales for a given stack size.
 	 * 
@@ -201,6 +221,22 @@ public class AuctionSalesCollection implements Collection<AuctionSale> {
 	}
 
 	/**
+	 * Refresh best offer for a stack size.
+	 * 
+	 * @param stackSize
+	 *            the stack size
+	 */
+	private void refreshBest(final Integer stackSize) {
+		Collection<AuctionSale> salesForStack = salesByStack.get(stackSize);
+
+		if (salesForStack.isEmpty()) {
+			bestOffers.remove(stackSize);
+		} else {
+			bestOffers.put(stackSize, salesForStack.iterator().next());
+		}
+	}
+
+	/**
 	 * {@link AuctionSalesCollection}'s {@link Iterator}.
 	 */
 	private class AuctionSalesIterator implements Iterator<AuctionSale> {
@@ -215,7 +251,7 @@ public class AuctionSalesCollection implements Collection<AuctionSale> {
 		 * Instantiates a new auction sales iterator.
 		 */
 		private AuctionSalesIterator() {
-			this.setIterator = bestOffers.iterator();
+			this.setIterator = bestOffers.values().iterator();
 		}
 
 		@Override

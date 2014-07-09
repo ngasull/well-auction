@@ -239,6 +239,10 @@ public class WellAuctionDao extends WellDao {
 				AuctionSale sale = db.find(AuctionSale.class).where("id=:id").setParameter("id", saleId).fetch("sellerData").fetch("sellerData.shop")
 						.findUnique();
 
+				if (sale == null) {
+					return null;
+				}
+
 				sale.getSellerData().setShop(shopById.get(sale.getSellerData().getShop().getId()));
 				refreshSale(sale);
 				return sale;
