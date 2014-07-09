@@ -1,0 +1,80 @@
+sell:
+  notification: "Tu viens de vendre %item% à %player% pour %price%"
+  invalidStackSize: "Tu ne peux pas vendre cet objet par %amount%. Quantités valides: %amounts%"
+buy:
+  notification: "Tu viens d'acheter %item% à %player% pour %price%"
+  sorry: "Désolé, %item% n'est plus disponible dans ce magasin..!"
+  noMoney: "Tu n'as pas assez d'argent pour acheter %item%"
+player:
+  setPrice:
+    success: "Tu vends maintenant %item% pour %price%"
+    successDefault: "Tu vends maintenant par défaut %item% à %price% par unité"
+    unset: "Tu viens de retirer le prix de %item%"
+    unsetDefault: "Tu viens de retirer le prix par défaut de %item%"
+    please: "Saisis dans le chat ton prix pour %item%"
+    invalid: "Prix invalide, opération annulée"
+    canceled: "Mise en place du prix annulée"
+inventory:
+  sell:
+    title: Vendre
+  buy:
+    title: Acheter
+  menu:
+    button:
+      sell:
+        title: Vendre
+        noPrice: "Pas encore de prix défini!"
+        price: "Ton prix: %price% p.u."
+      buy:
+        title: Acheter
+        bestSale: "Meilleur prix: %price% p.u"
+      info:
+        title: "Bienvenue à l'Hôtel des Ventes !"
+        desc:
+        - "\xa7bBienvenue à l'Hôtel des Ventes !"
+        - "\xa78============================="
+        - "\xa7bClic gauche : acheter"
+        - "\xa7bClic droit  : vendre"
+        - "\xa7bShift-clic  : définir un prix p.u."
+        - "\xa78============================="
+        - "\xa7bShift-clic fonctionne sur les"
+        - "\xa7bventes et les catégories."
+        - "\xa78============================="
+        - "\xa7bTu peux retirer tes ventes"
+        - "\xa7bavec un clic droit."
+        chatDesc:
+        - "\xa7bBienvenue à l'Hôtel des Ventes !"
+        - "\xa7bClic gauche : acheter"
+        - "\xa7bClic droit  : vendre"
+        - "\xa7bShift-clic  : définir un prix par unité"
+        - "\xa7bShift-clic fonctionne sur les ventes et les catégories."
+        - "\xa7bTu peux retirer tes ventes avec un clic droit."
+shop:
+  item:
+    pricePerUnit: "%price% p.u."
+    soldBy: "Vendu par %player%"
+    noPrice: "Pas encore de prix défini!"
+command:
+  creation:
+    success: "Vente de %item% attachée avec succès"
+  detach:
+    success: "Vente détachée avec succès"
+  list:
+    noShop: "Pas encore de magasin configuré"
+  preset:
+    error:
+      file: "Impossible de charger le preset. Solution possible: redémarrer le serveur ou recharger le plugin."
+      key: 'Pas de preset trouvé pour "%key%"'
+      invalidMaterial: "Attention: %material% n'est pas un material reconnu"
+    success: "Preset chargé avec succès"
+  remove:
+    success: "Magasin retiré avec succès"
+  error:
+    saleAlreadyHere: "Ceci est déjà en vente ici"
+    notBlockSeen: "Tu dois viser un bloc"
+    cantSellAir: "Tu ne peux pas mettre l'air en vente !"
+permission:
+  notAllowed: "Tu n'as pas le droit de %thing%"
+db:
+  error:
+    sync: "Désolé, les Hôtels de Vente se synchronisent, il va falloir réessayer plus tard!"

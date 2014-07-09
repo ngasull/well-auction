@@ -1,14 +1,14 @@
 sell:
-  notification: You've just sold %item% to %player% for %price%
+  notification: "You've just sold %item% to %player% for %price%"
   invalidStackSize: "You can't sell %amount% of this item. Valid amounts: %amounts%"
 buy:
-  notification: You've just bought %item% to %player% for %price%
-  sorry: Sorry, %item% is not available in the shop any more..!
-  noMoney: You don't have enough money to buy %item%
+  notification: "You've just bought %item% to %player% for %price%"
+  sorry: "Sorry, %item% is not available in the shop any more..!"
+  noMoney: "You don't have enough money to buy %item%"
 player:
   setPrice:
-    success: You're now selling %item% at %price%
-    successDefault: You're now selling %item% at %price% by default
+    success: "You're now selling %item% at %price%"
+    successDefault: "You're now selling by default %item% at %price% per unit"
     unset: You've unset the price of %item%
     unsetDefault: You've unset the default price of %item%
     please: Please type in the chat the price you want to sell %item% at
