@@ -65,7 +65,7 @@ public class AuctionShopManager {
 	 */
 	public AuctionSale sell(Player player, ItemStack theItem) throws AuctionShopException, WellPermissionException {
 
-		WellCore.permission().can(player, "sell items", "well.auction.sell");
+		WellCore.permission().can(player, plugin.lang().get("permission.sell"), "well.auction.sell");
 		checkEnabled(player);
 		AuctionShop shop = plugin.db().getShop(theItem);
 
@@ -109,7 +109,7 @@ public class AuctionShopManager {
 	 *             the well permission exception
 	 */
 	public ItemStack unsell(Player player, ItemStack theItem) throws AuctionShopException, WellPermissionException {
-		WellCore.permission().can(player, "sell items", "well.auction.sell");
+		WellCore.permission().can(player, plugin.lang().get("permission.sell"), "well.auction.sell");
 		checkEnabled(player);
 		AuctionShop shop = plugin.db().getShop(theItem);
 
@@ -156,7 +156,7 @@ public class AuctionShopManager {
 	 */
 	public AuctionSale buy(Player player, ItemStack saleStack) throws AuctionShopException, WellPermissionException {
 
-		WellCore.permission().can(player, "buy items", "well.auction.buy");
+		WellCore.permission().can(player, plugin.lang().get("permission.buy"), "well.auction.buy");
 		checkEnabled(player);
 		AuctionSale sale = plugin.db().saleFromSaleStack(saleStack);
 

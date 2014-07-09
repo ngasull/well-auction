@@ -91,7 +91,7 @@ public class AucShopEntityManager {
 	 *             if the player is not allowed to open auction houses
 	 */
 	public void open(ShopEntity shopEntity, Player player) throws WellPermissionException {
-		WellCore.permission().can(player, "open auction houses", "well.auction.open");
+		WellCore.permission().can(player, plugin.lang().get("permission.open"), "well.auction.open");
 		shopEntity.getMenu().open(player);
 		playerToShopEntity.put(player, shopEntity);
 	}

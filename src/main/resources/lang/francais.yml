@@ -74,7 +74,9 @@ command:
     notBlockSeen: "Tu dois viser un bloc"
     cantSellAir: "Tu ne peux pas mettre l'air en vente !"
 permission:
-  notAllowed: "Tu n'as pas le droit de %thing%"
+  buy: "de faire des achats"
+  sell: "de vendre des objets"
+  open: "de consulter les Hôtels de Vente"
 db:
   error:
     sync: "Désolé, les Hôtels de Vente se synchronisent, il va falloir réessayer plus tard!"

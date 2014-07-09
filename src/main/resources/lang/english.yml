@@ -9,11 +9,11 @@ player:
   setPrice:
     success: "You're now selling %item% at %price%"
     successDefault: "You're now selling by default %item% at %price% per unit"
-    unset: You've unset the price of %item%
-    unsetDefault: You've unset the default price of %item%
-    please: Please type in the chat the price you want to sell %item% at
-    invalid: Invalid price, operation canceled
-    canceled: Price set canceled
+    unset: "You've unset the price of %item%"
+    unsetDefault: "You've unset the default price of %item%"
+    please: "Please type in the chat the price you want to sell %item% at"
+    invalid: "Invalid price, operation canceled"
+    canceled: "Price set canceled"
 inventory:
   sell:
     title: Sell
@@ -23,13 +23,13 @@ inventory:
     button:
       sell:
         title: Sell
-        noPrice: No price set up yet!
-        price: 'Your price: %price% p.u.'
+        noPrice: "No price set up yet!"
+        price: "Your price: %price% p.u."
       buy:
         title: Buy
-        bestSale: 'Best price: %price% p.u'
+        bestSale: "Best price: %price% p.u."
       info:
-        title: Welcome to the Auction House!
+        title: "Welcome to the Auction House!"
         desc:
         - "\xa7bWelcome to the Auction House!"
         - "\xa78============================="
@@ -52,9 +52,9 @@ inventory:
         - "\xa7bYou can remove your sales by right-clicking them."
 shop:
   item:
-    pricePerUnit: '%price% p.u.'
-    soldBy: Sold by %player%
-    noPrice: No price set up yet!
+    pricePerUnit: "%price% p.u."
+    soldBy: "Sold by %player%"
+    noPrice: "No price set up yet!"
 command:
   creation:
     success: "Successfully attached for sale %item%"
@@ -75,7 +75,9 @@ command:
     notBlockSeen: "You must be looking at a block"
     cantSellAir: "You can't put air on sale!"
 permission:
-  notAllowed: "You're not allowed to %thing%"
+  buy: "buy items"
+  sell: "sell items"
+  open: "open Auction Houses"
 db:
   error:
     sync: "Sorry, Auction Houses are syncing. Please try again!"
