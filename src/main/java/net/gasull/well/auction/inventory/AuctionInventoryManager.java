@@ -175,7 +175,7 @@ public class AuctionInventoryManager {
 	 */
 	public boolean checkSell(InventoryView view, Player player, ItemStack theItem) {
 		AuctionShop shop = shopForSellInventory.get(view);
-		return shop != null && shop.sells(theItem);
+		return view.getTopInventory().firstEmpty() > -1 && shop != null && shop.sells(theItem);
 	}
 
 	/**
