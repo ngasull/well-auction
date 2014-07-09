@@ -12,6 +12,8 @@ well-auction
 * Seller notification on each of his sales.
 * **Localizable**. Don't hesitate to send here your translated configuration file in your language!
 * DB storage from your bukkit server's configuration.
+* Easy setup with ready-to-use shop presets.
+
 
 ### Basic use case
 
