@@ -68,7 +68,7 @@ public class AuctionBlockShopListener implements Listener {
 				try {
 					shopEntityManager.open(shopBlock, player);
 				} catch (WellPermissionException e) {
-					plugin.getLogger().log(Level.INFO, "{} couldn't open auction house ({})", new Object[] { player, e.getKey() });
+					plugin.getLogger().log(Level.INFO, String.format("%s couldn't open auction house (%s)", player.getName(), e.getKey()));
 				}
 			}
 		}
