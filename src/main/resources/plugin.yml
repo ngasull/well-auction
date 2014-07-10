@@ -1,7 +1,7 @@
 name: well-auction
 main: net.gasull.well.auction.WellAuction
 version: 0.4.0
-depend: [Vault]
+depend: [well-core, Vault]
 commands:
   wellauction:
     aliases:
