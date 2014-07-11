@@ -3,11 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.gasull.well</groupId>
 	<artifactId>well-auction</artifactId>
-	<version>0.4.0</version>
+	<version>0.4-SNAPSHOT</version>
 	<name>well-auction</name>
 	<description>Yet a simple but powerful way to set the economic equilibrium in your bukkit server</description>
 
 	<properties>
+		<wellcore.version>0.4-SNAPSHOT</wellcore.version>
 		<minecraft.version>1.7.9</minecraft.version>
 		<bukkit.version>1.7.9-R0.1</bukkit.version>
 		<vault.version>1.4.1</vault.version>
@@ -41,7 +42,7 @@
 		<dependency>
 			<groupId>net.gasull.well</groupId>
 			<artifactId>well-core</artifactId>
-			<version>${project.version}</version>
+			<version>${wellcore.version}</version>
 			<optional>true</optional>
 		</dependency>
 	</dependencies>
