@@ -17,6 +17,7 @@ import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
+import net.gasull.well.auction.util.ItemStackUtil;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -105,7 +106,7 @@ public class AuctionInventoryManager {
 
 		setPriceTasks.put(player, task);
 		player.closeInventory();
-		player.sendMessage(plugin.lang().get("player.setPrice.please").replace("%item%", auctionSellerData.getShop().getRefItemCopy().toString()));
+		player.sendMessage(plugin.lang().get("player.setPrice.please").replace("%item%", ItemStackUtil.asString(auctionSellerData.getShop().getRefItemCopy())));
 	}
 
 	/**
@@ -131,7 +132,7 @@ public class AuctionInventoryManager {
 
 		setPriceTasks.put(player, task);
 		player.closeInventory();
-		player.sendMessage(plugin.lang().get("player.setPrice.please").replace("%item%", sale.getItem().toString()));
+		player.sendMessage(plugin.lang().get("player.setPrice.please").replace("%item%", ItemStackUtil.asString(sale.getItem())));
 	}
 
 	/**

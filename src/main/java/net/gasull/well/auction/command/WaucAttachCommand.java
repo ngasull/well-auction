@@ -3,6 +3,7 @@ package net.gasull.well.auction.command;
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.shop.entity.ShopEntity;
+import net.gasull.well.auction.util.ItemStackUtil;
 import net.gasull.well.command.WellCommand;
 import net.gasull.well.command.WellCommandException;
 import net.gasull.well.conf.WellPermissionManager.WellPermissionException;
@@ -42,9 +43,10 @@ public class WaucAttachCommand extends WellCommand<Player> {
 			plugin.db().save(shopEntity.getModel());
 			plugin.db().save(shopEntity.getModel().getEntityToShops());
 
-			return plugin.lang().success("command.creation.success").replace("%item%", shop.getRefItemCopy().toString());
+			return plugin.lang().success("command.creation.success").replace("%item%", ItemStackUtil.asString(shop.getRefItemCopy()));
 		} else {
-			throw new WellCommandException(plugin.lang().error("command.error.saleAlreadyHere").replace("%item%", shop.getRefItemCopy().toString()));
+			throw new WellCommandException(plugin.lang().error("command.error.saleAlreadyHere")
+					.replace("%item%", ItemStackUtil.asString(shop.getRefItemCopy())));
 		}
 	}
 

@@ -10,6 +10,7 @@ import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
+import net.gasull.well.auction.util.ItemStackUtil;
 import net.gasull.well.conf.WellPermissionManager.WellPermissionException;
 
 import org.apache.commons.lang.StringUtils;
@@ -70,7 +71,7 @@ public class AuctionShopManager {
 		AuctionShop shop = plugin.db().getShop(theItem);
 
 		if (shop == null) {
-			throw new AuctionShopException("No registered shop for item " + theItem);
+			throw new AuctionShopException("No registered shop for item " + ItemStackUtil.asString(theItem));
 		}
 		if (!shop.getStackSizes().contains(theItem.getAmount())) {
 			String msg = plugin.lang().error("sell.invalidStackSize");
@@ -86,7 +87,8 @@ public class AuctionShopManager {
 			AuctionSale sale = new AuctionSale(++maxSaleId, plugin, sellerData, theItem);
 			plugin.db().save(sale);
 			refreshPrice(shop, sale);
-			plugin.getLogger().log(Level.INFO, "{} ({}) put on sale {}", new Object[] { player.getName(), player.getUniqueId(), theItem.toString() });
+			plugin.getLogger().log(Level.INFO, "{} ({}) put on sale {}",
+					new Object[] { player.getName(), player.getUniqueId(), ItemStackUtil.asString(theItem) });
 
 			t.commit();
 			return sale;
@@ -114,7 +116,7 @@ public class AuctionShopManager {
 		AuctionShop shop = plugin.db().getShop(theItem);
 
 		if (shop == null) {
-			throw new AuctionShopException("No registered shop for item " + theItem);
+			throw new AuctionShopException("No registered shop for item " + ItemStackUtil.asString(theItem));
 		}
 
 		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
@@ -135,7 +137,7 @@ public class AuctionShopManager {
 		}
 
 		// Handle failure here
-		String msg = plugin.lang().error("buy.sorry").replace("%item%", theItem.toString());
+		String msg = plugin.lang().error("buy.sorry").replace("%item%", ItemStackUtil.asString(theItem));
 
 		player.sendMessage(msg);
 		throw new AuctionShopException("To " + player.getName() + " : " + msg);
@@ -175,19 +177,22 @@ public class AuctionShopManager {
 					OfflinePlayer seller = sale.getSellerData().getAuctionPlayer().getPlayer();
 					String priceStr = plugin.economy().format(price);
 					player.sendMessage(ChatColor.DARK_GREEN
-							+ plugin.lang().get("buy.notification").replace("%item%", item.toString()).replace("%player%", seller.getName())
+							+ plugin.lang().get("buy.notification").replace("%item%", ItemStackUtil.asString(item)).replace("%player%", seller.getName())
 									.replace("%price%", priceStr));
 
 					if (seller.isOnline() && seller instanceof Player) {
 						((Player) seller).sendMessage(ChatColor.BLUE
-								+ plugin.lang().get("sell.notification").replace("%item%", item.toString()).replace("%player%", player.getName())
+								+ plugin.lang().get("sell.notification").replace("%item%", ItemStackUtil.asString(item)).replace("%player%", player.getName())
 										.replace("%price%", priceStr));
 					}
 
 					plugin.economy().withdrawPlayer(player, price);
 					plugin.economy().depositPlayer(seller, price);
-					plugin.getLogger().log(Level.INFO, "{} ({}) bought {} to {} ({}) for {}",
-							new Object[] { player.getName(), player.getUniqueId(), item.toString(), seller.getName(), seller.getUniqueId(), priceStr });
+					plugin.getLogger().log(
+							Level.INFO,
+							"{} ({}) bought {} to {} ({}) for {}",
+							new Object[] { player.getName(), player.getUniqueId(), ItemStackUtil.asString(item), seller.getName(), seller.getUniqueId(),
+									priceStr });
 
 					t.commit();
 					return sale;
@@ -202,9 +207,9 @@ public class AuctionShopManager {
 		// Handle failure here
 		String msg;
 		if (sale == null) {
-			msg = plugin.lang().error("buy.sorry").replace("%item%", saleStack.toString());
+			msg = plugin.lang().error("buy.sorry").replace("%item%", ItemStackUtil.asString(saleStack));
 		} else {
-			msg = plugin.lang().get("buy.noMoney").replace("%item%", saleStack.toString());
+			msg = plugin.lang().get("buy.noMoney").replace("%item%", ItemStackUtil.asString(saleStack));
 		}
 
 		player.sendMessage(msg);
@@ -239,7 +244,7 @@ public class AuctionShopManager {
 							.getAuctionPlayer()
 							.sendMessage(
 									ChatColor.BLUE
-											+ plugin.lang().get("player.setPrice.success").replace("%item%", sale.getItem().toString())
+											+ plugin.lang().get("player.setPrice.success").replace("%item%", ItemStackUtil.asString(sale.getItem()))
 													.replace("%price%", plugin.economy().format(price)));
 					t.commit();
 				} finally {
@@ -269,7 +274,7 @@ public class AuctionShopManager {
 				changePrice(sale, null);
 				sale.unlock();
 				sale.getSellerData().getAuctionPlayer()
-						.sendMessage(ChatColor.BLUE + plugin.lang().get("player.setPrice.unset").replace("%item%", sale.getItem().toString()));
+						.sendMessage(ChatColor.BLUE + plugin.lang().get("player.setPrice.unset").replace("%item%", ItemStackUtil.asString(sale.getItem())));
 				t.commit();
 			} finally {
 				t.end();
@@ -313,7 +318,8 @@ public class AuctionShopManager {
 			setDefaultPrice(sellerData, price);
 			sellerData.getAuctionPlayer().sendMessage(
 					ChatColor.BLUE
-							+ plugin.lang().get("player.setPrice.successDefault").replace("%item%", sellerData.getShop().getRefItemCopy().toString())
+							+ plugin.lang().get("player.setPrice.successDefault")
+									.replace("%item%", ItemStackUtil.asString(sellerData.getShop().getRefItemCopy()))
 									.replace("%price%", plugin.economy().format(price)));
 		}
 	}
@@ -356,7 +362,8 @@ public class AuctionShopManager {
 		checkEnabled(player);
 		setDefaultPrice(sellerData, null);
 		sellerData.getAuctionPlayer().sendMessage(
-				ChatColor.BLUE + plugin.lang().get("player.setPrice.unsetDefault").replace("%item%", sellerData.getShop().getRefItemCopy().toString()));
+				ChatColor.BLUE
+						+ plugin.lang().get("player.setPrice.unsetDefault").replace("%item%", ItemStackUtil.asString(sellerData.getShop().getRefItemCopy())));
 	}
 
 	/**

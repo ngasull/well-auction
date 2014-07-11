@@ -11,6 +11,7 @@ import net.gasull.well.auction.shop.AuctionShopException;
 import net.gasull.well.auction.shop.AuctionShopManager;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 import net.gasull.well.auction.shop.entity.ShopEntity;
+import net.gasull.well.auction.util.ItemStackUtil;
 import net.gasull.well.conf.WellPermissionManager.WellPermissionException;
 
 import org.bukkit.Material;
@@ -241,9 +242,10 @@ public class AuctionShopInventoryListener implements Listener {
 						player.setItemOnCursor(remaining);
 					}
 				} catch (AuctionShopException e) {
-					plugin.getLogger().log(Level.INFO, String.format("%s couldn't buy %s (%s)", player.getName(), theItem, e.getMessage()));
+					plugin.getLogger().log(Level.INFO,
+							String.format("%s couldn't buy %s (%s)", player.getName(), ItemStackUtil.asString(theItem), e.getMessage()));
 				} catch (WellPermissionException e) {
-					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed to buy %s", player.getName(), theItem));
+					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed to buy %s", player.getName(), ItemStackUtil.asString(theItem)));
 				}
 			}
 		}
@@ -263,9 +265,10 @@ public class AuctionShopInventoryListener implements Listener {
 					player.setItemOnCursor(unsold);
 					plugin.getLogger().info(String.format("%s successfully unsold %s", player.getName(), unsold));
 				} catch (AuctionShopException e) {
-					plugin.getLogger().log(Level.WARNING, String.format("%s couldn't unsell %s (%s)", player.getName(), theItem, e.getMessage()));
+					plugin.getLogger().log(Level.WARNING,
+							String.format("%s couldn't unsell %s (%s)", player.getName(), ItemStackUtil.asString(theItem), e.getMessage()));
 				} catch (WellPermissionException e) {
-					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed manage sale %s", player.getName(), theItem));
+					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed manage sale %s", player.getName(), ItemStackUtil.asString(theItem)));
 				}
 			}
 		}
@@ -326,12 +329,13 @@ public class AuctionShopInventoryListener implements Listener {
 				try {
 					AuctionSale sale = shopManager.sell(player, theItem);
 					inventoryManager.handleSell(evt.getInventory(), sale.getShop(), player);
-					plugin.getLogger().info(player.getName() + " successfully put on sale " + theItem);
+					plugin.getLogger().info(player.getName() + " successfully put on sale " + ItemStackUtil.asString(theItem));
 					removeTheItem(evt, action);
 				} catch (AuctionShopException e) {
-					plugin.getLogger().log(Level.WARNING, String.format("%s couldn't sell %s (%s)", player.getName(), theItem.toString(), e.getMessage()));
+					plugin.getLogger().log(Level.WARNING,
+							String.format("%s couldn't sell %s (%s)", player.getName(), ItemStackUtil.asString(theItem), e.getMessage()));
 				} catch (WellPermissionException e) {
-					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed to sell %s", player.getName(), theItem));
+					plugin.getLogger().log(Level.INFO, String.format("%s was not allowed to sell %s", player.getName(), ItemStackUtil.asString(theItem)));
 				}
 			}
 		}
