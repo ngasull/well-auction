@@ -54,7 +54,7 @@ public class AuctionMenu {
 	 * The last help display cache to avoid player chat spam. Mapped to UUID,
 	 * but could have been any non null value.
 	 */
-	private final Cache<UUID, UUID> lastHelpCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.SECONDS).build(new CacheLoader<UUID, UUID>() {
+	private static Cache<UUID, UUID> lastHelpCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.SECONDS).build(new CacheLoader<UUID, UUID>() {
 		@Override
 		public UUID load(UUID arg0) throws Exception {
 			return arg0;
