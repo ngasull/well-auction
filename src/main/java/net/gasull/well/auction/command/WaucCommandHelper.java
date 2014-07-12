@@ -5,11 +5,13 @@ import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
 import net.gasull.well.auction.shop.entity.BlockShopEntity;
+import net.gasull.well.auction.shop.entity.EntityShopEntity;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.command.WellCommandException;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.BlockIterator;
@@ -51,6 +53,19 @@ public class WaucCommandHelper {
 	 */
 	public ShopEntity getTargetShop(String[] args, Player player) throws WellCommandException {
 		ShopEntity shopEntity = null;
+
+		// Take the nearest animal or NPC as a shop
+		if (shopEntity == null) {
+			for (Entity entity : player.getNearbyEntities(3d, 3d, 3d)) {
+				shopEntity = EntityShopEntity.forEntity(entity);
+
+				if (shopEntity != null) {
+					return shopEntity;
+				} else if (EntityShopEntity.canBeShop(entity) && player.hasLineOfSight(entity)) {
+					return new EntityShopEntity(plugin, entity);
+				}
+			}
+		}
 
 		// Take the block seen by default as a shop
 		if (shopEntity == null) {

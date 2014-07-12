@@ -14,6 +14,7 @@ import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
+import net.gasull.well.auction.shop.entity.EntityShopEntity;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.db.WellDao;
 import net.gasull.well.db.WellDatabase;
@@ -387,6 +388,27 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 	 */
 	public ShopEntityModel findSimilarShopEntity(ShopEntity shopEntity) {
 		return db.find(shopEntity.getModel().getClass()).where().eq("data", shopEntity.getModel().getData()).findUnique();
+	}
+
+	/**
+	 * Delete shop entity.
+	 * 
+	 * @param shopEntity
+	 *            the shop entity
+	 */
+	public void deleteShopEntity(ShopEntity shopEntity) {
+		shopEntity.unregister();
+
+		for (AucEntityToShop entityToShop : shopEntity.getModel().getEntityToShops()) {
+			delete(entityToShop);
+		}
+
+		if (shopEntity instanceof EntityShopEntity) {
+			EntityShopEntity casted = (EntityShopEntity) shopEntity;
+			casted.getEntity().remove();
+		}
+
+		delete(shopEntity.getModel());
 	}
 
 	@Override

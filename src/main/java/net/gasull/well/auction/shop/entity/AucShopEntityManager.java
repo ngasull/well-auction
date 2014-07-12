@@ -60,6 +60,9 @@ public class AucShopEntityManager {
 			case "block":
 				entity = new BlockShopEntity(plugin, model);
 				break;
+			case "entity":
+				entity = new EntityShopEntity(plugin, model);
+				break;
 			default:
 				return null;
 			}

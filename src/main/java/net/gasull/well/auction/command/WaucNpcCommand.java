@@ -1,17 +1,17 @@
 package net.gasull.well.auction.command;
 
 import net.gasull.well.auction.WellAuction;
-import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.command.WellCommand;
 import net.gasull.well.command.WellCommandException;
 import net.gasull.well.conf.WellPermissionManager.WellPermissionException;
 
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 /**
- * /wauc detach
+ * /wauc npc creates a NPC shop.
  */
-public class WaucRemoveCommand extends WellCommand<Player> {
+public class WaucNpcCommand extends WellCommand<Player> {
 
 	/** The plugin. */
 	private WellAuction plugin;
@@ -20,14 +20,12 @@ public class WaucRemoveCommand extends WellCommand<Player> {
 	private WaucCommandHelper helper;
 
 	/**
-	 * Instantiates a new wauc remove command.
+	 * Instantiates a new wauc attach command.
 	 * 
 	 * @param plugin
 	 *            the plugin
-	 * @param helper
-	 *            the helper
 	 */
-	public WaucRemoveCommand(WellAuction plugin, WaucCommandHelper helper) {
+	public WaucNpcCommand(WellAuction plugin, WaucCommandHelper helper) {
 		this.plugin = plugin;
 		this.helper = helper;
 	}
@@ -35,19 +33,13 @@ public class WaucRemoveCommand extends WellCommand<Player> {
 	@Override
 	public String handleCommand(Player player, String[] args) throws WellCommandException, WellPermissionException {
 
-		ShopEntity shopEntity = helper.getTargetShop(args, player);
-		if (shopEntity.getModel().getId() == 0) {
-			return null;
-		}
-
-		plugin.db().deleteShopEntity(shopEntity);
-
-		return plugin.lang().success("command.remove.success");
+		player.getWorld().spawnEntity(player.getLocation(), EntityType.VILLAGER);
+		return plugin.lang().success("command.npc.success");
 	}
 
 	@Override
 	public String getName() {
-		return "remove";
+		return "npc";
 	}
 
 	@Override
@@ -64,5 +56,4 @@ public class WaucRemoveCommand extends WellCommand<Player> {
 	public String getPermission() {
 		return null;
 	}
-
 }

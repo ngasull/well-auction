@@ -10,6 +10,7 @@ import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.AucShopEntityManager;
+import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.auction.util.ItemStackUtil;
 import net.gasull.well.conf.WellPermissionManager.WellPermissionException;
 
@@ -485,7 +486,11 @@ public class AuctionShopManager {
 		List<ShopEntityModel> registered = plugin.db().listShopEntities();
 
 		for (ShopEntityModel shopEntityModel : registered) {
-			shopEntityManager.get(shopEntityModel).register();
+			ShopEntity shopEntity = shopEntityManager.get(shopEntityModel);
+
+			if (shopEntity != null) {
+				shopEntity.register();
+			}
 		}
 
 		AuctionSale lastSale = plugin.db().getDb().find(AuctionSale.class).order("id desc").setMaxRows(1).findUnique();

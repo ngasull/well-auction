@@ -67,6 +67,8 @@ command:
       key: 'Pas de preset trouvé pour "%key%"'
       invalidMaterial: "Attention: %material% n'est pas un material reconnu"
     success: "Preset chargé avec succès"
+  npc:
+    success: "Magasin PNJ créé avec succès, tu peux maintenant lui associer des objets ou un preset"
   remove:
     success: "Magasin retiré avec succès"
   error:

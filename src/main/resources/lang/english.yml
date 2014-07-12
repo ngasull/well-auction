@@ -68,6 +68,8 @@ command:
       key: "Couldn't find presets for key %key%"
       invalidMaterial: "Warning: %material% is an unknown material"
     success: "Successfully loaded preset"
+  npc:
+    success: "Successfully created NPC shop, you can now attach items or a preset to it"
   remove:
     success: "Successfully removed a shop"
   error:

@@ -38,8 +38,7 @@ public class WaucDetachCommand extends WellCommand<Player> {
 
 			// Remove an empty shop
 			if (model.getEntityToShops().isEmpty()) {
-				shopEntity.unregister();
-				plugin.db().delete(model);
+				plugin.db().deleteShopEntity(shopEntity);
 			} else {
 				shopEntity.register();
 			}
