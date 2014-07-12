@@ -9,6 +9,10 @@ inventory:
         item: EMERALD
       info:
         item: PAPER
+  sell:
+    # Number of lines in sell inventory
+    size:
+      default: 3
 player:
   setPrice:
     timeout: 7

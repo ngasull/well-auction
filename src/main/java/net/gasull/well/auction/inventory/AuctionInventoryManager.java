@@ -144,7 +144,7 @@ public class AuctionInventoryManager {
 	 *            the auction shop
 	 */
 	public void openSell(Player player, AuctionShop shop) {
-		Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.SIZE, titleSell);
+		Inventory sellInv = Bukkit.createInventory(player, AuctionSellInventory.getSize(plugin), titleSell);
 		loadSellInventory(sellInv, plugin.db().getSalesOf(shop, player));
 		openSubMenu(player, sellInv, shop, sellInventories, shopForSellInventory);
 	}
@@ -460,7 +460,7 @@ public class AuctionInventoryManager {
 	 *            the sales
 	 */
 	private void loadSellInventory(Inventory sellInv, List<AuctionSale> sales) {
-		sellInv.setContents(AuctionSellInventory.generateContents(sales));
+		sellInv.setContents(AuctionSellInventory.generateContents(plugin, sales));
 	}
 
 	/**

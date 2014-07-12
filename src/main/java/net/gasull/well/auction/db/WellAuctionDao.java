@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.gasull.well.WellCore;
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AucEntityToShop;
 import net.gasull.well.auction.db.model.AuctionPlayer;
@@ -18,19 +19,22 @@ import net.gasull.well.auction.db.model.ShopEntityModel;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.db.WellDao;
 import net.gasull.well.db.WellDatabase;
+import net.gasull.well.version.WellUpgrade;
+import net.gasull.well.version.WellVersionable;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
 
 /**
  * The Class WellAuctionDao.
  */
-public class WellAuctionDao extends WellDao {
+public class WellAuctionDao extends WellDao implements WellVersionable {
 
 	/** The plugin. */
 	private final WellAuction plugin;
@@ -71,18 +75,31 @@ public class WellAuctionDao extends WellDao {
 			};
 		};
 
-		checkVersion(plugin);
+		WellCore.checkVersion(this);
+		wellDatabase.initializeIfNotInit(false);
 		this.db = wellDatabase.getDatabase();
 	}
 
 	@Override
-	protected void handleVersionChanges(String oldVersion, String newVersion) {
-		if (oldVersion == null) {
-			wellDatabase.initializeDatabase(true);
-			return;
-		}
+	public List<WellUpgrade> getVersionChanges() {
+		List<WellUpgrade> versions = new ArrayList<>();
 
-		wellDatabase.initializeDatabase(false);
+		versions.add(new WellUpgrade(null) {
+			@Override
+			public void handleUpgrade() {
+				wellDatabase.initializeDatabase(true);
+			}
+		});
+
+		versions.add(new WellUpgrade("0.5.0") {
+			@Override
+			public void handleUpgrade() {
+				plugin.config().getConfig().set("inventory.sell.size.default", 4);
+				plugin.config().save();
+			}
+		});
+
+		return versions;
 	}
 
 	/**
@@ -384,5 +401,10 @@ public class WellAuctionDao extends WellDao {
 	@Override
 	public EbeanServer getDb() {
 		return db;
+	}
+
+	@Override
+	public JavaPlugin getPlugin() {
+		return plugin;
 	}
 }
