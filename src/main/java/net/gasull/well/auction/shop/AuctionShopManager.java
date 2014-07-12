@@ -203,6 +203,22 @@ public class AuctionShopManager {
 		String msg;
 		if (sale == null) {
 			msg = plugin.lang().error("buy.sorry").replace("%item%", saleStack.toString());
+
+			// This time, ensure to remove the sale from shop
+			Integer saleId = AuctionSale.idFromTradeStack(saleStack);
+
+			if (saleId != null) {
+				// Create a dummy sale
+				sale = new AuctionSale();
+				sale.setId(saleId);
+
+				// Create a template itemstack from sale to find associated shop
+				ItemStack soldItem = new ItemStack(saleStack.getType());
+				soldItem.setData(saleStack.getData());
+				AuctionShop shop = plugin.db().getShop(saleStack);
+
+				shop.getSales().remove(sale);
+			}
 		} else {
 			msg = plugin.lang().get("buy.noMoney").replace("%item%", saleStack.toString());
 		}
