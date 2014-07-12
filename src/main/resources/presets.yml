@@ -168,10 +168,9 @@ decoration:
   - "166:Barrier;barrier"
   - "47:Bookshelf;bookshelf"
   - "355:Bed;bed"
-  - "140:Flower Pot;flower_pot"
+  - "390:Flower Pot;flower_pot"
   - "321:Painting;painting"
   - "389:Item Frame;item_frame"
-  - "390:Flower Pot;flower_pot"
 
 coloration:
   - "351:Ink Sack;dye"
@@ -433,7 +432,6 @@ craft:
   - "58:Crafting Table;crafting_table"
   - "61:Furnace;furnace"
   - "116:Enchantment Table;enchanting_table"
-  - "117:Brewing Stand;brewing_stand"
   - "145:Anvil;anvil"
   - "25:Note Block;noteblock"
   - "84:Jukebox;jukebox"
@@ -451,7 +449,6 @@ harvesting:
   - "39:Brown Mushroom;brown_mushroom"
   - "40:Red Mushroom;red_mushroom"
   - "81:Cactus;cactus"
-  - "83:Sugar Canes;reeds"
   - "86:Pumpkin;pumpkin"
   - "106:Vines;vine"
   - "111:Lily Pad;waterlily"
