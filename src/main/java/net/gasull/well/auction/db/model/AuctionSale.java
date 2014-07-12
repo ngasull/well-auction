@@ -3,6 +3,8 @@ package net.gasull.well.auction.db.model;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -57,6 +59,9 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	/** The lock for operations on the sale (buy/sell/price set). */
 	@Transient
 	private AtomicBoolean lock = new AtomicBoolean(false);
+
+	/** The Constant SALE_ID_PATTERN. */
+	private static final Pattern SALE_ID_PATTERN = Pattern.compile(String.format("%s([0-9]+)", AuctionSale.N));
 
 	/** Prefixes item id's. */
 	public static final String N = "#";
@@ -305,6 +310,19 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	 */
 	public void unlock() {
 		getLock().set(false);
+	}
+
+	public static Integer idFromTradeStack(ItemStack tradeStack) {
+		if (tradeStack.hasItemMeta() && tradeStack.getItemMeta().getLore().size() > 0) {
+			String idString = tradeStack.getItemMeta().getLore().get(0);
+
+			Matcher m = SALE_ID_PATTERN.matcher(idString);
+			if (m.find()) {
+				return Integer.valueOf(m.group(1));
+			}
+		}
+
+		return null;
 	}
 
 	@Override

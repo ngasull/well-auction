@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import net.gasull.well.WellCore;
 import net.gasull.well.auction.WellAuction;
@@ -50,9 +48,6 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 
 	/** The shops by id. */
 	private Map<Integer, AuctionShop> shopById = new HashMap<>();
-
-	/** The Constant SALE_ID_PATTERN. */
-	private static final Pattern SALE_ID_PATTERN = Pattern.compile(String.format("%s([0-9]+)", AuctionSale.N));
 
 	/**
 	 * Instantiates a new well auction dao.
@@ -247,23 +242,19 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 	 * @return the sale
 	 */
 	public AuctionSale saleFromSaleStack(ItemStack theItem) {
-		if (theItem.hasItemMeta() && theItem.getItemMeta().getLore().size() > 0) {
-			String idString = theItem.getItemMeta().getLore().get(0);
 
-			Matcher m = SALE_ID_PATTERN.matcher(idString);
-			if (m.find()) {
-				Integer saleId = Integer.valueOf(m.group(1));
-				AuctionSale sale = db.find(AuctionSale.class).where("id=:id").setParameter("id", saleId).fetch("sellerData").fetch("sellerData.shop")
-						.findUnique();
+		Integer saleId = AuctionSale.idFromTradeStack(theItem);
 
-				if (sale == null) {
-					return null;
-				}
+		if (saleId != null) {
+			AuctionSale sale = db.find(AuctionSale.class).where("id=:id").setParameter("id", saleId).fetch("sellerData").fetch("sellerData.shop").findUnique();
 
-				sale.getSellerData().setShop(shopById.get(sale.getSellerData().getShop().getId()));
-				refreshSale(sale);
-				return sale;
+			if (sale == null) {
+				return null;
 			}
+
+			sale.getSellerData().setShop(shopById.get(sale.getSellerData().getShop().getId()));
+			refreshSale(sale);
+			return sale;
 		}
 
 		throw new IllegalArgumentException("Provided item isn't recognozed as an Auction Sale");
