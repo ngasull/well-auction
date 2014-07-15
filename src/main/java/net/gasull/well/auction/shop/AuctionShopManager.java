@@ -1,7 +1,6 @@
 package net.gasull.well.auction.shop;
 
 import java.util.List;
-import java.util.logging.Level;
 
 import net.gasull.well.WellCore;
 import net.gasull.well.auction.WellAuction;
@@ -88,9 +87,6 @@ public class AuctionShopManager {
 			AuctionSale sale = new AuctionSale(++maxSaleId, plugin, sellerData, theItem);
 			plugin.db().save(sale);
 			shop.getSales().refresh(sale);
-			plugin.getLogger().log(Level.INFO, "{} ({}) put on sale {}",
-					new Object[] { player.getName(), player.getUniqueId(), ItemStackUtil.asString(theItem) });
-
 			t.commit();
 			return sale;
 		} finally {
@@ -189,11 +185,6 @@ public class AuctionShopManager {
 
 					plugin.economy().withdrawPlayer(player, price);
 					plugin.economy().depositPlayer(seller, price);
-					plugin.getLogger().log(
-							Level.INFO,
-							"{} ({}) bought {} to {} ({}) for {}",
-							new Object[] { player.getName(), player.getUniqueId(), ItemStackUtil.asString(item), seller.getName(), seller.getUniqueId(),
-									priceStr });
 
 					t.commit();
 					return sale;

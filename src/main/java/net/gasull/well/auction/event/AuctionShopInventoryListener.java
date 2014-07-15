@@ -263,7 +263,7 @@ public class AuctionShopInventoryListener implements Listener {
 					ItemStack unsold = shopManager.unsell(player, theItem);
 					inventoryManager.handleBuy(sale);
 					player.setItemOnCursor(unsold);
-					plugin.getLogger().info(String.format("%s successfully unsold %s", player.getName(), unsold));
+					plugin.getLogger().info(String.format("%s successfully unsold %s", player.getName(), ItemStackUtil.asString(unsold)));
 				} catch (AuctionShopException e) {
 					plugin.getLogger().log(Level.WARNING,
 							String.format("%s couldn't unsell %s (%s)", player.getName(), ItemStackUtil.asString(theItem), e.getMessage()));
