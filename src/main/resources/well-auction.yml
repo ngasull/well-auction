@@ -15,7 +15,7 @@ inventory:
       default: 3
 player:
   setPrice:
-    timeout: 7
+    timeout: 20
 shop:
   buy:
     possibleStackSizes:
