@@ -87,7 +87,7 @@ public class AuctionShopManager {
 			AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
 			AuctionSale sale = new AuctionSale(++maxSaleId, plugin, sellerData, theItem);
 			plugin.db().save(sale);
-			refreshPrice(shop, sale);
+			shop.getSales().refresh(sale);
 			plugin.getLogger().log(Level.INFO, "{} ({}) put on sale {}",
 					new Object[] { player.getName(), player.getUniqueId(), ItemStackUtil.asString(theItem) });
 
@@ -246,52 +246,27 @@ public class AuctionShopManager {
 	 *             the auction shop exception
 	 */
 	public void changeSalePrice(Player player, AuctionSale sale, Double price) throws AuctionShopException {
+		Double newPrice;
+		String successMsg;
+
 		if (price < 0) {
-			unsetSalePrice(player, sale);
+			newPrice = null;
+			successMsg = plugin.lang().get("player.setPrice.unset").replace("%item%", ItemStackUtil.asString(sale.getItem()));
 		} else {
-			checkEnabled(player);
-
-			if (sale.lock()) {
-				Transaction t = plugin.db().transaction();
-
-				try {
-					changePrice(sale, price);
-					sale.unlock();
-					sale.getSellerData()
-							.getAuctionPlayer()
-							.sendMessage(
-									ChatColor.BLUE
-											+ plugin.lang().get("player.setPrice.success").replace("%item%", ItemStackUtil.asString(sale.getItem()))
-													.replace("%price%", plugin.economy().format(price)));
-					t.commit();
-				} finally {
-					t.end();
-				}
-			}
+			newPrice = price;
+			successMsg = plugin.lang().get("player.setPrice.success").replace("%item%", ItemStackUtil.asString(sale.getItem()))
+					.replace("%price%", plugin.economy().format(price));
 		}
-	}
 
-	/**
-	 * Unset sale price.
-	 * 
-	 * @param player
-	 *            the player
-	 * @param sale
-	 *            the sale
-	 * @throws AuctionShopException
-	 *             the auction shop exception
-	 */
-	public void unsetSalePrice(Player player, AuctionSale sale) throws AuctionShopException {
 		checkEnabled(player);
 
 		if (sale.lock()) {
 			Transaction t = plugin.db().transaction();
 
 			try {
-				changePrice(sale, null);
+				changePrice(sale, newPrice);
 				sale.unlock();
-				sale.getSellerData().getAuctionPlayer()
-						.sendMessage(ChatColor.BLUE + plugin.lang().get("player.setPrice.unset").replace("%item%", ItemStackUtil.asString(sale.getItem())));
+				sale.getSellerData().getAuctionPlayer().sendMessage(ChatColor.BLUE + successMsg);
 				t.commit();
 			} finally {
 				t.end();
@@ -309,11 +284,20 @@ public class AuctionShopManager {
 	 *            the price
 	 */
 	private void changePrice(AuctionSale sale, Double price) {
-		sale.getSellerData().getShop().getSales().remove(sale);
 		sale.setPrice(price);
-		plugin.db().save(sale);
 
-		refreshPrice(sale.getSellerData().getShop(), sale);
+		if (price == null) {
+			Double defaultPrice = sale.getSellerData().getDefaultPrice();
+
+			if (defaultPrice != null) {
+				sale.setUnitPrice(defaultPrice * sale.getItem().getAmount());
+			}
+		} else {
+			sale.setUnitPrice(price / (double) sale.getItem().getAmount());
+		}
+
+		plugin.db().save(sale);
+		sale.getSellerData().getShop().getSales().refresh(sale);
 	}
 
 	/**
@@ -329,58 +313,44 @@ public class AuctionShopManager {
 	 *             the auction shop exception
 	 */
 	public void setDefaultPrice(Player player, AuctionSellerData sellerData, Double price) throws AuctionShopException {
-		if (price < 0) {
-			unsetDefaultPrice(player, sellerData);
-		} else {
-			setDefaultPrice(sellerData, price);
-			sellerData.getAuctionPlayer().sendMessage(
-					ChatColor.BLUE
-							+ plugin.lang().get("player.setPrice.successDefault")
-									.replace("%item%", ItemStackUtil.asString(sellerData.getShop().getRefItemCopy()))
-									.replace("%price%", plugin.economy().format(price)));
-		}
-	}
+		Double defaultPrice;
+		String successMsg;
 
-	/**
-	 * Sets the default price.
-	 * 
-	 * @param sellerData
-	 *            the seller data
-	 * @param price
-	 *            the price
-	 */
-	public void setDefaultPrice(AuctionSellerData sellerData, Double price) {
-		sellerData.setDefaultPrice(price);
+		if (price < 0) {
+			defaultPrice = null;
+			successMsg = plugin.lang().get("player.setPrice.unsetDefault").replace("%item%", ItemStackUtil.asString(sellerData.getShop().getRefItemCopy()));
+		} else {
+			defaultPrice = price;
+			successMsg = plugin.lang().get("player.setPrice.successDefault").replace("%item%", ItemStackUtil.asString(sellerData.getShop().getRefItemCopy()))
+					.replace("%price%", plugin.economy().format(price));
+		}
+
+		checkEnabled(player);
+		sellerData.setDefaultPrice(defaultPrice);
 		plugin.db().save(sellerData);
+
+		// Update associated sales
+		List<AuctionSale> sales = plugin.db().findSales(sellerData);
+		boolean changed = false;
+
+		for (AuctionSale sale : sales) {
+			if (sale.getPrice() == null) {
+				changed = true;
+				sale.setUnitPrice(defaultPrice);
+			}
+		}
+
+		if (changed) {
+			plugin.db().save(sales);
+		}
 
 		// Refresh the price of sales that depend on default price
 		AuctionShop shop = sellerData.getShop();
 		if (shop != null) {
-			List<AuctionSale> sales = plugin.db().findSales(sellerData);
-			shop.getSales().removeAll(sales);
-
-			for (AuctionSale sale : sales) {
-				refreshPrice(shop, sale);
-			}
+			shop.getSales().refreshAll();
 		}
-	}
 
-	/**
-	 * Unset default price.
-	 * 
-	 * @param player
-	 *            the player
-	 * @param sellerData
-	 *            the seller data
-	 * @throws AuctionShopException
-	 *             the auction shop exception
-	 */
-	public void unsetDefaultPrice(Player player, AuctionSellerData sellerData) throws AuctionShopException {
-		checkEnabled(player);
-		setDefaultPrice(sellerData, null);
-		sellerData.getAuctionPlayer().sendMessage(
-				ChatColor.BLUE
-						+ plugin.lang().get("player.setPrice.unsetDefault").replace("%item%", ItemStackUtil.asString(sellerData.getShop().getRefItemCopy())));
+		sellerData.getAuctionPlayer().sendMessage(ChatColor.BLUE + successMsg);
 	}
 
 	/**
@@ -441,17 +411,6 @@ public class AuctionShopManager {
 	}
 
 	/**
-	 * Refresh price.
-	 * 
-	 * @param sale
-	 *            the sale
-	 */
-	public void refreshPrice(AuctionShop shop, AuctionSale sale) {
-		plugin.db().refreshSale(sale);
-		shop.getSales().refresh(sale);
-	}
-
-	/**
 	 * Removes the sale.
 	 * 
 	 * @param shop
@@ -461,8 +420,8 @@ public class AuctionShopManager {
 	 * @return the item stack
 	 */
 	private ItemStack removeSale(AuctionShop shop, AuctionSale sale) {
-		shop.getSales().remove(sale);
 		plugin.db().delete(sale);
+		shop.getSales().refresh(sale);
 		return sale.getItem();
 	}
 
@@ -475,12 +434,7 @@ public class AuctionShopManager {
 		for (AuctionShop shop : dbShops) {
 			shop.setup(plugin);
 			plugin.db().registerShop(shop);
-
-			List<AuctionSale> sales = plugin.db().findSales(shop);
-			for (AuctionSale sale : sales) {
-				refreshPrice(shop, sale);
-			}
-
+			shop.getSales().refreshAll();
 		}
 
 		List<ShopEntityModel> registered = plugin.db().listShopEntities();

@@ -14,6 +14,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import net.gasull.well.auction.WellAuction;
+import net.gasull.well.db.WellRawSql;
 
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.inventory.ItemStack;
@@ -46,8 +47,14 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	@Column(length = 2000)
 	private String itemSerial;
 
+	/** The amount of sold items. */
+	private Integer amount;
+
 	/** The price. */
 	private Double price;
+
+	/** The price per unit. */
+	private Double unitPrice;
 
 	/** The creation date. */
 	private Date created = new Date();
@@ -88,10 +95,14 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	 *            the stack
 	 */
 	public AuctionSale(int id, WellAuction plugin, AuctionSellerData data, ItemStack stack) {
-		this.id = id;
-		this.plugin = plugin;
-		this.item = stack;
-		this.sellerData = data;
+		setId(id);
+		setPlugin(plugin);
+		setItem(stack);
+		setSellerData(data);
+
+		if (getPrice() == null && sellerData.getDefaultPrice() != null) {
+			setUnitPrice(sellerData.getDefaultPrice());
+		}
 	}
 
 	/**
@@ -175,6 +186,12 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	 */
 	public void setItem(ItemStack item) {
 		this.item = item;
+
+		if (item == null) {
+			setAmount(null);
+		} else {
+			setAmount(item.getAmount());
+		}
 	}
 
 	/**
@@ -215,6 +232,25 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	}
 
 	/**
+	 * Gets the amount.
+	 * 
+	 * @return the amount
+	 */
+	public Integer getAmount() {
+		return amount;
+	}
+
+	/**
+	 * Sets the amount.
+	 * 
+	 * @param amount
+	 *            the new amount
+	 */
+	public void setAmount(Integer amount) {
+		this.amount = amount;
+	}
+
+	/**
 	 * Gets the price.
 	 * 
 	 * @return the price
@@ -231,6 +267,25 @@ public class AuctionSale implements Comparable<AuctionSale> {
 	 */
 	public void setPrice(Double price) {
 		this.price = price;
+	}
+
+	/**
+	 * Gets the unit price.
+	 * 
+	 * @return the unit price
+	 */
+	public Double getUnitPrice() {
+		return unitPrice;
+	}
+
+	/**
+	 * Sets the unit price.
+	 * 
+	 * @param unitPrice
+	 *            the new unit price
+	 */
+	public void setUnitPrice(Double unitPrice) {
+		this.unitPrice = unitPrice;
 	}
 
 	/**
@@ -312,6 +367,13 @@ public class AuctionSale implements Comparable<AuctionSale> {
 		getLock().set(false);
 	}
 
+	/**
+	 * Id from trade stack.
+	 * 
+	 * @param tradeStack
+	 *            the trade stack
+	 * @return the integer
+	 */
 	public static Integer idFromTradeStack(ItemStack tradeStack) {
 		if (tradeStack.hasItemMeta() && tradeStack.getItemMeta().getLore().size() > 0) {
 			String idString = tradeStack.getItemMeta().getLore().get(0);
@@ -323,6 +385,18 @@ public class AuctionSale implements Comparable<AuctionSale> {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Map raw sql.
+	 * 
+	 * @param a
+	 *            the table alias
+	 * @return the well raw sql
+	 */
+	public static WellRawSql mapRawSql(String a) {
+		return new WellRawSql().mapColumn(a, "id", "id").mapColumn(a, "item_serial", "itemSerial").mapColumn(a, "amount", "amount")
+				.mapColumn(a, "price", "price").mapColumn(a, "unit_price", "unitPrice").mapColumn(a, "created", "created");
 	}
 
 	@Override

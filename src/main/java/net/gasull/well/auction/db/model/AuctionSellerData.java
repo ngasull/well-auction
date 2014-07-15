@@ -5,6 +5,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import net.gasull.well.db.WellRawSql;
+
 /**
  * Data for a seller, for a single shop.
  */
@@ -120,5 +122,16 @@ public class AuctionSellerData {
 	 */
 	public void setDefaultPrice(Double defaultPrice) {
 		this.defaultPrice = defaultPrice;
+	}
+
+	/**
+	 * Map raw sql.
+	 * 
+	 * @param a
+	 *            the table alias
+	 * @return the well raw sql
+	 */
+	public static WellRawSql mapRawSql(String a) {
+		return new WellRawSql().mapColumn(a, "id", "id").mapColumn(a, "default_price", "defaultPrice");
 	}
 }

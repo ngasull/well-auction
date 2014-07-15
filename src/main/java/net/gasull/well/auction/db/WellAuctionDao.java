@@ -1,5 +1,7 @@
 package net.gasull.well.auction.db;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,9 +20,12 @@ import net.gasull.well.auction.shop.entity.EntityShopEntity;
 import net.gasull.well.auction.shop.entity.ShopEntity;
 import net.gasull.well.db.WellDao;
 import net.gasull.well.db.WellDatabase;
+import net.gasull.well.db.WellDatabaseSimple;
+import net.gasull.well.db.WellDbTableAlter;
 import net.gasull.well.version.WellUpgrade;
 import net.gasull.well.version.WellVersionable;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -29,6 +34,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
+import com.avaje.ebean.RawSql;
 
 /**
  * The Class WellAuctionDao.
@@ -39,16 +45,19 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 	private final WellAuction plugin;
 
 	/** The well database object. */
-	private WellDatabase wellDatabase;
+	private final WellDatabase wellDatabase;
 
 	/** The actual database object. */
-	private EbeanServer db;
+	private final EbeanServer db;
 
 	/** The registered shops by type. */
 	private Map<ItemStack, AuctionShop> shops = new HashMap<ItemStack, AuctionShop>();
 
 	/** The shops by id. */
 	private Map<Integer, AuctionShop> shopById = new HashMap<>();
+
+	/** The post upgrades. */
+	private List<Runnable> postUpgrades = new ArrayList<>();
 
 	/**
 	 * Instantiates a new well auction dao.
@@ -74,6 +83,10 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 		WellCore.checkVersion(this);
 		wellDatabase.initializeIfNotInit(false);
 		this.db = wellDatabase.getDatabase();
+
+		for (Runnable postUpgrade : postUpgrades) {
+			postUpgrade.run();
+		}
 	}
 
 	@Override
@@ -92,6 +105,39 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 			public void handleUpgrade() {
 				plugin.config().getConfig().set("inventory.sell.size.default", 4);
 				plugin.config().save();
+
+				try (WellDatabaseSimple simpleDb = new WellDatabaseSimple(plugin.config().getConfig())) {
+
+					new WellDbTableAlter(simpleDb.getConnection(), "well_auction_sale").addColumn("amount", Integer.class, null, 0)
+							.addColumn("unit_price", Double.class, null, null).execute();
+
+				} catch (SQLException | IOException e) {
+					throw new RuntimeException("Couldn't add amount and unit_price columns", e);
+				}
+
+				postUpgrades.add(new Runnable() {
+					@Override
+					public void run() {
+						List<AuctionSale> sales = db.find(AuctionSale.class).fetch("sellerData").findList();
+
+						for (AuctionSale sale : sales) {
+							sale.setAmount(sale.getItem().getAmount());
+
+							if (sale.getPrice() == null) {
+								Double defaultPrice = sale.getSellerData().getDefaultPrice();
+
+								if (defaultPrice != null) {
+									sale.setUnitPrice(defaultPrice);
+								}
+							} else {
+								sale.setUnitPrice(sale.getPrice() / (double) sale.getAmount());
+							}
+
+						}
+
+						db.save(sales);
+					}
+				});
 			}
 		});
 
@@ -236,6 +282,97 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 	}
 
 	/**
+	 * Shop is selling a specific sale.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @param sale
+	 *            the sale
+	 * @return true, if successful
+	 */
+	public boolean shopIsSelling(AuctionShop shop, AuctionSale sale) {
+		return db.find(AuctionSale.class).where().eq("sellerData.shop", shop).eq("id", sale.getId()).findUnique() != null;
+	}
+
+	/**
+	 * Find the best price by shop.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @return the auction sale
+	 */
+	public AuctionSale findBestSaleByShop(AuctionShop shop) {
+
+		String bestPriceReq = String
+				.format("select min(unit_price) bestPrice from well_auction_sale bs inner join well_auction_sellerData bsd on bsd.id = bs.seller_data_id where bsd.shop_id=%d",
+						shop.getId());
+
+		String sql = "from well_auction_sale s inner join (" + bestPriceReq + ") bpr on s.unit_price = bpr.bestPrice "
+				+ "left outer join well_auction_sellerData sd on sd.id = s.seller_data_id ";
+
+		RawSql rawSql = AuctionSale.mapRawSql("s").mapJoin("sellerData", AuctionSellerData.mapRawSql("sd")).create(sql);
+
+		return refreshSale(db.find(AuctionSale.class).setRawSql(rawSql).where("sd.shop_id=:shop").setParameter("shop", shop.getId()).order().asc("created")
+				.setMaxRows(1).findUnique());
+	}
+
+	/**
+	 * Find best sale for amount.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @param amount
+	 *            the amount
+	 * @param stackSizes
+	 *            the stack sizes
+	 * @return the auction sale
+	 */
+	public AuctionSale findBestSaleForAmount(AuctionShop shop, int amount, List<Integer> stackSizes) {
+		String amountCondition;
+
+		if (amount > 0) {
+			amountCondition = String.format("= %d", amount);
+		} else {
+			amountCondition = String.format("not in (%s)", StringUtils.join(stackSizes, ","));
+		}
+
+		String bestPriceReq = String
+				.format("select bs.amount, min(unit_price) bestPrice from well_auction_sale bs inner join well_auction_sellerData bsd on bsd.id = bs.seller_data_id where bsd.shop_id=%d and bs.amount %s",
+						shop.getId(), amountCondition);
+
+		String sql = "from well_auction_sale s inner join (" + bestPriceReq + ") bpr on s.amount=bpr.amount and s.unit_price = bpr.bestPrice "
+				+ "left outer join well_auction_sellerData sd on sd.id = s.seller_data_id  ";
+
+		RawSql rawSql = AuctionSale.mapRawSql("s").mapJoin("sellerData", AuctionSellerData.mapRawSql("sd")).create(sql);
+
+		return refreshSale(db.find(AuctionSale.class).setRawSql(rawSql).where(String.format("sd.shop_id=:shop and amount %s", amountCondition))
+				.setParameter("shop", shop.getId()).order().asc("created").setMaxRows(1).findUnique());
+	}
+
+	/**
+	 * Find best sales.
+	 * 
+	 * @param shop
+	 *            the shop
+	 * @param stackSizes
+	 *            the stack sizes
+	 * @return the list
+	 */
+	public List<AuctionSale> findBestSales(AuctionShop shop, List<Integer> stackSizes) {
+		String bestPriceReq = String
+				.format("select bs.amount, min(unit_price) bestPrice from well_auction_sale bs inner join well_auction_sellerData bsd on bsd.id = bs.seller_data_id where bsd.shop_id=%d group by bs.amount",
+						shop.getId());
+
+		String sql = "from well_auction_sale s inner join (" + bestPriceReq + ") bpr on s.amount=bpr.amount and s.unit_price = bpr.bestPrice "
+				+ "left outer join well_auction_sellerData sd on sd.id = s.seller_data_id  ";
+
+		RawSql rawSql = AuctionSale.mapRawSql("s").mapJoin("sellerData", AuctionSellerData.mapRawSql("sd")).create(sql);
+
+		return refreshSales(db.find(AuctionSale.class).setRawSql(rawSql).where("sd.shop_id=:shop and amount in (:amount)").setParameter("shop", shop.getId())
+				.setParameter("amount", stackSizes).order().asc("created").findList());
+	}
+
+	/**
 	 * Gets a sale from a sale stack {@link ItemStack}.
 	 * 
 	 * @param theItem
@@ -266,10 +403,11 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 	 * 
 	 * @param sale
 	 *            the sale
+	 * @return the auction sale
 	 */
-	public void refreshSale(AuctionSale sale) {
-		if (plugin == null || sale.getSellerData() == null) {
-			return;
+	public AuctionSale refreshSale(AuctionSale sale) {
+		if (plugin == null || sale == null || sale.getSellerData() == null) {
+			return null;
 		}
 
 		ItemStack tradeStack = new ItemStack(sale.getItem());
@@ -306,6 +444,22 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 		meta.setLore(desc);
 		tradeStack.setItemMeta(meta);
 		sale.setTradeStack(tradeStack);
+		return sale;
+	}
+
+	/**
+	 * Refresh sales.
+	 * 
+	 * @param sales
+	 *            the sales
+	 * @return the list of sales
+	 */
+	public List<AuctionSale> refreshSales(List<AuctionSale> sales) {
+		for (AuctionSale sale : sales) {
+			refreshSale(sale);
+		}
+
+		return sales;
 	}
 
 	/**

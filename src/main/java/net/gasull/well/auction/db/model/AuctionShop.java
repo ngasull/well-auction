@@ -110,7 +110,7 @@ public class AuctionShop {
 	 */
 	public void setup(WellAuction plugin) {
 		setStackSizes(plugin.config().getIntegerList("shop.buy.possibleStackSizes"));
-		setSales(new AuctionSalesCollection(this.stackSizes));
+		setSales(new AuctionSalesCollection(plugin, this, this.stackSizes));
 	}
 
 	/**
@@ -214,20 +214,6 @@ public class AuctionShop {
 	 */
 	public void setSales(AuctionSalesCollection sales) {
 		this.sales = sales;
-	}
-
-	/**
-	 * Gets the best price.
-	 * 
-	 * @return the best price
-	 */
-	public Double getBestPrice() {
-		if (getSales().isEmpty()) {
-			return null;
-		}
-
-		AuctionSale bestSale = getSales().iterator().next();
-		return bestSale.getTradePrice() / (double) bestSale.getItem().getAmount();
 	}
 
 	@Override

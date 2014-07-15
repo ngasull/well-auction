@@ -11,6 +11,7 @@ import java.util.logging.Level;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AuctionPlayer;
+import net.gasull.well.auction.db.model.AuctionSale;
 import net.gasull.well.auction.db.model.AuctionSellerData;
 import net.gasull.well.auction.db.model.AuctionShop;
 import net.gasull.well.auction.shop.entity.ShopEntity;
@@ -156,7 +157,7 @@ public class AuctionMenu {
 	 */
 	private Inventory createInventorySingle(AuctionShop shop, Player player) {
 		AuctionSellerData sellerData = plugin.db().findSellerData(player, shop);
-		Double bestPrice = shop.getBestPrice();
+		AuctionSale bestSale = plugin.db().findBestSaleByShop(shop);
 		ItemStack[] contents = new ItemStack[MENU_SIZE];
 
 		for (int i = 0; i < MENU_SIZE; i++) {
@@ -179,8 +180,8 @@ public class AuctionMenu {
 				ItemMeta itemMeta = contents[i].getItemMeta();
 				List<String> desc = new ArrayList<>();
 
-				if (bestPrice != null) {
-					desc.add(ChatColor.YELLOW + msgBestSalePrice.replace("%price%", plugin.economy().format(bestPrice)));
+				if (bestSale != null) {
+					desc.add(ChatColor.YELLOW + msgBestSalePrice.replace("%price%", plugin.economy().format(bestSale.getUnitPrice())));
 					itemMeta.setLore(desc);
 				}
 
@@ -227,15 +228,15 @@ public class AuctionMenu {
 		int i = 0;
 		for (AuctionShop shop : shops) {
 			AuctionSellerData sellerData = sellerDataMap.get(shop.getId());
-			Double bestPrice = shop.getBestPrice();
+			AuctionSale bestSale = plugin.db().findBestSaleByShop(shop);
 
 			lastShopSlots[i] = shop;
 			contents[i] = new ItemStack(shop.getRefItem());
 			ItemMeta itemMeta = contents[i].getItemMeta();
 			List<String> desc = new ArrayList<>();
 
-			if (bestPrice != null) {
-				desc.add(ChatColor.YELLOW + msgBestSalePrice.replace("%price%", plugin.economy().format(bestPrice)));
+			if (bestSale != null) {
+				desc.add(ChatColor.YELLOW + msgBestSalePrice.replace("%price%", plugin.economy().format(bestSale.getUnitPrice())));
 				itemMeta.setLore(desc);
 			}
 			if (sellerData.getDefaultPrice() != null) {
