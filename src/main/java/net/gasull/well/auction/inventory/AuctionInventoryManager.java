@@ -474,8 +474,7 @@ public class AuctionInventoryManager {
 	 */
 	private Double checkPriceSet(Player player, String price) {
 		try {
-			Double parsed = Double.valueOf(Double.valueOf(price).doubleValue());
-			return Math.round(parsed * 100d) / 100d;
+			return Math.round(Double.valueOf(price).doubleValue() * 100d) / 100d;
 		} catch (NumberFormatException e) {
 			switch (price) {
 			case "unset":
