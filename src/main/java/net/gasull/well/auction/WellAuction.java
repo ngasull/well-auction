@@ -4,7 +4,6 @@ import net.gasull.well.auction.command.WaucAttachCommand;
 import net.gasull.well.auction.command.WaucCommandHelper;
 import net.gasull.well.auction.command.WaucDetachCommand;
 import net.gasull.well.auction.command.WaucListCommand;
-import net.gasull.well.auction.command.WaucNpcCommand;
 import net.gasull.well.auction.command.WaucPresetCommand;
 import net.gasull.well.auction.command.WaucRemoveCommand;
 import net.gasull.well.auction.db.WellAuctionDao;
@@ -159,7 +158,6 @@ public class WellAuction extends JavaPlugin {
 	private void setupCommands() {
 		WaucCommandHelper helper = new WaucCommandHelper(this, shopEntityManager);
 		WellCommandHandler.bind(this, "wellauction").attach(new WaucAttachCommand(this, helper)).attach(new WaucDetachCommand(this, helper))
-				.attach(new WaucRemoveCommand(this, helper)).attach(new WaucListCommand(this)).attach(new WaucPresetCommand(this, helper))
-				.attach(new WaucNpcCommand(this, helper));
+				.attach(new WaucRemoveCommand(this, helper)).attach(new WaucListCommand(this)).attach(new WaucPresetCommand(this, helper));
 	}
 }

@@ -7,6 +7,6 @@ commands:
     aliases:
       - wauc
     description: This allow you to manage Auction Houses.
-    usage: /<command> attach|detach|preset|npc|remove|list
+    usage: /<command> attach|detach|preset|remove|list
     permission: well.auction
     permission-message: You don't have <permission>

@@ -69,6 +69,8 @@ command:
     success: "Successfully loaded preset"
   npc:
     success: "Successfully created NPC shop, you can now attach items or a preset to it"
+    error:
+      citizens: "This command requires Citizens plugin, which was not found"
   remove:
     success: "Successfully removed a shop"
   error:
