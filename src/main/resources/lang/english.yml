@@ -57,6 +57,8 @@ shop:
 command:
   creation:
     success: "Successfully attached for sale %item%"
+    error:
+      general: "Unable to create a shop for this item"
   detach:
     success: "Successfully detached an item"
   list:

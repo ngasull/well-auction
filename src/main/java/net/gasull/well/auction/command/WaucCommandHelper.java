@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.BlockIterator;
+import org.yaml.snakeyaml.error.YAMLException;
 
 /**
  * The Class WaucCommandHelper.
@@ -109,7 +110,12 @@ public class WaucCommandHelper {
 			throw new WellCommandException(plugin.lang().error("lang.command.error.cantSellAir"));
 		}
 
-		return plugin.db().getShop(refItem);
+		try {
+			return plugin.db().getShop(refItem);
+		} catch (YAMLException e) {
+			// Unable to create the shop
+			return null;
+		}
 	}
 
 }

@@ -38,6 +38,10 @@ public class WaucAttachCommand extends WellCommand<Player> {
 		ShopEntity shopEntity = helper.getTargetShop(args, player);
 		AuctionShop shop = helper.getShopFromHand(player);
 
+		if (shop == null) {
+			throw new WellCommandException(plugin.lang().get("command.creation.error.general"));
+		}
+
 		if (shopEntity.getModel().addShop(shop)) {
 			shopEntity.register();
 			plugin.db().save(shopEntity.getModel());
