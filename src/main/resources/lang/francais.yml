@@ -46,8 +46,7 @@ inventory:
         - "\xa7bBienvenue à l'Hôtel des Ventes !"
         - "\xa7bClic gauche : acheter"
         - "\xa7bClic droit  : vendre"
-        - "\xa7bShift-clic  : définir un prix par unité"
-        - "\xa7bShift-clic fonctionne sur les ventes et les catégories."
+        - "\xa7bShift-clic sur une catégorie pour définir un prix par unité."
         - "\xa7bTu peux retirer tes ventes avec un clic droit."
 shop:
   item:

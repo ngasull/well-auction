@@ -47,8 +47,7 @@ inventory:
         chatDesc:
         - "\xa7bWelcome to the Auction House!"
         - "\xa7bEither left-click to buy items or right-click to sell items."
-        - "\xa7bSetup default sell price per unit by shift-clicking a category."
-        - "\xa7bShift-clicking also works for individual sales."
+        - "\xa7bSetup a price per unit by shift-clicking a category."
         - "\xa7bYou can remove your sales by right-clicking them."
 shop:
   item:
