@@ -8,7 +8,7 @@
 	<description>Yet a simple but powerful way to set the economic equilibrium in your bukkit server</description>
 
 	<properties>
-		<wellcore.version>0.5-SNAPSHOT</wellcore.version>
+		<wellcore.version>0.6-SNAPSHOT</wellcore.version>
 		<minecraft.version>1.7.9</minecraft.version>
 		<bukkit.version>1.7.9-R0.1</bukkit.version>
 		<vault.version>1.4.1</vault.version>
