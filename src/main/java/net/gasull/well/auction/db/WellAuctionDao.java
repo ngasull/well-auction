@@ -106,7 +106,7 @@ public class WellAuctionDao extends WellDao implements WellVersionable {
 				plugin.config().getConfig().set("inventory.sell.size.default", 4);
 				plugin.config().save();
 
-				try (WellDatabaseSimple simpleDb = new WellDatabaseSimple(plugin.config().getConfig())) {
+				try (WellDatabaseSimple simpleDb = new WellDatabaseSimple(plugin, plugin.config().getConfig())) {
 
 					new WellDbTableAlter(simpleDb.getConnection(), "well_auction_sale").addColumn("amount", Integer.class, null, 0)
 							.addColumn("unit_price", Double.class, null, null).execute();
