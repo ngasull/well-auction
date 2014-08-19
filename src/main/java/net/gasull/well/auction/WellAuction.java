@@ -5,6 +5,7 @@ import net.gasull.well.auction.command.WaucCommandHelper;
 import net.gasull.well.auction.command.WaucDetachCommand;
 import net.gasull.well.auction.command.WaucListCommand;
 import net.gasull.well.auction.command.WaucPresetCommand;
+import net.gasull.well.auction.command.WaucReloadCommand;
 import net.gasull.well.auction.command.WaucRemoveCommand;
 import net.gasull.well.auction.db.WellAuctionDao;
 import net.gasull.well.auction.event.AuctionBlockShopListener;
@@ -26,6 +27,9 @@ import org.bukkit.plugin.java.JavaPlugin;
  * WellAuction, this is it!
  */
 public class WellAuction extends JavaPlugin {
+
+	/** The command handler. */
+	private WellCommandHandler commandHandler;
 
 	/** The well config. */
 	private WellConfig config;
@@ -53,6 +57,9 @@ public class WellAuction extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
+		commandHandler = WellCommandHandler.bind(this, "wellauction");
+		commandHandler.attach(new WaucReloadCommand(this));
+
 		setupConf();
 		setupVault();
 
@@ -68,6 +75,8 @@ public class WellAuction extends JavaPlugin {
 			inventoryManager = new AuctionInventoryManager(this, shopManager);
 			shopManager.load();
 			shopManager.enable();
+
+			setupCommands(new WaucCommandHelper(this, shopEntityManager));
 		}
 
 		// Listeners
@@ -76,14 +85,15 @@ public class WellAuction extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new AuctionEntityShopListener(this, shopEntityManager), this);
 
 		config.save();
-		setupCommands();
 	}
 
 	@Override
 	public void onDisable() {
 		if (shopManager != null) {
 			shopManager.disable();
+			shopManager = null;
 			shopEntityManager.clean();
+			shopEntityManager = null;
 		}
 	}
 
@@ -154,10 +164,12 @@ public class WellAuction extends JavaPlugin {
 
 	/**
 	 * Setup commands.
+	 * 
+	 * @param waucCommandHelper
+	 *            the command helper
 	 */
-	private void setupCommands() {
-		WaucCommandHelper helper = new WaucCommandHelper(this, shopEntityManager);
-		WellCommandHandler.bind(this, "wellauction").attach(new WaucAttachCommand(this, helper)).attach(new WaucDetachCommand(this, helper))
-				.attach(new WaucRemoveCommand(this, helper)).attach(new WaucListCommand(this)).attach(new WaucPresetCommand(this, helper));
+	private void setupCommands(WaucCommandHelper helper) {
+		commandHandler.attach(new WaucAttachCommand(this, helper)).attach(new WaucDetachCommand(this, helper)).attach(new WaucRemoveCommand(this, helper))
+				.attach(new WaucListCommand(this)).attach(new WaucPresetCommand(this, helper));
 	}
 }
