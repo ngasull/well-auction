@@ -74,6 +74,8 @@ command:
       citizens: "Cette commande nécessite le plugin Citizens, qui est introuvable"
   remove:
     success: "Magasin retiré avec succès"
+  reload:
+    success: "well-auction rechargé"
   error:
     saleAlreadyHere: "Ceci est déjà en vente ici"
     notBlockSeen: "Tu dois viser un bloc"

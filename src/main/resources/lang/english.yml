@@ -75,6 +75,8 @@ command:
       citizens: "This command requires Citizens plugin, which was not found"
   remove:
     success: "Successfully removed a shop"
+  reload:
+    success: "Reloaded well-auction"
   error:
     saleAlreadyHere: "This is already being on sale here"
     notBlockSeen: "You must be looking at a block"
