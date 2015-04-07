@@ -2,12 +2,10 @@ package net.gasull.well.auction.inventory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 import net.gasull.well.auction.WellAuction;
 import net.gasull.well.auction.db.model.AuctionPlayer;
@@ -23,10 +21,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 
 /**
  * Represents the menu to access Sell & Buy inventories.
@@ -52,15 +46,12 @@ public class AuctionMenu {
 	private final String[] chatInfo;
 
 	/**
-	 * The last help display cache to avoid player chat spam. Mapped to UUID,
-	 * but could have been any non null value.
+	 * Memorizes what are the times when players will see the help, mapped by player.
 	 */
-	private static Cache<UUID, UUID> lastHelpCache = CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.SECONDS).build(new CacheLoader<UUID, UUID>() {
-		@Override
-		public UUID load(UUID arg0) throws Exception {
-			return arg0;
-		}
-	});
+	private static final Map<UUID, Long> MEM_HELPMSG_MAP = new HashMap<>();
+
+	/** Show help message every 20 seconds. */
+	private static final long HELP_DISPLAY_DELAY = 20 * 1000 * 60;
 
 	/** The msg sale no price. */
 	private final String msgSaleNoPrice;
@@ -250,13 +241,12 @@ public class AuctionMenu {
 		}
 
 		// Display help each HELP_DISPLAY_DELAY milliseconds
-		try {
-			if (!lastHelpCache.asMap().containsKey(aucPlayer.getPlayerId())) {
-				player.sendMessage(chatInfo);
-				lastHelpCache.get(aucPlayer.getPlayerId());
-			}
-		} catch (ExecutionException e) {
-			plugin.getLogger().log(Level.WARNING, "Couldn't determine if we had to display help to the player", e);
+		Long noHelpMsgUntil = MEM_HELPMSG_MAP.get(aucPlayer.getPlayerId());
+		long curTime = System.currentTimeMillis();
+
+		if (noHelpMsgUntil == null || noHelpMsgUntil < curTime) {
+			player.sendMessage(chatInfo);
+			MEM_HELPMSG_MAP.put(aucPlayer.getPlayerId(), curTime + HELP_DISPLAY_DELAY);
 		}
 
 		shopSlots = lastShopSlots;
